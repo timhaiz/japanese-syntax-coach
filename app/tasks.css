@@ -1,0 +1,7 @@
+.points{font-size:15px;color:var(--green);white-space:nowrap}
+.daily-tasks{display:grid;gap:9px;margin:12px 0 30px}
+.task,.bonus-task{display:flex;align-items:center;gap:11px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 13px}
+.task.complete{border-color:#b9dfca;background:#f5fcf8}
+.task>div,.bonus-task>div{flex:1;min-width:0}.task b,.bonus-task b{display:block;font-size:12px}.task small,.bonus-task small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.task-check{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;background:#eef5f1;color:#8da99a;font-size:10px;font-weight:700}.task.complete .task-check{background:var(--green);color:#fff}
+.task-action,.claim{border:0;border-radius:9px;padding:7px 9px;font-size:10px;white-space:nowrap;cursor:pointer}.task-action{background:#edf7f2;color:var(--green)}.task-action:disabled{opacity:.55;cursor:default}.claim{background:var(--green);color:#fff}.claim:disabled{background:#c8d9d0;color:#fff;cursor:default}.bonus-task{background:#fff8e8;border-color:#f1d493}.bonus-task>span{font-size:21px}

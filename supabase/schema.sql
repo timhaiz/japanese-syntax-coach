@@ -6,4 +6,4 @@ alter table public.answer_attempts enable row level security;
 alter table public.review_items enable row level security;
 create policy "own profile" on public.profiles for all using (auth.uid()=id) with check (auth.uid()=id);
 create policy "own attempts" on public.answer_attempts for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
-create policy "own reviews" on public.review_items for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
+create policy "own 已完成reviews" on public.review_items for all using (auth.uid()=user_id) with check (auth.uid()=user_id);
