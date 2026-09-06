@@ -75,3 +75,10 @@ test('旧账号可以进入设置密码邮件流程',async({page})=>{
   await page.getByRole('button',{name:/发送设置密码邮件/}).click()
   await expect(page.getByText('请输入需要设置密码的邮箱。')).toBeVisible()
 })
+
+test('未登录时个人页不会显示已同步',async({page})=>{
+  await page.getByRole('button',{name:/我的/}).click()
+  await expect(page.getByText('尚未登录')).toBeVisible()
+  await expect(page.getByText('登录后同步',{exact:true})).toBeVisible()
+  await expect(page.getByText('学习记录已同步到云端。')).not.toBeVisible()
+})
