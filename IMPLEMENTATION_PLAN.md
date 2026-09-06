@@ -15,7 +15,7 @@
 ### 已完成
 
 - [x] Next.js + TypeScript 移动端 PWA 外壳。
-- [x] Supabase 邮箱 Magic Link 登录和回调。
+- [x] Supabase 邮箱+密码注册、验证码确认和密码登录。
 - [x] 用户学习进度、课程完成状态、错题和每日任务写入 Supabase 用户元数据。
 - [x] 本地规则批改；省略句末标点仍判定正确并给出书写提醒。
 - [x] 独立题库 `lib/question-bank.ts`，第 1～3 课各至少 20 题，题目 ID 稳定（如 `L01-Q001`）。
@@ -76,7 +76,7 @@
 
 **目标**：同一 Supabase 账号在 Chrome 和 Safari 看到一致的课程、错题和每日状态。
 
-- [x] 增加邮箱+密码注册、邮箱验证码确认和密码登录；保留 Magic Link 作为兼容入口。
+- [x] 增加邮箱+密码注册、邮箱验证码确认和密码登录。
 - 统一进度数据结构和版本号。
 - 登录、刷新、账号切换时先完成云端 hydration，再允许本地状态写回。
 - 对旧版 `done`、`lessonDone`、`completedLessons` 做一次性兼容迁移。
