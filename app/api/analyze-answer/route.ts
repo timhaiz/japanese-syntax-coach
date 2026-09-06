@@ -1,0 +1,17 @@
+import {NextResponse} from 'next/server'
+
+export async function POST(req:Request){
+  const body=await req.json().catch(()=>({})) as {prompt?:string;answer?:string;standardAnswer?:string;hint?:string}
+  const key=process.env.OPENAI_API_KEY
+  if(!key)return NextResponse.json({analysis:'AI 分析未配置：缺少 OPENAI_API_KEY。',source:'fallback',reason:'missing-api-key'})
+  const prompt=`你是中文用户的日语记忆教练。请分析这道题，帮助用户记忆，不要重新判分。题目：${body.prompt||''}\n用户答案：${body.answer||''}\n标准答案：${body.standardAnswer||''}\n原有提示：${body.hint||''}\n请严格返回 JSON：{"analysis":"用简体中文说明记忆方法，最多 120 字","words":[{"word":"日语词","kana":"假名","meaning":"中文义","memory":"简短记法"}],"pitfalls":["易错点"]}。只分析题目中出现的词和句型，不引入超纲语法。`
+  try{
+    const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
+    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.6-sol',input:prompt,store:false})})
+    if(!response.ok)return NextResponse.json({analysis:`AI 服务返回 ${response.status}，请检查第三方接口地址、Key、模型名和额度。`,source:'fallback',reason:`upstream-${response.status}`})
+    const data=await response.json();const outputText=data.output_text||data.output?.flatMap((item:{content?:{text?:string}[]})=>item.content||[]).map((item:{text?:string})=>item.text||'').join('')||'';const parsed=JSON.parse(outputText||'{}')
+    return NextResponse.json({...parsed,source:'ai'})
+  }catch{
+    return NextResponse.json({analysis:'无法连接 AI 服务，请检查 OPENAI_BASE_URL 是否为第三方接口的 /v1 地址。',source:'fallback',reason:'network-or-invalid-json'})
+  }
+}
