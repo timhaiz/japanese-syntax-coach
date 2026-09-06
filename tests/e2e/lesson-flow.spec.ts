@@ -60,17 +60,17 @@ test('刷新后保留当日训练进度',async({page})=>{
 
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
   await page.goto('/login')
-  await page.getByRole('button',{name:'注册'}).click()
+  await page.getByRole('button',{name:'注册'}).first().click()
   await page.getByPlaceholder('邮箱').fill('new-user@example.com')
   await page.getByPlaceholder('设置密码（至少 6 位）').fill('123456')
   await page.getByPlaceholder('再次输入密码').fill('654321')
-  await page.getByRole('button',{name:/注册并获取验证码/}).click()
+  await page.locator('button.primary').click()
   await expect(page.getByText('两次输入的密码不一致。')).toBeVisible()
 })
 
 test('旧账号可以进入设置密码邮件流程',async({page})=>{
   await page.goto('/login')
-  await page.getByRole('button',{name:'忘记密码 / 为旧账号设置密码'}).click()
+  await page.getByRole('button',{name:'忘记密码'}).click()
   await expect(page.getByText('旧账号没有密码？输入注册邮箱，我们会发送一封仅用于设置密码的邮件。')).toBeVisible()
   await page.getByRole('button',{name:/发送设置密码邮件/}).click()
   await expect(page.getByText('请输入需要设置密码的邮箱。')).toBeVisible()
