@@ -57,3 +57,13 @@ test('刷新后保留当日训练进度',async({page})=>{
   await page.reload()
   await expect(page.getByText('今日 1 / 10')).toBeVisible()
 })
+
+test('注册表单要求邮箱和匹配的密码',async({page})=>{
+  await page.goto('/login')
+  await page.getByRole('button',{name:'注册'}).click()
+  await page.getByPlaceholder('邮箱').fill('new-user@example.com')
+  await page.getByPlaceholder('设置密码（至少 6 位）').fill('123456')
+  await page.getByPlaceholder('再次输入密码').fill('654321')
+  await page.getByRole('button',{name:/注册并获取验证码/}).click()
+  await expect(page.getByText('两次输入的密码不一致。')).toBeVisible()
+})
