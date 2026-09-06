@@ -1,0 +1,59 @@
+import {test,expect} from '@playwright/test'
+
+test.beforeEach(async({page})=>{
+  await page.goto('/')
+  await page.evaluate(()=>localStorage.clear())
+  await page.reload()
+})
+
+test('首页入口会进入今日新题模式',async({page})=>{
+  await expect(page.getByText('今天完成 10 道主动输出练习，约需 20 分钟。')).toBeVisible()
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await expect(page.getByText('第 1 课 · 练习')).toBeVisible()
+  await expect(page.getByText('1 / 10')).toBeVisible()
+})
+
+test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.locator('textarea').fill('私は学生です')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await expect(page.getByText('✓ 很好，句型正确')).toBeVisible()
+  await expect(page.getByText('下次书写时不要忘记写标点符号。')).toBeVisible()
+})
+
+test('答错后进入错题本并可独立练习',async({page})=>{
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.locator('textarea').fill('完全不同的答案')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await expect(page.getByText('△ 句型或词语还需要调整')).toBeVisible()
+  await page.getByRole('button',{name:/错题本/}).click()
+  await expect(page.getByText('我是学生。')).toBeVisible()
+  await page.getByRole('button',{name:/开始错题练习/}).click()
+  await page.locator('textarea').fill('私は学生です。')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:/完成训练/}).click()
+  await page.getByRole('button',{name:/错题本/}).click()
+  await expect(page.getByText('目前没有错题')).toBeVisible()
+})
+
+test('完成第 1 课 10 题后才解锁第 2 课',async({page})=>{
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  for(let i=0;i<10;i++){
+    await page.locator('textarea').fill(`答案 ${i}`)
+    await page.getByRole('button',{name:/^提交答案/}).click()
+    await page.getByRole('button',{name:i===9?/完成训练/:/下一题/}).click()
+  }
+  await page.getByRole('button',{name:/课程/}).click()
+  const lesson2=page.getByRole('button',{name:/02 第 2 课/})
+  await expect(lesson2).toBeVisible()
+  await expect(lesson2).not.toContainText('🔒')
+})
+
+test('刷新后保留当日训练进度',async({page})=>{
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.locator('textarea').fill('答案')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:/下一题/}).click()
+  await page.reload()
+  await expect(page.getByText('今日 1 / 10')).toBeVisible()
+})
