@@ -1,5 +1,14 @@
 import {test,expect} from '@playwright/test'
 
+async function passFirstChoice(page:any){
+  const choices=page.locator('.choice-list button')
+  if(await choices.count()){
+    await choices.first().click()
+    await page.getByRole('button',{name:/^提交答案/}).click()
+    await page.getByRole('button',{name:/下一题|完成训练/}).click()
+  }
+}
+
 test.beforeEach(async({page})=>{
   await page.goto('/')
   await page.evaluate(()=>localStorage.clear())
@@ -9,12 +18,20 @@ test.beforeEach(async({page})=>{
 test('首页入口会进入今日新题模式',async({page})=>{
   await expect(page.getByText('今天完成 10 道主动输出练习，约需 20 分钟。')).toBeVisible()
   await page.getByRole('button',{name:/开始今日训练/}).click()
+  await passFirstChoice(page)
   await expect(page.getByText('第 1 课 · 练习')).toBeVisible()
   await expect(page.getByText('1 / 10')).toBeVisible()
 })
 
 test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
+  await passFirstChoice(page)
+  await page.locator('textarea').fill('の')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:/下一题/}).click()
+  await page.locator('textarea').fill('の')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:/下一题/}).click()
   await page.locator('textarea').fill('私は学生です')
   await page.getByRole('button',{name:/^提交答案/}).click()
   await expect(page.getByText('✓ 很好，句型正确')).toBeVisible()
@@ -23,25 +40,27 @@ test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
 
 test('提交后保持当前题目，点击下一题才切换',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
-  await expect(page.locator('.prompt')).toHaveText('我是学生。')
-  await page.locator('textarea').fill('私は学生です。')
+  await passFirstChoice(page)
+  await expect(page.locator('.prompt')).toContainText('这是')
+  await page.locator('textarea').fill('の')
   await page.getByRole('button',{name:/^提交答案/}).click()
-  await expect(page.locator('.prompt')).toHaveText('我是学生。')
-  await expect(page.locator('textarea')).toHaveValue('私は学生です。')
+  await expect(page.locator('.prompt')).toContainText('这是')
+  await expect(page.locator('textarea')).toHaveValue('の')
   await page.getByRole('button',{name:/下一题/}).click()
-  await expect(page.locator('.prompt')).toHaveText('我不是老师。')
+  await expect(page.locator('.prompt')).toContainText('佐藤')
   await expect(page.locator('textarea')).toHaveValue('')
 })
 
 test('答错后进入错题本并可独立练习',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
+  await passFirstChoice(page)
   await page.locator('textarea').fill('完全不同的答案')
   await page.getByRole('button',{name:/^提交答案/}).click()
   await expect(page.getByText('△ 句型或词语还需要调整')).toBeVisible()
   await page.getByRole('button',{name:/错题本/}).click()
-  await expect(page.getByText('我是学生。')).toBeVisible()
+  await expect(page.getByText('这是')).toBeVisible()
   await page.getByRole('button',{name:/开始错题练习/}).click()
-  await page.locator('textarea').fill('私は学生です。')
+  await page.locator('textarea').fill('の')
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/完成训练/}).click()
   await page.getByRole('button',{name:/错题本/}).click()
@@ -50,10 +69,11 @@ test('答错后进入错题本并可独立练习',async({page})=>{
 
 test('每日完成 10 题不会直接解锁下一课',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
-  for(let i=0;i<10;i++){
+  await passFirstChoice(page)
+  for(let i=0;i<9;i++){
     await page.locator('textarea').fill(`答案 ${i}`)
     await page.getByRole('button',{name:/^提交答案/}).click()
-    await page.getByRole('button',{name:i===9?/完成训练/:/下一题/}).click()
+    await page.getByRole('button',{name:i===8?/完成训练/:/下一题/}).click()
   }
   await page.getByRole('button',{name:/课程/}).click()
   const lesson2=page.getByRole('button',{name:/02 第 2 课/})
@@ -63,11 +83,12 @@ test('每日完成 10 题不会直接解锁下一课',async({page})=>{
 
 test('刷新后保留当日训练进度',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
+  await passFirstChoice(page)
   await page.locator('textarea').fill('答案')
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/下一题/}).click()
   await page.reload()
-  await expect(page.getByText('今日 1 / 10')).toBeVisible()
+  await expect(page.getByText('今日 2 / 10')).toBeVisible()
 })
 
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
