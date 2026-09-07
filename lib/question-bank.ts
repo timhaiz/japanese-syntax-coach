@@ -16,12 +16,16 @@ export const questionBank:Record<number,Question[]> = {
 }
 questionBank[1].unshift({id:'L01-Q021',lessonId:1,type:'选择',prompt:'“我是学生。”选择正确项。',answer:'A',hint:'选择 私は学生です。'})
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
-export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
+const japaneseFillPrompts:Record<string,string>={'L01-Q003':'これは私___本です。','L01-Q007':'これは佐藤さん___傘です。'}
+export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].map(question=>question.id==='L01-Q001'||question.id==='L01-Q003'||question.id==='L01-Q007'?{...question,type:'选择' as const,prompt:question.id==='L01-Q001'?'“我是学生。”选择正确项。':japaneseFillPrompts[question.id]??question.prompt,answer:question.id==='L01-Q001'?'A':question.answer,hint:question.id==='L01-Q001'?'选择 私は学生です。':question.hint}:question).sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
 export function questionForId(questionId:string){return Object.values(questionBank).flat().find(question=>question.id===questionId)}
 
 /** Visible choices for the legacy choice items. The answer remains the option letter. */
 export const choiceOptions:Record<string,string[]> = {
+  'L01-Q001':['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。'],
   'L01-Q021':['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。'],
+  'L01-Q003':['A：は','B：の','C：も'],
+  'L01-Q007':['A：は','B：の','C：も'],
   'L02-Q014':['A：それは田中さんの本です。','B：これは私の本です。','C：あれは先生の本です。'],
   'L02-Q015':['A：その本は佐藤さんです。','B：この本は先生のです。','C：この本は田中さんのです。'],
   'L02-Q016':['A：あれは日本の雑誌ですか。','B：これは日本の雑誌です。','C：それは中国の本です。'],
