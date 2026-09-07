@@ -204,7 +204,7 @@
 
 **M7.2 执行记录（2026-09-08）**：删除 `L01-Q021` 旧兼容题注入和重复 `choiceOptions` 映射；页面与判分统一读取规范化题目的 `options`。全量 `npm run test:e2e`（12/12）通过，TypeScript 通过。仍需拆分每日/整课进度，并把第 1 课兼容型题型覆盖改成静态题库字段。
 
-**M7.3 执行记录（2026-09-08）**：修正每日新题与整课进度混用问题。每日训练仍限制为 10 题，但答题会累计到整课题数（当前题库每课 20 题以上），并同步累计整课正确数；课程完成判定改为完成该课全部题目且正确率 ≥90%，不再因完成每日 10 题提前解锁下一课。旧本地进度读取上限提升至 100，云端 `lesson_progress.correct_count` 继续作为整课正确率来源。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（12/12）均通过。最新 Vercel 生产部署 `japanese-syntax-coach-qeqnqhukq-timhai06.vercel.app` 已 READY。
+**M7.3 执行记录（2026-09-08）**：修正每日新题与整课进度混用问题。每日训练仍限制为 10 题，但答题会累计到整课题数（当前题库每课 20 题以上），并同步累计整课正确数；课程完成判定改为完成该课全部题目且正确率 ≥90%，不再因完成每日 10 题提前解锁下一课。旧本地进度读取上限提升至 100，云端 `lesson_progress.correct_count` 继续作为整课正确率来源。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（12/12）均通过。Vercel 生产部署 `dpl_Ckh9iN9ag3rEhbtTp2WskKHKAV14`（`japanese-syntax-coach-fbapshba8-timhai06.vercel.app`）已 READY，并已绑定主域名。
 
 ## 6. 测试护栏
 
