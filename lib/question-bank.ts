@@ -14,30 +14,14 @@ export const questionBank:Record<number,Question[]> = {
     ['翻译','这里是学校。','ここは学校です。','ここは + 地点 + です'],['翻译','那里是银行。','そこは銀行です。','そこは + 地点 + です'],['翻译','那边是车站。','あそこは駅です。','あそこ = 离双方远'],['翻译','银行在哪里？','銀行はどこですか。','どこ = 哪里；銀行（ぎんこう）= 银行'],['翻译','银行在这里。','銀行はここです。','N は ここです'],['翻译','学校在那里。','学校はそこです。','N は そこです'],['翻译','车站在那边。','駅はあそこです。','N は あそこです'],['问答','ここは学校ですか。（是的。）','はい、学校です。','はい + 名词 + です'],['问答','ここは銀行ですか。（不，是学校。）','いいえ、学校です。','いいえ + 修正'],['选择','“这里是百货商店。”选择正确项。','B','地点用 ここ'],['选择','“这家银行在哪里？”选择正确项。','A','この銀行はどこですか。'],['翻译','这里是百货商店。','ここはデパートです。','地点句型'],['翻译','那里是邮局。','そこは郵便局です。','地点句型'],['翻译','那边是公司。','あそこは会社です。','地点句型'],['问答','ここはどこですか。（学校。）','ここは学校です。','ここはどこ = 这里是哪里'],['问答','郵便局はどこですか。（那里。）','郵便局はそこです。','N は そこです'],['翻译','这里不是医院。','ここは病院ではありません。','地点 + 否定'],['翻译','那边是日语学校吗？','あそこは日本語学校ですか。','地点 + ですか'],['选择','“这里是车站。”选择正确项。','B','ここは駅です。'],['翻译','银行和车站在哪里？','銀行と駅はどこですか。','どこですか']
   ]))
 }
-questionBank[1].unshift({id:'L01-Q021',lessonId:1,type:'选择',prompt:'“我是学生。”选择正确项。',answer:'A',hint:'选择 私は学生です。'})
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 const japaneseFillPrompts:Record<string,string>={'L01-Q003':'これは私___本です。','L01-Q007':'これは佐藤さん___傘です。'}
 const optionMap:Record<string,string[]> = {
   'L01-Q001':['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。'],
   'L01-Q003':['A：は','B：の','C：も'],'L01-Q007':['A：は','B：の','C：も'],
-  'L01-Q021':['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。'],
   'L02-Q014':['A：それは田中さんの本です。','B：これは私の本です。','C：あれは先生の本です。'],'L02-Q015':['A：その本は佐藤さんです。','B：この本は先生のです。','C：この本は田中さんのです。'],'L02-Q016':['A：あれは日本の雑誌ですか。','B：これは日本の雑誌です。','C：それは中国の本です。'],
   'L03-Q010':['A：そこはデパートです。','B：ここはデパートです。','C：あそこは会社です。'],'L03-Q011':['A：この銀行はどこですか。','B：その銀行はここです。','C：あの銀行は駅です。'],'L03-Q019':['A：そこは駅です。','B：ここは駅です。','C：あそこは銀行です。']
 }
 const normalizeQuestion=(question:Question):Question=>{const isChoice=['L01-Q001','L01-Q003','L01-Q007'].includes(question.id);return {...question,type:isChoice?'选择':question.type,prompt:question.id==='L01-Q001'?'“我是学生。”选择正确项。':japaneseFillPrompts[question.id]??question.prompt,answer:question.id==='L01-Q001'?'A':question.answer,options:optionMap[question.id]}}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].map(normalizeQuestion).sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
 export function questionForId(questionId:string){return Object.values(questionBank).flat().map(normalizeQuestion).find(question=>question.id===questionId)}
-
-/** Visible choices for the legacy choice items. The answer remains the option letter. */
-export const choiceOptions:Record<string,string[]> = {
-  'L01-Q001':['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。'],
-  'L01-Q021':['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。'],
-  'L01-Q003':['A：は','B：の','C：も'],
-  'L01-Q007':['A：は','B：の','C：も'],
-  'L02-Q014':['A：それは田中さんの本です。','B：これは私の本です。','C：あれは先生の本です。'],
-  'L02-Q015':['A：その本は佐藤さんです。','B：この本は先生のです。','C：この本は田中さんのです。'],
-  'L02-Q016':['A：あれは日本の雑誌ですか。','B：これは日本の雑誌です。','C：それは中国の本です。'],
-  'L03-Q010':['A：そこはデパートです。','B：ここはデパートです。','C：あそこは会社です。'],
-  'L03-Q011':['A：この銀行はどこですか。','B：その銀行はここです。','C：あの銀行は駅です。'],
-  'L03-Q019':['A：そこは駅です。','B：ここは駅です。','C：あそこは銀行です。']
-}
