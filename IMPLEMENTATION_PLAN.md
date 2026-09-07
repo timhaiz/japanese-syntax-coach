@@ -104,6 +104,7 @@
 - [x] 已在生产 Supabase 执行 `202609070002_lesson_accuracy.sql`；`correct_count` 已接入前端 study-state hydration，完成跨设备的 90% 正确率同步基础。
 - [x] 第 2、3 课现有选择题已增加可见选项按钮；点击选项后提交，仍按选项字母进行规则判分。
 - [x] 各课练习题按“选择 → 助词填写 → 翻译 → 问答”排序；第 1 课已补充稳定 ID 的选择题，进入练习不再以翻译题开场。
+- [x] 助词题改为日文句子中的空格，并使用选择按钮；只有翻译题保留文本输入框。
 - [x] 前端已接入 `study-state` 的 `correct_count` hydration；登录或刷新后会恢复每课正确数。
 
 **最近执行记录（2026-09-07）**：已按 PDF 逐页核对第 1～3 课语法页，并将接续、说明、应答和易错点展示到课程页；新增第 1 课语法说明 E2E。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（10/10）通过；已提交并部署 `8560430 feat: expand lessons one through three grammar`。后续按第 4 课起逐课补全，每完成一课都更新本记录。
@@ -121,6 +122,8 @@
 **选择题交互执行记录（2026-09-07）**：为第 2、3 课选择题补充具体选项按钮和选中状态，避免用户只能手动输入 A/B/C；`npx tsc --noEmit`、`npm run test:e2e`（11/11）通过；生产部署 `dpl_BjuMkXPWsNUPVUsfqcHNkzV8dBkP` 已 READY。
 
 **题型顺序执行记录（2026-09-07）**：题库读取统一按“选择 → 助词填写 → 翻译 → 问答”排序；第 1 课增加 `L01-Q021` 选择题并显示可点击选项。更新回归测试后 `npx tsc --noEmit`、`npm run test:e2e`（11/11）通过；生产部署 `dpl_CQNq1q9imHqY6e5GMzUzeZm84BzP` 已 READY。
+
+**助词题交互执行记录（2026-09-07）**：助词题显示日文句子（如 `これは私___本です。`），选项为 `は／の／も`；文本输入框仅用于翻译题。已提交 `f0950d2 fix: present Japanese fill prompts as choices`，待重新完成全量 E2E 后部署。
 
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 
