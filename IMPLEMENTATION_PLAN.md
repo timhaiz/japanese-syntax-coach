@@ -192,7 +192,7 @@
 - [ ] 清理 `L01-Q021` 旧兼容题和运行时题型覆盖，改为静态题库字段：`type`、`prompt`、`answer`、`options`。
 - [x] 增加规范化题目入口和 `options` 类型；`questionForId()` 与 `questionsForLesson()` 现在经过同一套规范化逻辑。
 - [x] 删除旧的 `L01-Q021` 注入、重复 `choiceOptions` 来源；页面统一读取规范化题目的 `options`。
-- [ ] 将第 1 课早期题目的兼容型运行时覆盖改写为静态题库字段：`type`、`prompt`、`answer`、`options`。
+- [x] 将第 1 课早期题目的兼容型运行时覆盖改写为静态题库字段：`type`、`prompt`、`answer`、`options`。
 - [ ] 拆分每日 10 题进度与整课答题进度；刷新、登录和跨设备恢复时分别读取。
 - [ ] 修复整课模式的断点续练、重复答题、重新练习和 90% 正确率计算。
 - [ ] 更新并补齐 E2E：选择题、助词选择、翻译输入、错题选择题、整课 20+ 题、跨设备正确率；恢复到 11/11 或新增场景全部通过。
@@ -205,6 +205,8 @@
 **M7.2 执行记录（2026-09-08）**：删除 `L01-Q021` 旧兼容题注入和重复 `choiceOptions` 映射；页面与判分统一读取规范化题目的 `options`。全量 `npm run test:e2e`（12/12）通过，TypeScript 通过。仍需拆分每日/整课进度，并把第 1 课兼容型题型覆盖改成静态题库字段。
 
 **M7.3 执行记录（2026-09-08）**：修正每日新题与整课进度混用问题。每日训练仍限制为 10 题，但答题会累计到整课题数（当前题库每课 20 题以上），并同步累计整课正确数；课程完成判定改为完成该课全部题目且正确率 ≥90%，不再因完成每日 10 题提前解锁下一课。旧本地进度读取上限提升至 100，云端 `lesson_progress.correct_count` 继续作为整课正确率来源。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（12/12）均通过。Vercel 生产部署 `dpl_Ckh9iN9ag3rEhbtTp2WskKHKAV14`（`japanese-syntax-coach-fbapshba8-timhai06.vercel.app`）已 READY，并已绑定主域名。
+
+**M7.4 执行记录（2026-09-08）**：将第 1 课 Q001、Q003、Q007 的选择/助词题完整写入静态题库，移除运行时 `normalizeQuestion`、兼容 prompt 和 `optionMap`。页面现在直接消费题库字段。TypeScript、Build、E2E（12/12）通过。
 
 ## 6. 测试护栏
 

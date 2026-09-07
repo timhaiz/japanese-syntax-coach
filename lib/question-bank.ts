@@ -2,10 +2,10 @@ export type QuestionType = '翻译' | '助词' | '选择' | '问答'
 export type Question = { id: string; lessonId: number; type: QuestionType; prompt: string; answer: string; hint: string; options?: string[] }
 type Draft = Omit<Question, 'id' | 'lessonId'>
 const build = (lessonId:number, drafts:Draft[]):Question[] => drafts.map((q,i)=>({...q,lessonId,id:`L${String(lessonId).padStart(2,'0')}-Q${String(i+1).padStart(3,'0')}`}))
-const drafts = (rows:string[][]):Draft[] => rows.map(([type,prompt,answer,hint])=>({type:type as QuestionType,prompt,answer,hint}))
+const drafts = (rows:Array<[string,string,string,string,string[]?]>):Draft[] => rows.map(([type,prompt,answer,hint,options])=>({type:type as QuestionType,prompt,answer,hint,...(options?{options}:{})}))
 export const questionBank:Record<number,Question[]> = {
   1: build(1,drafts([
-    ['翻译','我是学生。','私は学生です。','A は B です'],['翻译','我不是老师。','私は先生ではありません。','ではありません = 不是'],['助词','填入正确助词：这是 ___ 我的书。','の','用 の 连接所属'],['翻译','田中先生是学生吗？','田中さんは学生ですか。','句尾加 ですか'],['翻译','我是公司职员。','私は会社員です。','A は B です'],['翻译','小李不是医生。','李さんは医者ではありません。','ではありません = 不是'],['助词','填入正确助词：这是 ___ 佐藤先生的伞。','の','用 の 连接所属'],['翻译','那个人是日本人吗？','あの人は日本人ですか。','句尾加 ですか'],['翻译','我不是大学生。','私は大学生ではありません。','ではありません = 不是'],['翻译','山田先生是老师。','山田さんは先生です。','A は B です'],['翻译','我是中国人。','私は中国人です。','A は B です'],['翻译','我不是日本人。','私は日本人ではありません。','ではありません = 不是'],['翻译','这是我的日语书。','これは私の日本語の本です。','A の B'],['翻译','那个人是田中的老师吗？','あの人は田中さんの先生ですか。','の + ですか'],['翻译','那本书不是我的。','あの本は私のではありません。','名词 + の + ではありません'],['问答','これは何ですか。（这是杂志。）','雑誌です。','何ですか = 什么'],['问答','あの人は田中さんですか。（是的。）','はい、田中さんです。','はい + 名词 + です'],['翻译','这是我的书。','これは私の本です。','これ は N です；所属用 の'],['翻译','这本书是田中的。','この本は田中さんのです。','この + 名词；名词 + の'],['翻译','那是日本的杂志吗？','あれは日本の雑誌ですか。','あれ は N です；句尾加 ですか']
+    ['选择','“我是学生。”选择正确项。','A','A は B です',['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。']],['翻译','我不是老师。','私は先生ではありません。','ではありません = 不是'],['助词','これは私___本です。','の','用 の 连接所属',['A：は','B：の','C：も']],['翻译','田中先生是学生吗？','田中さんは学生ですか。','句尾加 ですか'],['翻译','我是公司职员。','私は会社員です。','A は B です'],['翻译','小李不是医生。','李さんは医者ではありません。','ではありません = 不是'],['助词','これは佐藤さん___傘です。','の','用 の 连接所属',['A：は','B：の','C：も']],['翻译','那个人是日本人吗？','あの人は日本人ですか。','句尾加 ですか'],['翻译','我不是大学生。','私は大学生ではありません。','ではありません = 不是'],['翻译','山田先生是老师。','山田さんは先生です。','A は B です'],['翻译','我是中国人。','私は中国人です。','A は B です'],['翻译','我不是日本人。','私は日本人ではありません。','ではありません = 不是'],['翻译','这是我的日语书。','これは私の日本語の本です。','A の B'],['翻译','那个人是田中的老师吗？','あの人は田中さんの先生ですか。','の + ですか'],['翻译','那本书不是我的。','あの本は私のではありません。','名词 + の + ではありません'],['问答','これは何ですか。（这是杂志。）','雑誌です。','何ですか = 什么'],['问答','あの人は田中さんですか。（是的。）','はい、田中さんです。','はい + 名词 + です'],['翻译','这是我的书。','これは私の本です。','これ は N です；所属用 の'],['翻译','这本书是田中的。','この本は田中さんのです。','この + 名词；名词 + の'],['翻译','那是日本的杂志吗？','あれは日本の雑誌ですか。','あれ は N です；句尾加 ですか']
   ])),
   2: build(2,drafts([
     ['翻译','这是我的书。','これは私の本です。','これ は N です'],['翻译','那是田中的伞。','それは田中さんの傘です。','それ は N です'],['翻译','那边的是日本的杂志。','あれは日本の雑誌です。','あれ は N です'],['翻译','这本书是我的。','この本は私のです。','この + 名词'],['翻译','那把伞是佐藤的。','その傘は佐藤さんのです。','その + 名词'],['翻译','那边那本书是老师的。','あの本は先生のです。','あの + 名词'],['翻译','这是日语书。','これは日本語の本です。','A の B'],['翻译','那是我的相机。','それは私のカメラです。','これ／それ／あれ'],['翻译','这不是我的词典。','これは私の辞書ではありません。','ではありません'],['翻译','那本杂志是田中的。','その雑誌は田中さんのです。','名词 + の'],['问答','これは誰の本ですか。（我的。）','私の本です。','誰の = 谁的'],['问答','この傘は誰のですか。（佐藤的。）','佐藤さんのです。','名词 + のです'],['问答','それは何ですか。（相机。）','カメラです。','何ですか'],['选择','“这是我的书。”选择正确项。','B','これは私の本です。'],['选择','“这本书是田中的。”选择正确项。','C','この本は田中さんのです。'],['选择','“那是日本的杂志吗？”选择正确项。','A','あれは日本の雑誌ですか。'],['翻译','这是学校的地图。','これは学校の地図です。','A の B'],['翻译','那是老师的手表。','それは先生の時計です。','A の B'],['翻译','那边那个人是我的朋友。','あの人は私の友達です。','あの + 名词'],['翻译','这本日语书不是我的。','この日本語の本は私のではありません。','名词 + の + 否定']
@@ -15,13 +15,5 @@ export const questionBank:Record<number,Question[]> = {
   ]))
 }
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
-const japaneseFillPrompts:Record<string,string>={'L01-Q003':'これは私___本です。','L01-Q007':'これは佐藤さん___傘です。'}
-const optionMap:Record<string,string[]> = {
-  'L01-Q001':['A：私は学生です。','B：私は先生ではありません。','C：私は会社員です。'],
-  'L01-Q003':['A：は','B：の','C：も'],'L01-Q007':['A：は','B：の','C：も'],
-  'L02-Q014':['A：それは田中さんの本です。','B：これは私の本です。','C：あれは先生の本です。'],'L02-Q015':['A：その本は佐藤さんです。','B：この本は先生のです。','C：この本は田中さんのです。'],'L02-Q016':['A：あれは日本の雑誌ですか。','B：これは日本の雑誌です。','C：それは中国の本です。'],
-  'L03-Q010':['A：そこはデパートです。','B：ここはデパートです。','C：あそこは会社です。'],'L03-Q011':['A：この銀行はどこですか。','B：その銀行はここです。','C：あの銀行は駅です。'],'L03-Q019':['A：そこは駅です。','B：ここは駅です。','C：あそこは銀行です。']
-}
-const normalizeQuestion=(question:Question):Question=>{const isChoice=['L01-Q001','L01-Q003','L01-Q007'].includes(question.id);return {...question,type:isChoice?'选择':question.type,prompt:question.id==='L01-Q001'?'“我是学生。”选择正确项。':japaneseFillPrompts[question.id]??question.prompt,answer:question.id==='L01-Q001'?'A':question.answer,options:optionMap[question.id]}}
-export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].map(normalizeQuestion).sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
-export function questionForId(questionId:string){return Object.values(questionBank).flat().map(normalizeQuestion).find(question=>question.id===questionId)}
+export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
+export function questionForId(questionId:string){return Object.values(questionBank).flat().find(question=>question.id===questionId)}
