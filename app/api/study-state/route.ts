@@ -10,7 +10,7 @@ export async function GET(){
  const [daily,due,completed]=await Promise.all([
   supabase.from('daily_learning_progress').select('new_done,review_done,minutes,claimed_new,claimed_review,claimed_time,claimed_bonus').eq('study_date',today).maybeSingle(),
   supabase.from('question_review_state').select('question_id').lte('next_review_at',new Date().toISOString()).order('next_review_at',{ascending:true}).limit(5),
-  supabase.from('lesson_progress').select('lesson_id,answered_count,completed_at').order('lesson_id',{ascending:true})
+  supabase.from('lesson_progress').select('lesson_id,answered_count,correct_count,completed_at').order('lesson_id',{ascending:true})
  ])
  if(daily.error||due.error||completed.error)return NextResponse.json({error:'Unable to load study state'},{status:500})
  return NextResponse.json({daily:daily.data??null,dueQuestionIds:(due.data??[]).map(item=>item.question_id),lessons:completed.data??[]})

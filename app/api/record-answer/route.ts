@@ -1,10 +1,10 @@
 import {NextResponse} from 'next/server'
 import {getSupabaseServer} from '@/lib/supabase-server'
 
-type Body={questionId?:string;lessonId?:number;answer?:string;correct?:boolean;errorTags?:string[];mode?:'new'|'review'|'mistakes'}
+type Body={questionId?:string;lessonId?:number;answer?:string;correct?:boolean;errorTags?:string[];mode?:'new'|'review'|'mistakes'|'lesson'}
 export async function POST(request:Request){
  const body=await request.json().catch(()=>({})) as Body
- if(!body.questionId||!Number.isInteger(body.lessonId)||typeof body.answer!=='string'||typeof body.correct!=='boolean'||!['new','review','mistakes'].includes(body.mode??''))return NextResponse.json({error:'Invalid answer record'},{status:400})
+ if(!body.questionId||!Number.isInteger(body.lessonId)||typeof body.answer!=='string'||typeof body.correct!=='boolean'||!['new','review','mistakes','lesson'].includes(body.mode??''))return NextResponse.json({error:'Invalid answer record'},{status:400})
  const supabase=await getSupabaseServer()
  if(!supabase)return NextResponse.json({error:'Supabase is not configured'},{status:503})
  const {data:{user}}=await supabase.auth.getUser()
