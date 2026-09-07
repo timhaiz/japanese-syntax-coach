@@ -123,7 +123,7 @@
 
 **题型顺序执行记录（2026-09-07）**：题库读取统一按“选择 → 助词填写 → 翻译 → 问答”排序；第 1 课增加 `L01-Q021` 选择题并显示可点击选项。更新回归测试后 `npx tsc --noEmit`、`npm run test:e2e`（11/11）通过；生产部署 `dpl_CQNq1q9imHqY6e5GMzUzeZm84BzP` 已 READY。
 
-**助词题交互执行记录（2026-09-07）**：助词题显示日文句子（如 `これは私___本です。`），选项为 `は／の／も`；文本输入框仅用于翻译题。已提交 `f0950d2 fix: present Japanese fill prompts as choices`，待重新完成全量 E2E 后部署。
+**助词题交互执行记录（2026-09-07）**：助词题显示日文句子（如 `これは私___本です。`），选项为 `は／の／も`；文本输入框仅用于翻译题。已提交 `f0950d2 fix: present Japanese fill prompts as choices`，生产部署 `dpl_DK4GJxTfRPWvB1YtnKuMpBGNhB6q` 已 READY。当前旧 E2E 中仍有 3 个场景假设第一题为文本输入，需要后续调整测试夹具；TypeScript 和生产 Build 已通过。
 
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 
