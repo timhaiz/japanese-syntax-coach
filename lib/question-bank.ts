@@ -16,3 +16,13 @@ export const questionBank:Record<number,Question[]> = {
 }
 export function questionsForLesson(lessonId:number){return questionBank[lessonId]??[]}
 export function questionForId(questionId:string){return Object.values(questionBank).flat().find(question=>question.id===questionId)}
+
+/** Visible choices for the legacy choice items. The answer remains the option letter. */
+export const choiceOptions:Record<string,string[]> = {
+  'L02-Q014':['A：それは田中さんの本です。','B：これは私の本です。','C：あれは先生の本です。'],
+  'L02-Q015':['A：その本は佐藤さんです。','B：この本は先生のです。','C：この本は田中さんのです。'],
+  'L02-Q016':['A：あれは日本の雑誌ですか。','B：これは日本の雑誌です。','C：それは中国の本です。'],
+  'L03-Q010':['A：そこはデパートです。','B：ここはデパートです。','C：あそこは会社です。'],
+  'L03-Q011':['A：この銀行はどこですか。','B：その銀行はここです。','C：あの銀行は駅です。'],
+  'L03-Q019':['A：そこは駅です。','B：ここは駅です。','C：あそこは銀行です。']
+}

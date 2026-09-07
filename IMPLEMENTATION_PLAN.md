@@ -102,7 +102,7 @@
 - [x] 前端已增加整课练习入口：按当前课全部题目练习，提交后统计答对数，达到完整题库且正确率 90% 后解锁下一课，并显示下一课预告；每日训练仍为独立的 10 题模式。
 - [x] 新增 `lesson` 作答模式和 Supabase migration，保存整课 `answered_count` 与 `correct_count`，不计入每日 10 题。
 - [x] 已在生产 Supabase 执行 `202609070002_lesson_accuracy.sql`；`correct_count` 已接入前端 study-state hydration，完成跨设备的 90% 正确率同步基础。
-- [ ] 补齐第 2、3 课可见选择题交互。
+- [x] 第 2、3 课现有选择题已增加可见选项按钮；点击选项后提交，仍按选项字母进行规则判分。
 - [x] 前端已接入 `study-state` 的 `correct_count` hydration；登录或刷新后会恢复每课正确数。
 
 **最近执行记录（2026-09-07）**：已按 PDF 逐页核对第 1～3 课语法页，并将接续、说明、应答和易错点展示到课程页；新增第 1 课语法说明 E2E。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（10/10）通过；已提交并部署 `8560430 feat: expand lessons one through three grammar`。后续按第 4 课起逐课补全，每完成一课都更新本记录。
@@ -116,6 +116,8 @@
 **正确率持久化执行记录（2026-09-07）**：新增 `supabase/migrations/202609070002_lesson_accuracy.sql`，扩展课程进度约束、正确数和 `lesson` RPC 模式；API 已允许 `lesson` 作答，`study-state` 已返回 `correct_count`。本地 `tsc` 与 E2E（11/11）通过；待在生产 Supabase SQL Editor 执行迁移，并补前端读取。
 
 **前端 hydration 执行记录（2026-09-07）**：登录或刷新时读取 `correct_count` 并恢复课程正确率。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（11/11）通过；生产部署 `dpl_7Vgz3zAdhMiw736ATtoPvVeTTvEQ` 已 READY。生产 Supabase migration 已由用户执行成功。
+
+**选择题交互执行记录（2026-09-07）**：为第 2、3 课选择题补充具体选项按钮和选中状态，避免用户只能手动输入 A/B/C；`npx tsc --noEmit`、`npm run test:e2e`（11/11）通过。
 
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 
