@@ -21,6 +21,18 @@ test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
   await expect(page.getByText('下次书写时不要忘记写标点符号。')).toBeVisible()
 })
 
+test('提交后保持当前题目，点击下一题才切换',async({page})=>{
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await expect(page.locator('.prompt')).toHaveText('我是学生。')
+  await page.locator('textarea').fill('私は学生です。')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await expect(page.locator('.prompt')).toHaveText('我是学生。')
+  await expect(page.locator('textarea')).toHaveValue('私は学生です。')
+  await page.getByRole('button',{name:/下一题/}).click()
+  await expect(page.locator('.prompt')).toHaveText('我不是老师。')
+  await expect(page.locator('textarea')).toHaveValue('')
+})
+
 test('答错后进入错题本并可独立练习',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
   await page.locator('textarea').fill('完全不同的答案')
