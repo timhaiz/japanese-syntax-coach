@@ -15,3 +15,4 @@ export const questionBank:Record<number,Question[]> = {
   ]))
 }
 export function questionsForLesson(lessonId:number){return questionBank[lessonId]??[]}
+export function questionForId(questionId:string){return Object.values(questionBank).flat().find(question=>question.id===questionId)}

@@ -82,3 +82,10 @@ test('未登录时个人页不会显示已同步',async({page})=>{
   await expect(page.getByText('登录后同步',{exact:true})).toBeVisible()
   await expect(page.getByText('学习记录已同步到云端。')).not.toBeVisible()
 })
+
+test('学习记录 API 拒绝未授权或未配置请求',async({page})=>{
+  const state=await page.request.get('/api/study-state')
+  const record=await page.request.post('/api/record-answer',{data:{questionId:'L01-Q001',lessonId:1,answer:'私は学生です。',correct:true,mode:'new'}})
+  expect([401,503]).toContain(state.status())
+  expect([401,503]).toContain(record.status())
+})
