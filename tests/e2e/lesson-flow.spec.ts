@@ -89,3 +89,12 @@ test('学习记录 API 拒绝未授权或未配置请求',async({page})=>{
   expect([401,503]).toContain(state.status())
   expect([401,503]).toContain(record.status())
 })
+
+test('第 1 课展示判断、疑问应答和名词所属说明',async({page})=>{
+  await page.getByRole('button',{name:/课程/}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await expect(page.getByText('N は N ですか。')).toBeVisible()
+  await expect(page.getByText(/肯定：はい、そうです。/)).toBeVisible()
+  await expect(page.getByText('N1 の N2')).toBeVisible()
+  await expect(page.getByText(/所属、机构、国家或属性/)).toBeVisible()
+})
