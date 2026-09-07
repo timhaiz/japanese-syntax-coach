@@ -99,6 +99,8 @@
 
 **最近执行记录（2026-09-07）**：已按 PDF 逐页核对第 1～3 课语法页，并将接续、说明、应答和易错点展示到课程页；新增第 1 课语法说明 E2E。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（10/10）通过；已提交并部署 `8560430 feat: expand lessons one through three grammar`。后续按第 4 课起逐课补全，每完成一课都更新本记录。
 
+**M2.1 执行记录（2026-09-07）**：完成第 1～3 课 AI 辅助抽检和重复题扫描，修正第 1 课助词题答案及无选项选择题；`npx tsc --noEmit`、`npm run test:e2e`（11/11）和 Vercel production build 通过。代码提交 `a793a15 fix: audit lesson one question answers`；生产部署 `dpl_H4Pjeb7PpQKZEAPiRJKqcytfjLzf` 已 READY。
+
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 
 ### M3：规则判分和错题闭环
