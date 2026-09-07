@@ -48,7 +48,7 @@ test('答错后进入错题本并可独立练习',async({page})=>{
   await expect(page.getByText('目前没有错题')).toBeVisible()
 })
 
-test('完成第 1 课 10 题后才解锁第 2 课',async({page})=>{
+test('每日完成 10 题不会直接解锁下一课',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
   for(let i=0;i<10;i++){
     await page.locator('textarea').fill(`答案 ${i}`)
@@ -58,7 +58,7 @@ test('完成第 1 课 10 题后才解锁第 2 课',async({page})=>{
   await page.getByRole('button',{name:/课程/}).click()
   const lesson2=page.getByRole('button',{name:/02 第 2 课/})
   await expect(lesson2).toBeVisible()
-  await expect(lesson2).not.toContainText('🔒')
+  await expect(lesson2).toContainText('🔒')
 })
 
 test('刷新后保留当日训练进度',async({page})=>{
