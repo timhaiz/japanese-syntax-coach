@@ -94,12 +94,13 @@
 - [x] 第 1～3 课各有至少 20 道稳定 ID 的练习题，覆盖翻译、助词、选择和问答。
 - [x] 第 1～3 课全部题目已使用 AI 逐题核对标准答案、可接受答案和提示。
 - [ ] 本次校对使用 AI 完成，后续仍建议人工抽检；第 4～24 课仍是简略占位内容，尚未按 PDF 逐课校对。
-- [x] M2.1 已完成第 1～3 课的 AI 辅助题目抽检和重复题扫描；修正第 1 课助词题答案为单独的「の」，并将无选项的选择题改为具体翻译题。
+- [x] M2.1 已完成第 1～3 课的 AI 辅助题目抽检和重复题扫描；修正第 1 课助词题答案为单独的「の」，并将第 1 课无选项的选择题改为具体翻译题。
+- [ ] 第 2、3 课仍有旧格式选择题，需在后续题型交互调整时补充可见选项或改为可直接作答题。
 - [ ] 第 4～24 课仍是简略占位课程资料，尚未按 PDF 逐课校对语法说明和题库；不得视为教材完整覆盖。
 
 **最近执行记录（2026-09-07）**：已按 PDF 逐页核对第 1～3 课语法页，并将接续、说明、应答和易错点展示到课程页；新增第 1 课语法说明 E2E。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（10/10）通过；已提交并部署 `8560430 feat: expand lessons one through three grammar`。后续按第 4 课起逐课补全，每完成一课都更新本记录。
 
-**M2.1 执行记录（2026-09-07）**：完成第 1～3 课 AI 辅助抽检和重复题扫描，修正第 1 课助词题答案及无选项选择题；`npx tsc --noEmit`、`npm run test:e2e`（11/11）和 Vercel production build 通过。代码提交 `a793a15 fix: audit lesson one question answers`；生产部署 `dpl_H4Pjeb7PpQKZEAPiRJKqcytfjLzf` 已 READY。
+**M2.1 执行记录（2026-09-07）**：完成第 1～3 课 AI 辅助抽检和重复题扫描，修正第 1 课助词题答案及第 1 课无选项选择题；第 2、3 课旧格式选择题列为后续修正项。`npx tsc --noEmit`、`npm run test:e2e`（11/11）和 Vercel production build 通过。代码提交 `a793a15 fix: audit lesson one question answers`；生产部署 `dpl_H4Pjeb7PpQKZEAPiRJKqcytfjLzf` 已 READY。
 
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 
