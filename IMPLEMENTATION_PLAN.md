@@ -117,7 +117,7 @@
 
 **前端 hydration 执行记录（2026-09-07）**：登录或刷新时读取 `correct_count` 并恢复课程正确率。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（11/11）通过；生产部署 `dpl_7Vgz3zAdhMiw736ATtoPvVeTTvEQ` 已 READY。生产 Supabase migration 已由用户执行成功。
 
-**选择题交互执行记录（2026-09-07）**：为第 2、3 课选择题补充具体选项按钮和选中状态，避免用户只能手动输入 A/B/C；`npx tsc --noEmit`、`npm run test:e2e`（11/11）通过。
+**选择题交互执行记录（2026-09-07）**：为第 2、3 课选择题补充具体选项按钮和选中状态，避免用户只能手动输入 A/B/C；`npx tsc --noEmit`、`npm run test:e2e`（11/11）通过；生产部署 `dpl_BjuMkXPWsNUPVUsfqcHNkzV8dBkP` 已 READY。
 
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 
