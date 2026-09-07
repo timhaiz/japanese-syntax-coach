@@ -112,7 +112,7 @@
 
 **验收**：漏标点判对但提醒；“でわありません”等假名错误进入错题并标记假名/拼写；错题本可以单独完成一轮练习。
 
-**最近执行记录（2026-09-07）**：修复答题提交后题目先切换、答案仍显示上一题的问题；新增“提交后保持当前题目，点击下一题才切换”E2E 回归测试。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（11/11）通过。待提交并推送，随后进行生产部署。
+**最近执行记录（2026-09-07）**：修复答题提交后题目先切换、答案仍显示上一题的问题；新增“提交后保持当前题目，点击下一题才切换”E2E 回归测试。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（11/11）通过；代码已提交并推送（`d7a7469 fix: keep question and answer aligned after submit`），并已部署到生产（Vercel `dpl_FDcmPg4u5sFohwCTgGmZ79rJEzwX`，`https://japanese-syntax-coach.vercel.app`）。
 
 ### M4：持久化间隔复习
 
