@@ -114,7 +114,7 @@
 
 **正确率持久化执行记录（2026-09-07）**：新增 `supabase/migrations/202609070002_lesson_accuracy.sql`，扩展课程进度约束、正确数和 `lesson` RPC 模式；API 已允许 `lesson` 作答，`study-state` 已返回 `correct_count`。本地 `tsc` 与 E2E（11/11）通过；待在生产 Supabase SQL Editor 执行迁移，并补前端读取。
 
-**前端 hydration 执行记录（2026-09-07）**：登录或刷新时读取 `correct_count` 并恢复课程正确率。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（11/11）通过。生产 Supabase migration 尚待执行。
+**前端 hydration 执行记录（2026-09-07）**：登录或刷新时读取 `correct_count` 并恢复课程正确率。`npx tsc --noEmit`、`npm run build`、`npm run test:e2e`（11/11）通过；生产部署 `dpl_7Vgz3zAdhMiw736ATtoPvVeTTvEQ` 已 READY。生产 Supabase migration 尚待执行。
 
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 
