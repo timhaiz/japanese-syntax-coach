@@ -199,7 +199,7 @@
 
 **验收**：同一题库函数在课程、首页、错题本和复习模式返回一致题目；每日进度不影响整课进度；整课完成且正确率 ≥90% 后才解锁下一课；全量 E2E、TypeScript、Build 通过。
 
-**M7.1 执行记录（2026-09-07）**：完成规范化题目入口和选项字段接入；助词选择回归测试通过，TypeScript 通过。每日/整课进度拆分、旧兼容题清理和全量 E2E 仍待完成。
+**M7.1 执行记录（2026-09-07）**：完成规范化题目入口和选项字段接入；助词选择回归测试通过，TypeScript 和 Vercel production build 通过。提交 `0f22f5a refactor: normalize question bank access`；部署 `dpl_4XsuDwCFa66oMSS6PajNT3Rt7cJD` 已 READY。每日/整课进度拆分、旧兼容题清理和全量 E2E 仍待完成。
 
 ## 6. 测试护栏
 
