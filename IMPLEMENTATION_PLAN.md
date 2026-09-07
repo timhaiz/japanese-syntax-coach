@@ -34,6 +34,7 @@
 - [ ] 整课练习的前端进度仍复用 `lessonDone`，与首页每日 10 题进度混在一起；需要拆分 `dailyLessonProgress`、`fullLessonAnswered` 和 `fullLessonCorrect`，避免刷新/跨设备后整课索引错位。
 - [ ] `questionBank[1].unshift` 仍保留旧的 `L01-Q021` 兼容题，同时 `questionsForLesson` 动态覆盖 `L01-Q001/Q003/Q007` 的题型；需要清理为单一、静态、稳定的题库定义。
 - [ ] `questionForId()` 返回原始题目，未应用日文助词题提示和选择题类型转换；错题本/复习模式可能与课程练习显示不一致。
+- [x] 修复选择题判分：选项字母会解析为对应选项内容；助词题选择 `B` 会按「の」与标准答案比较。
 - [x] 作答、复习项目、课程进度和每日任务已迁移至 Supabase 数据表；旧用户元数据保留为兼容回退。
 - [x] 已建立 Playwright 端到端测试脚本，覆盖第 1 课主路径和认证表单基础校验。
 - [ ] Vercel Git 自动部署连接尚需单独确认；当前仍通过 CLI 手动部署。
@@ -131,6 +132,8 @@
 **助词题交互执行记录（2026-09-07）**：助词题显示日文句子（如 `これは私___本です。`），选项为 `は／の／も`；文本输入框仅用于翻译题。已提交 `f0950d2 fix: present Japanese fill prompts as choices`，生产部署 `dpl_DK4GJxTfRPWvB1YtnKuMpBGNhB6q` 已 READY。当前旧 E2E 中仍有 3 个场景假设第一题为文本输入，需要后续调整测试夹具；TypeScript 和生产 Build 已通过。
 
 **全项目只读审计记录（2026-09-07）**：已检查 `app/`、`lib/`、`supabase/migrations/`、`tests/`、`package.json`、Git 提交和 Vercel 部署记录，未修改业务代码。确认当前课程数据只有第 1～3 课完整语法说明，第 4～24 课为 `lib/courses.ts` 中的简化占位语法；题库集中在 `lib/question-bank.ts`，课程 1～3 各 20 道。Supabase 已有学习记录、复习状态、课程进度、每日任务和正确率 migration；生产 migration 已由用户执行。当前需要优先修复进度模型和题库单一来源，再继续扩充教材内容。
+
+**选择题判分修复记录（2026-09-07）**：修复助词题选择 `B：の` 被当作字符串 `B` 与标准答案 `の` 比较而判错的问题；新增助词选择回归测试，单项通过。TypeScript 通过。
 
 **验收**：每课 20 题以上；刷新或重新进入同一练习不会因随机 ID 造成重复错题；第 1～3 课题目均能被题库函数取出。
 

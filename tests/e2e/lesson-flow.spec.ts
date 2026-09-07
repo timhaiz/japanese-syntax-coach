@@ -46,6 +46,17 @@ test('提交后保持当前题目，点击下一题才切换',async({page})=>{
   await expect(page.locator('textarea')).toHaveValue('')
 })
 
+test('助词选择题按选项内容判分',async({page})=>{
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  for(let i=0;i<3;i++){
+    const choices=page.locator('.choice-list button')
+    await choices.nth(i===0?0:1).click()
+    await page.getByRole('button',{name:/^提交答案/}).click()
+    if(i<2) await page.getByRole('button',{name:/下一题/}).click()
+  }
+  await expect(page.getByText('✓ 很好，句型正确')).toBeVisible()
+})
+
 test('答错后进入错题本并可独立练习',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
   await passFirstChoice(page)
