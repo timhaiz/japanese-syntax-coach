@@ -265,7 +265,7 @@
 
 **第 24 课教材语法补漏（2026-09-08）**：通过教材 PDF OCR 复核第 24 课语法页，补充遗漏的副词「とうとう」（经过一段时间后终于发生），并新增选择题 `L24-Q023`。同时将「どうやって」与「について」拆分为独立课程语法点，明确其接续和与「どうして」的区别。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过；代码提交 `95b0fb00`；Vercel production 部署 `dpl_3rksJiHiDBrX78VJ5PLfzrExVfDY` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题抽检标准答案、可接受答案和提示。
 
-**可接受答案判定（2026-09-08）**：为 `Question` 增加可选 `acceptedAnswers` 字段和统一 `isAnswerAccepted()` 判定函数，接入练习页面；第 1～3 课名词否定题加入教材常见的「じゃありません」表达，标点仍不影响判分。新增回归测试验证合理同义答案通过、语义相反答案拒绝。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过。第 1～24 课仍需继续人工逐题核对答案与提示。
+**可接受答案判定（2026-09-08）**：为 `Question` 增加可选 `acceptedAnswers` 字段和统一 `isAnswerAccepted()` 判定函数，接入练习页面；第 1～3 课名词否定题加入教材常见的「じゃありません」表达，标点仍不影响判分。新增回归测试验证合理同义答案通过、语义相反答案拒绝。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过；代码提交 `f7328dce`；Vercel production 部署 `dpl_6W9xQNkrAiVYMsVqoyD7FosC5vNF` 已 READY，并已绑定主域名。第 1～24 课仍需继续人工逐题核对答案与提示。
 
 ## 6. 测试护栏
 
