@@ -110,6 +110,15 @@ test('完成部分整课练习后刷新仍保留课程进度',async({page})=>{
   await expect(page.getByText('第 1 课', {exact:false}).first()).toBeVisible()
 })
 
+test('未完成课程再次进入时从已答题数继续，不重复第一题',async({page})=>{
+  await page.evaluate(()=>localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:3})))
+  await page.reload()
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await expect(page.getByText('第 1 课 · 练习')).toBeVisible()
+  await expect(page.getByText('4 / 20')).toBeVisible()
+  await expect(page.locator('.prompt')).not.toHaveText('“我是学生。”选择正确项。')
+})
+
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
   await page.goto('/login')
   await page.getByRole('button',{name:'注册'}).first().click()
