@@ -341,6 +341,14 @@ questionBank[3].push(
   {id:'L03-Q021',lessonId:3,type:'助词',prompt:'銀行___どこですか。',answer:'は',hint:'疑问句主题用 は。',options:['A：は','B：を','C：で']},
   {id:'L03-Q022',lessonId:3,type:'助词',prompt:'ここ___学校です。',answer:'は',hint:'地点主题用 は。',options:['A：が','B：は','C：に']}
 )
+questionBank[5].push(
+  {id:'L05-Q021',lessonId:5,type:'选择',prompt:'“森先生大约7点起床。”选择正确项。',answer:'A',hint:'表示大约时间用「ごろ」，后面不加「に」。',options:['A：森さんは7時ごろ起きます。','B：森さんは7時ごろに起きます。','C：森さんは7時まで起きます。']},
+  {id:'L05-Q022',lessonId:5,type:'助词',prompt:'森さんは7時___起きます。（大约）',answer:'ごろ',hint:'时间后接「ごろ」表示大约。',options:['A：ごろ','B：に','C：まで']}
+)
+questionBank[6].push(
+  {id:'L06-Q021',lessonId:6,type:'选择',prompt:'“从东京到大阪坐新干线。”选择正确项。',answer:'B',hint:'移动范围用「から～まで」，交通工具用「で」。',options:['A：東京から大阪へ新幹線に行きます。','B：東京から大阪まで新幹線で行きます。','C：東京まで大阪から新幹線を行きます。']},
+  {id:'L06-Q022',lessonId:6,type:'助词',prompt:'東京から大阪___新幹線で行きます。',answer:'まで',hint:'终点用「まで」。',options:['A：へ','B：まで','C：と']}
+)
 for(const lessonId of [18,19,20,21,22,23,24]) questionBank[lessonId]=build(lessonId,drafts(lessonId<=21?laterLessonRows[lessonId]:supplementalRows(lessonId)))
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
