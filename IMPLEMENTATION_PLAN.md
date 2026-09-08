@@ -373,6 +373,8 @@
 
 **部署限制记录（2026-09-08）**：提交 `a1945927` 已推送至 GitHub；手动 `vercel --prod --yes` 被 Vercel 免费额度 `api-deployments-free-per-day` 拒绝（当日部署次数超过 100），因此当前生产别名仍指向上一版本 `dpl_8SsKjS5Kpi5hT9gNLchXp9bVrcbU`。待额度恢复或升级后需重新部署并复测 AI 分析超时修复。
 
+**AI 分析本地回归（2026-09-08）**：使用 Production 的 `OPENAI_BASE_URL`、模型和密钥注入本地 Next.js，调用 `/api/analyze-answer` 返回 200、`source: "ai"`，耗时约 9.7 秒，确认 20 秒超时足以覆盖当前第三方响应；密钥未写入仓库或日志。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
