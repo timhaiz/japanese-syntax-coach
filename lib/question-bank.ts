@@ -349,6 +349,18 @@ questionBank[6].push(
   {id:'L06-Q021',lessonId:6,type:'选择',prompt:'“从东京到大阪坐新干线。”选择正确项。',answer:'B',hint:'移动范围用「から～まで」，交通工具用「で」。',options:['A：東京から大阪へ新幹線に行きます。','B：東京から大阪まで新幹線で行きます。','C：東京まで大阪から新幹線を行きます。']},
   {id:'L06-Q022',lessonId:6,type:'助词',prompt:'東京から大阪___新幹線で行きます。',answer:'まで',hint:'终点用「まで」。',options:['A：へ','B：まで','C：と']}
 )
+questionBank[7].push(
+  {id:'L07-Q021',lessonId:7,type:'选择',prompt:'“在图书馆学习。”选择正确项。',answer:'C',hint:'动作发生的场所用「で」。',options:['A：図書館に勉強します。','B：図書館を勉強します。','C：図書館で勉強します。']},
+  {id:'L07-Q022',lessonId:7,type:'助词',prompt:'コーラとケーキ___ください。',answer:'を',hint:'请求物品时用「をください」。',options:['A：を','B：に','C：で']}
+)
+questionBank[8].push(
+  {id:'L08-Q021',lessonId:8,type:'选择',prompt:'“你已经吃午饭了吗？”选择正确项。',answer:'A',hint:'「もう」和过去式一起表示已经完成。',options:['A：もう昼ご飯を食べましたか。','B：まだ昼ご飯を食べましたか。','C：もう昼ご飯を食べますか。']},
+  {id:'L08-Q022',lessonId:8,type:'助词',prompt:'ファックス___メールも届きました。',answer:'も',hint:'两个对象都成立时使用「も～も」。',options:['A：も','B：は','C：が']}
+)
+questionBank[9].push(
+  {id:'L09-Q021',lessonId:9,type:'选择',prompt:'“我不喝咖啡（对比说明）。”选择正确项。',answer:'B',hint:'对比宾语时用「は」替换「を」，不能说「をは」。',options:['A：私はコーヒーをは飲みません。','B：私はコーヒーは飲みません。','C：私はコーヒーが飲みません。']},
+  {id:'L09-Q022',lessonId:9,type:'助词',prompt:'これはおいしい___料理です。',answer:'い',hint:'い形容词直接修饰名词。',options:['A：い','B：な','C：の']}
+)
 for(const lessonId of [18,19,20,21,22,23,24]) questionBank[lessonId]=build(lessonId,drafts(lessonId<=21?laterLessonRows[lessonId]:supplementalRows(lessonId)))
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
