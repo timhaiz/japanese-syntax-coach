@@ -1,4 +1,6 @@
-const CACHE_NAME = 'syntax-coach-shell-v1'
+// Bump this whenever the app shell changes so installed clients do not retain
+// an older JavaScript bundle after a production deployment.
+const CACHE_NAME = 'syntax-coach-shell-v2'
 const APP_SHELL = ['/', '/manifest.webmanifest']
 
 self.addEventListener('install', event => {
