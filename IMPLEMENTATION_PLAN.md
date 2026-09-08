@@ -269,7 +269,7 @@
 
 **生产浏览器冒烟检查（2026-09-08）**：在已登录的 Chrome 生产标签页打开主域名，页面正常渲染“句型教练／标准日本语”，显示当前课程和云端进度状态（当前标签显示第 2 课、15%）。这证明生产页面与登录态可读取；本次推送自动部署 `dpl_BTUFeH39JsZipnioq11CzTehwcXr` 已 READY。Chrome/Safari 双设备一致性和手机离线安装仍需实际设备配合确认。
 
-**PWA 资源回归测试（2026-09-08）**：新增 `tests/e2e/pwa.spec.ts`，自动检查 manifest 的 standalone 配置、品牌图标和 Service Worker 安装/fetch 代码均可从应用提供。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（44/44）全部通过。真实手机安装与断网打开仍需设备验收。
+**PWA 资源回归测试（2026-09-08）**：新增 `tests/e2e/pwa.spec.ts`，自动检查 manifest 的 standalone 配置、品牌图标和 Service Worker 安装/fetch 代码均可从应用提供。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（44/44）全部通过；提交 `e18bf8a9` 并推送 GitHub；Vercel production 部署 `dpl_DJZgJJYXEp7jFTuCbfTQRjfgPatz` 已 READY。真实手机安装与断网打开仍需设备验收。
 
 **第 19～24 课内容抽检执行记录（2026-09-08）**：继续依据教材语法页核对并补全课程说明：第 19 课 `Vないでください`、`Vなければなりません／ないといけません`、`Vなくてもいいです` 和疑问词主语的 `が`；第 20 课疑问词＋`か`、`みんなで`；第 21 课 `Vたことがあります`、`Vたり`、`Vた／Vないほうがいい`、`Vた後で`、`Vましょうか`；第 22 课普通体、`と思います`、`と言いました`、`けど`；第 23 课普通体修饰名词、疑问词＋普通体＋`か`、`かどうか`、`Vる／Vたとき`；第 24 课 `んです`、`どうやって`、`について`。在批量题库构建之后追加 12 道稳定题（`L19-Q021`～`Q022`、`L20-Q021`～`Q022`、`L21-Q021`～`Q022`、`L22-Q021`～`Q022`、`L23-Q021`～`Q022`、`L24-Q021`～`Q022`），每课仍保持选择→助词→翻译→问答顺序。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过；代码提交 `5d8901de`；Vercel production 部署 `dpl_2Tu9MBKB8DH43ifzYZst92T1oEz1` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题核对标准答案、可接受答案和提示，不能视为最终教材校对完成。
 
