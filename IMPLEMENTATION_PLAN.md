@@ -267,7 +267,7 @@
 
 **可接受答案判定（2026-09-08）**：为 `Question` 增加可选 `acceptedAnswers` 字段和统一 `isAnswerAccepted()` 判定函数，接入练习页面；第 1～3 课名词否定题加入教材常见的「じゃありません」表达，标点仍不影响判分。新增回归测试验证合理同义答案通过、语义相反答案拒绝。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过；代码提交 `f7328dce`；Vercel production 部署 `dpl_6W9xQNkrAiVYMsVqoyD7FosC5vNF` 已 READY，并已绑定主域名。第 1～24 课仍需继续人工逐题核对答案与提示。
 
-**跨设备 hydration 门闩修复（2026-09-08）**：发现登录后 Supabase 用户元数据写回可能早于 `study-state` 持久化进度读取，存在新设备数据被旧快照覆盖的竞态。新增 `studyStateLoaded` 状态，登录/切换账号时先阻止写回，待云端学习状态请求完成（成功或失败）后再允许同步；未登录状态不受影响。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过。跨设备真实 Chrome/Safari 验收仍需使用真实账号执行。
+**跨设备 hydration 门闩修复（2026-09-08）**：发现登录后 Supabase 用户元数据写回可能早于 `study-state` 持久化进度读取，存在新设备数据被旧快照覆盖的竞态。新增 `studyStateLoaded` 状态，登录/切换账号时先阻止写回，待云端学习状态请求完成（成功或失败）后再允许同步；未登录状态不受影响。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过；代码提交 `1e79ec30`；Vercel production 部署 `dpl_6eSXEATCHrxb3PLqQJPYcj5HN3Yn` 已 READY，并已绑定主域名。跨设备真实 Chrome/Safari 验收仍需使用真实账号执行。
 
 ## 6. 测试护栏
 
