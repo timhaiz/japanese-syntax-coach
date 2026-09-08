@@ -398,6 +398,30 @@ questionBank[18].push(
   {id:'L18-Q021',lessonId:18,type:'选择',prompt:'“把房间变干净。”选择正确项。',answer:'B',hint:'人为改变用「Nをきれいにします」。',options:['A：部屋がきれいになります。','B：部屋をきれいにします。','C：部屋できれいになります。']},
   {id:'L18-Q022',lessonId:18,type:'助词',prompt:'息子は医者___なりました。',answer:'に',hint:'名词变化用「Nになります」。',options:['A：に','B：を','C：で']}
 )
+questionBank[19].push(
+  {id:'L19-Q021',lessonId:19,type:'选择',prompt:'“明天必须来学校。”选择正确项。',answer:'B',hint:'义务可用「ない形去ない＋なければなりません」或「ないといけません」。',options:['A：明日学校へ来なくてもいいです。','B：明日学校へ来なければなりません。','C：明日学校へ来ないでください。']},
+  {id:'L19-Q022',lessonId:19,type:'助词',prompt:'だれ___来ましたか。',answer:'が',hint:'疑问词作主语、回答新信息时用「が」。',options:['A：は','B：を','C：が']}
+)
+questionBank[20].push(
+  {id:'L20-Q021',lessonId:20,type:'选择',prompt:'“有没有什么想买的东西？”选择正确项。',answer:'A',hint:'疑问词加「か」表示不确定的对象。',options:['A：何か買いたいものがありますか。','B：何も買いたいものがありますか。','C：何でも買いたいものがありますか。']},
+  {id:'L20-Q022',lessonId:20,type:'助词',prompt:'みんな___旅行に行きます。',answer:'で',hint:'表示大家共同做某事时用「みんなで」。',options:['A：を','B：で','C：に']}
+)
+questionBank[21].push(
+  {id:'L21-Q021',lessonId:21,type:'选择',prompt:'“做完作业后看电视。”选择正确项。',answer:'C',hint:'动作完成后用「た形＋後で」。',options:['A：宿題をする後でテレビを見ます。','B：宿題をして後でテレビを見ます。','C：宿題をした後でテレビを見ます。']},
+  {id:'L21-Q022',lessonId:21,type:'助词',prompt:'荷物を持ち___ましょうか。',answer:'ましょ',hint:'提议主动帮忙时用「ます形去ます＋ましょうか」。',options:['A：ましょ','B：て','C：た']}
+)
+questionBank[22].push(
+  {id:'L22-Q021',lessonId:22,type:'选择',prompt:'“我认为田中先生今天不来。”选择正确项。',answer:'A',hint:'普通体否定接「と思います」：来ないと思います。',options:['A：田中さんは今日来ないと思います。','B：田中さんは今日来ませんと思います。','C：田中さんは今日来ないですと思います。']},
+  {id:'L22-Q022',lessonId:22,type:'助词',prompt:'この店は安い___、少し遠いです。',answer:'けど',hint:'普通体后接「けど」表示转折或铺垫。',options:['A：けど','B：ので','C：まで']}
+)
+questionBank[23].push(
+  {id:'L23-Q021',lessonId:23,type:'选择',prompt:'“不知道田中先生是否来。”选择正确项。',answer:'B',hint:'没有疑问词的一般疑问句嵌入时用「かどうか」。',options:['A：田中さんが来るか分かりません。','B：田中さんが来るかどうか分かりません。','C：田中さんが来るどうか分かりません。']},
+  {id:'L23-Q022',lessonId:23,type:'助词',prompt:'日本へ行っ___とき、写真をたくさん撮りました。',answer:'た',hint:'已经发生的动作后用「た形＋とき」。',options:['A：る','B：て','C：た']}
+)
+questionBank[24].push(
+  {id:'L24-Q021',lessonId:24,type:'选择',prompt:'“为什么不吃？——因为肚子不舒服。”选择正确项。',answer:'C',hint:'「んです」用于说明背景或理由。',options:['A：どうして食べないですか。お腹が痛いです。','B：どうやって食べないんですか。お腹が痛いです。','C：どうして食べないんですか。お腹が痛いんです。']},
+  {id:'L24-Q022',lessonId:24,type:'助词',prompt:'日本の文化___説明します。',answer:'について',hint:'表示“关于……”用「Nについて」。',options:['A：について','B：にとって','C：によって']}
+)
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
 export function questionForId(questionId:string){return Object.values(questionBank).flat().find(question=>question.id===questionId)}
