@@ -343,6 +343,8 @@
 
 **选择题答案记录修复（2026-09-08）**：修复选择题提交时仅把 `A/B/C` 字母写入作答记录和 AI 分析的问题；现在统一使用对应的日文选项文本，规则判分、Supabase `answer_attempts` 和 AI 记忆分析看到的是同一份实际答案。新增架构回归断言；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（51/51）通过。Vercel Production 部署 `dpl_4a7z7PvFLvyaCuj8oJxijjXsLWPk` 已 READY，并已绑定主域名。
 
+**选择题反馈精确化（2026-09-08）**：修复选择题错误反馈拿字母与日文句子比较、参考答案只显示 `A/B/C` 的问题。现在规则批改显示用户实际选择的日文句子和正确选项完整内容，错题提示更具体；新增架构回归断言。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（51/51）通过，待部署后进行生产冒烟复查。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
