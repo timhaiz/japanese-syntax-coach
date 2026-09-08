@@ -46,6 +46,17 @@ test('提交后保持当前题目，点击下一题才切换',async({page})=>{
   await expect(page.locator('textarea')).toHaveValue('')
 })
 
+test('句尾假名错误会指出具体缺少的字',async({page})=>{
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await passFirstChoice(page)
+  await page.locator('textarea').fill('私は先生ではありません。')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:/下一题/}).click()
+  await page.locator('textarea').fill('田中さんは学生でか。')
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await expect(page.getByText(/句尾疑问形式错误.*でか.*ですか.*缺少.*す/)).toBeVisible()
+})
+
 test('助词选择题按选项内容判分',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
   for(let i=0;i<3;i++){
