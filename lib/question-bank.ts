@@ -432,7 +432,18 @@ Object.assign(questionBank[20].find(question=>question.id==='L20-Q007')!, {
   options:['A：こと','B：の','C：もの']
 })
 Object.assign(questionBank[21].find(question=>question.id==='L21-Q022')!, {
-  prompt:'荷物を持ち___か。'
+  prompt:'荷物を持ち___か。',
+  answer:'ましょう',
+  options:['A：ましょう','B：まして','C：ました']
+})
+Object.assign(questionBank[9].find(question=>question.id==='L09-Q022')!, {
+  prompt:'これはおいし___料理です。'
+})
+Object.assign(questionBank[22].find(question=>question.id==='L22-Q007')!, {
+  prompt:'明日は晴れる___。'
+})
+Object.assign(questionBank[24].find(question=>question.id==='L24-Q007')!, {
+  prompt:'明日は晴れる___。'
 })
 // 允许教材中常见的礼貌体同义表达；标准答案仍用于展示和提示。
 const acceptedAnswers:Record<string,string[]>= {

@@ -75,6 +75,20 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(nominalized.answer).toBe('こと')
     const offer=questionsForLesson(21).find(item=>item.id==='L21-Q022')!
     expect(offer.prompt).toBe('荷物を持ち___か。')
-    expect(offer.answer).toBe('ましょ')
+    expect(offer.answer).toBe('ましょう')
+  })
+
+  test('填空题替换后形成完整日文句子',()=>{
+    const checks:[number,string,string,string][]=[
+      [9,'L09-Q022','これはおいし___料理です。','これはおいしい料理です。'],
+      [21,'L21-Q022','荷物を持ち___か。','荷物を持ちましょうか。'],
+      [22,'L22-Q007','明日は晴れる___。','明日は晴れるでしょう。'],
+      [24,'L24-Q007','明日は晴れる___。','明日は晴れるでしょう。']
+    ]
+    for(const [lesson,id,prompt,expected] of checks){
+      const question=questionsForLesson(lesson).find(item=>item.id===id)!
+      expect(question.prompt).toBe(prompt)
+      expect(question.prompt.replace('___',question.answer)).toBe(expected)
+    }
   })
 })
