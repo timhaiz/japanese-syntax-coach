@@ -245,7 +245,7 @@
 
 **M4.1 执行记录（2026-09-08）**：新增 `lib/review-set.ts` 和 `POST /api/create-review-set`。当已完成课程包含第 5、10、15、20 课时，按稳定课程顺序汇总旧题并去重生成混合复习集合；未达到五课节点时返回空集合。新增 2 项回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过。代码提交 `4b35f126`；Vercel production 部署 `dpl_AYUHhQ5Cb1Ar5STCELwSCCQP6MVj` 已 READY，并已绑定主域名。
 
-**M4.1 页面入口执行记录（2026-09-08）**：首页接入“综合混练”入口；当完成课程列表包含第 5、10、15 或 20 课时显示按钮，启动固定 20 道稳定混合题。混练使用独立会话游标，答题写入复习记录但不修改单课 `answered_count`、`correct_count`、`lessonDone` 或解锁状态。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过；提交 `e0c4d0ae`；Vercel production 部署 `dpl_Sp5P1ut2yDiUN3gPkMDtksHYhT7Z` 已 READY，并已绑定主域名。
+**M4.1 页面入口执行记录（2026-09-08）**：首页接入“综合混练”入口；当完成课程列表包含第 5、10、15 或 20 课时显示按钮，启动固定 20 道稳定混合题。混练使用独立会话游标，答题写入复习记录但不修改单课 `answered_count`、`correct_count`、`lessonDone` 或解锁状态。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过；提交 `3b9a200c`；Vercel production 部署 `dpl_GzHX7vTXTh4EvqewqG9HYhGvbmCz` 已 READY，并已绑定主域名。
 
 ## 6. 测试护栏
 
