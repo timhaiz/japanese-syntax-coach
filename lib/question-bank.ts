@@ -420,7 +420,8 @@ questionBank[23].push(
 )
 questionBank[24].push(
   {id:'L24-Q021',lessonId:24,type:'选择',prompt:'“为什么不吃？——因为肚子不舒服。”选择正确项。',answer:'C',hint:'「んです」用于说明背景或理由。',options:['A：どうして食べないですか。お腹が痛いです。','B：どうやって食べないんですか。お腹が痛いです。','C：どうして食べないんですか。お腹が痛いんです。']},
-  {id:'L24-Q022',lessonId:24,type:'助词',prompt:'日本の文化___説明します。',answer:'について',hint:'表示“关于……”用「Nについて」。',options:['A：について','B：にとって','C：によって']}
+  {id:'L24-Q022',lessonId:24,type:'助词',prompt:'日本の文化___説明します。',answer:'について',hint:'表示“关于……”用「Nについて」。',options:['A：について','B：にとって','C：によって']},
+  {id:'L24-Q023',lessonId:24,type:'选择',prompt:'“儿子终于大学毕业了。”选择正确项。',answer:'C',hint:'表示经过一段时间后终于发生，用副词「とうとう」。',options:['A：息子がいつも大学を卒業しました。','B：息子がまだ大学を卒業しました。','C：息子がとうとう大学を卒業しました。']}
 )
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
