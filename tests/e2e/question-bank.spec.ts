@@ -1,8 +1,8 @@
 import {test,expect} from '@playwright/test'
 import {questionsForLesson} from '../../lib/question-bank'
 
-test.describe('第 1～15 课题库回归检查',()=>{
-  for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]){
+test.describe('第 1～16 课题库回归检查',()=>{
+  for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]){
     test(`第 ${lessonId} 课题目字段完整且 ID 稳定`,()=>{
       const questions=questionsForLesson(lessonId)
       expect(questions.length).toBeGreaterThanOrEqual(20)
@@ -24,7 +24,7 @@ test.describe('第 1～15 课题库回归检查',()=>{
 
   test('题型顺序为选择、助词、翻译、问答',()=>{
     const order={选择:0,助词:1,翻译:2,问答:3} as const
-    for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]){
+    for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]){
       const values=questionsForLesson(lessonId).map(question=>order[question.type])
       expect(values).toEqual([...values].sort((a,b)=>a-b))
     }
