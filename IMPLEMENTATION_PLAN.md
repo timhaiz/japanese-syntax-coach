@@ -335,6 +335,8 @@
 
 **生产发布健康检查（2026-09-08）**：Git 推送后 Vercel 自动生成最新 Production 部署并返回 `Ready`（最新预览域名 `japanese-syntax-coach-j6hznpd0l-timhai06.vercel.app`）。通过 Node fetch 检查主域名：`/`、`/login`、`/manifest.webmanifest`、`/sw.js` 返回 200；未登录访问 `/api/study-state` 返回 401，未登录访问仅 POST 的 `/api/record-answer` 返回 405，符合路由保护预期。真实账号登录、Chrome/Safari 跨设备同步和手机离线安装仍需设备验收。
 
+**PWA 旧资源缓存修复（2026-09-08）**：生产浏览器冒烟发现旧客户端仍显示缺少选项的交互；确认最新部署 JavaScript 已包含题库选项后，将 Service Worker 缓存版本从 `v1` 提升为 `v2`，使已安装客户端在激活时删除旧壳资源。重新执行 TypeScript、Build、E2E（51/51）通过；Vercel Production 部署 `dpl_7onS5cJr8b7FpbWiSFG8NruaiQe3` 已 READY 并绑定主域名。仍需用户在真实设备确认 SW 激活后的选择题显示。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
