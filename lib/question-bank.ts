@@ -385,7 +385,19 @@ questionBank[15].push(
   {id:'L15-Q021',lessonId:15,type:'选择',prompt:'“森先生有车。”选择正确项。',answer:'C',hint:'持有的结果状态用「持っています」。',options:['A：森さんは車を持ちます。','B：森さんは車が持っています。','C：森さんは車を持っています。']},
   {id:'L15-Q022',lessonId:15,type:'助词',prompt:'まだ結婚し___いません。',answer:'て',hint:'“还没有”用「まだVていません」。',options:['A：て','B：た','C：ない']}
 )
+questionBank[16].push(
+  {id:'L16-Q021',lessonId:16,type:'选择',prompt:'“森先生有车。”选择正确项。',answer:'A',hint:'持有的结果状态用「持っています」。',options:['A：森さんは車を持っています。','B：森さんは車が持っています。','C：森さんは車を持ちます。']},
+  {id:'L16-Q022',lessonId:16,type:'助词',prompt:'この店はおいしい___、少し高いです。',answer:'が',hint:'句内转折用「が」。',options:['A：が','B：を','C：に']}
+)
+questionBank[17].push(
+  {id:'L17-Q023',lessonId:17,type:'选择',prompt:'“我什么都可以吃。”选择正确项。',answer:'C',hint:'疑问词加「でも」表示全面肯定。',options:['A：何も食べていいです。','B：何が食べていいです。','C：何でも食べていいです。']},
+  {id:'L17-Q024',lessonId:17,type:'助词',prompt:'どこ___行きたくないです。',answer:'も',hint:'疑问词＋も＋否定表示哪里都不去。',options:['A：も','B：で','C：が']}
+)
 for(const lessonId of [18,19,20,21,22,23,24]) questionBank[lessonId]=build(lessonId,drafts(lessonId<=21?laterLessonRows[lessonId]:supplementalRows(lessonId)))
+questionBank[18].push(
+  {id:'L18-Q021',lessonId:18,type:'选择',prompt:'“把房间变干净。”选择正确项。',answer:'B',hint:'人为改变用「Nをきれいにします」。',options:['A：部屋がきれいになります。','B：部屋をきれいにします。','C：部屋できれいになります。']},
+  {id:'L18-Q022',lessonId:18,type:'助词',prompt:'息子は医者___なりました。',answer:'に',hint:'名词变化用「Nになります」。',options:['A：に','B：を','C：で']}
+)
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
 export function questionForId(questionId:string){return Object.values(questionBank).flat().find(question=>question.id===questionId)}
