@@ -243,7 +243,7 @@
 
 **M7.23 执行记录（2026-09-08）**：补全第 18～24 课课程核心语法和每课 20 道具体题，覆盖变化表达、义务许可、动词基本形、经历列举、普通体、修饰名词、疑问嵌入、推测和引用。题库回归范围扩展至第 24 课；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（38/38）通过。代码提交 `50df8b64`；Vercel production 部署 `dpl_8Dv8eUxezLYdH3GGcWfzZ2eUgRLn` 已 READY，并已绑定主域名。
 
-**M4.1 执行记录（2026-09-08）**：新增 `lib/review-set.ts` 和 `POST /api/create-review-set`。当已完成课程包含第 5、10、15、20 课时，按稳定课程顺序汇总旧题并去重生成混合复习集合；未达到五课节点时返回空集合。新增 2 项回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过。页面入口仍列为后续体验接入项。
+**M4.1 执行记录（2026-09-08）**：新增 `lib/review-set.ts` 和 `POST /api/create-review-set`。当已完成课程包含第 5、10、15、20 课时，按稳定课程顺序汇总旧题并去重生成混合复习集合；未达到五课节点时返回空集合。新增 2 项回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过。代码提交 `4b35f126`；Vercel production 部署 `dpl_AYUHhQ5Cb1Ar5STCELwSCCQP6MVj` 已 READY，并已绑定主域名。页面入口仍列为后续体验接入项。
 
 ## 6. 测试护栏
 
