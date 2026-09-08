@@ -12,4 +12,6 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toContain('answer:submittedAnswer')
   expect(pageSource).toContain('const expectedAnswerText=presentedQuestion.options')
   expect(pageSource).toContain('const practiceInstruction=presentedQuestion.type')
+  expect(pageSource).toContain('setReplayMode(existingAnswered>=LESSON_QUESTION_LIMIT)')
+  expect(pageSource).toContain('if(!replayMode)')
 })
