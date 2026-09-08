@@ -385,6 +385,8 @@
 
 **Production 自动部署与 AI 验收（2026-09-09）**：GitHub 自动部署已生成并切换主域名到提交 `0e8d2d31` 对应的 READY 部署 `dpl_A7Q4FAtiKCMePmSSD1CNxoPdySd7`（`japanese-syntax-coach-r72e9582m-timhai06.vercel.app`）。调用主域名 `/api/analyze-answer` 返回 HTTP 200、`source: "ai"`，确认线上 AI 分析链路已恢复；此前 CLI 部署额度限制不再阻塞该版本上线。
 
+**Production 资源冒烟（2026-09-09）**：通过无状态 HTTP 检查主域名 `/`、`/login`、`/manifest.webmanifest`、`/sw.js` 均返回 200；未登录访问 `/api/study-state` 返回 401，空请求 `/api/record-answer` 返回 400（参数校验生效）。真实 Chrome/Safari 登录和手机安装验收因当前 Mac 锁定，待用户解锁设备后继续。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
