@@ -287,7 +287,9 @@
 
 **个人中心注册信息补齐（2026-09-08）**：个人页新增真实 Supabase `auth.users.created_at` 注册日期显示；未登录时显示占位符，不伪造日期。根据每日任务已下线的产品决定，个人页不再展示无数据来源的积分。新增未登录个人页回归断言；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（46/46）全部通过；提交 `44317941` 并推送 GitHub；Vercel production 部署 `dpl_HDC8hUA93vqPZ8f3Z99zSW9hWLdU` 已 READY。
 
-**Supabase 基线 schema 类型修正（2026-09-08）**：修正 `supabase/schema.sql` 中 `answer_attempts` 和 `review_items` 的 `exercise_id` 类型为 `text`，与稳定题目 ID（如 `L01-Q001`）及生产迁移一致，并注明生产环境应按序执行 migrations。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（46/46）全部通过；待提交并推送。
+**Supabase 基线 schema 类型修正（2026-09-08）**：修正 `supabase/schema.sql` 中 `answer_attempts` 和 `review_items` 的 `exercise_id` 类型为 `text`，与稳定题目 ID（如 `L01-Q001`）及生产迁移一致，并注明生产环境应按序执行 migrations。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（46/46）全部通过；提交 `6bf6abbf` 并推送 GitHub。
+
+**中后段教材 OCR 抽检（2026-09-08）**：对 PDF 第 180～240 页进行日中 OCR，确认扫描页中「てから」「ほうがいい」等中后段语法与课程/题库覆盖一致；本轮未发现可据此直接修复的遗漏，仍保留逐题人工校对待办。
 
 **第 19～24 课内容抽检执行记录（2026-09-08）**：继续依据教材语法页核对并补全课程说明：第 19 课 `Vないでください`、`Vなければなりません／ないといけません`、`Vなくてもいいです` 和疑问词主语的 `が`；第 20 课疑问词＋`か`、`みんなで`；第 21 课 `Vたことがあります`、`Vたり`、`Vた／Vないほうがいい`、`Vた後で`、`Vましょうか`；第 22 课普通体、`と思います`、`と言いました`、`けど`；第 23 课普通体修饰名词、疑问词＋普通体＋`か`、`かどうか`、`Vる／Vたとき`；第 24 课 `んです`、`どうやって`、`について`。在批量题库构建之后追加 12 道稳定题（`L19-Q021`～`Q022`、`L20-Q021`～`Q022`、`L21-Q021`～`Q022`、`L22-Q021`～`Q022`、`L23-Q021`～`Q022`、`L24-Q021`～`Q022`），每课仍保持选择→助词→翻译→问答顺序。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过；代码提交 `5d8901de`；Vercel production 部署 `dpl_2Tu9MBKB8DH43ifzYZst92T1oEz1` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题核对标准答案、可接受答案和提示，不能视为最终教材校对完成。
 
