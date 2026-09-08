@@ -24,6 +24,14 @@ test('首页入口会进入今日新题模式',async({page})=>{
   await expect(page.getByText('4 / 10')).toBeVisible()
 })
 
+test('每日训练从当前课程第 1 题开始，不沿用整课题号',async({page})=>{
+  await page.evaluate(()=>localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({'0':3})))
+  await page.reload()
+  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await expect(page.getByText('1 / 10')).toBeVisible()
+  await expect(page.locator('.prompt')).toHaveText('“我是学生。”选择正确项。')
+})
+
 test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
   await page.getByRole('button',{name:/开始今日训练/}).click()
   await passFirstChoice(page)
