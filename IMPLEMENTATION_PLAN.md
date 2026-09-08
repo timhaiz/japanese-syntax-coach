@@ -156,7 +156,7 @@
 - [x] 实现当天、+1、+3、+7、+14、+30 天间隔；错误答案回退到当天。
 - [x] 每次作答原子更新：答案、结果、错误标签、复习间隔、`nextReviewAt`、课程进度和每日题量。
 - [x] 今日复习优先读取最多 5 道到期题；无到期题时保留旧课复习回退。
-- [x] 每完成 5 课生成稳定的混合复习集合；服务层和 `POST /api/create-review-set` 已接入，页面入口继续在后续体验迭代中接入。
+- [x] 每完成 5 课生成稳定的混合复习集合；服务层、`POST /api/create-review-set` 和首页“综合混练”入口均已接入。
 
 **验收**：本地类型、构建与 9 条 E2E 回归测试通过；迁移已应用到生产 Supabase。生产部署后仍需用真实账号验证设备 A 答错后设备 B 刷新可见到期题，以及第 5、10、15、20 课的混练（M4.1）。
 
@@ -243,7 +243,9 @@
 
 **M7.23 执行记录（2026-09-08）**：补全第 18～24 课课程核心语法和每课 20 道具体题，覆盖变化表达、义务许可、动词基本形、经历列举、普通体、修饰名词、疑问嵌入、推测和引用。题库回归范围扩展至第 24 课；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（38/38）通过。代码提交 `50df8b64`；Vercel production 部署 `dpl_8Dv8eUxezLYdH3GGcWfzZ2eUgRLn` 已 READY，并已绑定主域名。
 
-**M4.1 执行记录（2026-09-08）**：新增 `lib/review-set.ts` 和 `POST /api/create-review-set`。当已完成课程包含第 5、10、15、20 课时，按稳定课程顺序汇总旧题并去重生成混合复习集合；未达到五课节点时返回空集合。新增 2 项回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过。代码提交 `4b35f126`；Vercel production 部署 `dpl_AYUHhQ5Cb1Ar5STCELwSCCQP6MVj` 已 READY，并已绑定主域名。页面入口仍列为后续体验接入项。
+**M4.1 执行记录（2026-09-08）**：新增 `lib/review-set.ts` 和 `POST /api/create-review-set`。当已完成课程包含第 5、10、15、20 课时，按稳定课程顺序汇总旧题并去重生成混合复习集合；未达到五课节点时返回空集合。新增 2 项回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过。代码提交 `4b35f126`；Vercel production 部署 `dpl_AYUHhQ5Cb1Ar5STCELwSCCQP6MVj` 已 READY，并已绑定主域名。
+
+**M4.1 页面入口执行记录（2026-09-08）**：首页接入“综合混练”入口；当完成课程列表包含第 5、10、15 或 20 课时显示按钮，启动固定 20 道稳定混合题。混练使用独立会话游标，答题写入复习记录但不修改单课 `answered_count`、`correct_count`、`lessonDone` 或解锁状态。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（40/40）通过；待提交并部署生产环境。
 
 ## 6. 测试护栏
 
