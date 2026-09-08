@@ -17,7 +17,9 @@ export async function POST(req:Request){
     // Third-party compatible endpoints may need a few extra seconds on cold start.
     const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.6-sol',input:prompt,store:false}),signal:AbortSignal.timeout(20000)})
     if(!response.ok)return NextResponse.json({analysis:`AI 服务返回 ${response.status}，请检查第三方接口地址、Key、模型名和额度。`,source:'fallback',reason:`upstream-${response.status}`})
-    const data=await response.json();const outputText=data.output_text||data.output?.flatMap((item:{content?:{text?:string}[]})=>item.content||[]).map((item:{text?:string})=>item.text||'').join('')||'';const parsed=JSON.parse(outputText||'{}')
+    const data=await response.json();const outputText=data.output_text||data.output?.flatMap((item:{content?:{text?:string}[]})=>item.content||[]).map((item:{text?:string})=>item.text||'').join('')||''
+    let parsed:unknown
+    try{parsed=JSON.parse(outputText||'{}')}catch{return NextResponse.json({analysis:'AI 返回的内容不是合法 JSON，请稍后重试；你仍可使用规则批改结果。',source:'fallback',reason:'invalid-json'})}
     if(!isAnalysisResult(parsed))return NextResponse.json({analysis:'AI 返回格式不完整，请对照标准答案拆分短语、助词和假名记忆。',source:'fallback',reason:'invalid-response-shape'})
     return NextResponse.json({...parsed,source:'ai'})
   }catch(error){
