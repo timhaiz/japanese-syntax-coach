@@ -377,6 +377,8 @@
 
 **AI 非法 JSON 降级提示（2026-09-08）**：将 AI 正文解析失败从网络错误中独立出来，返回 `reason: "invalid-json"` 和可操作提示；规则批改仍不受影响。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（56/56）通过。生产部署受当日 Vercel 免费额度限制，尚未更新线上版本。
 
+**AI 默认模型统一（2026-09-09）**：将 `/api/analyze-answer` 未设置 `OPENAI_MODEL` 时的默认值统一为 `gpt-5.4-mini`，与 `lib/ai.ts` 及产品约定一致。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（56/56）通过；待部署后验证生产环境变量实际模型。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：

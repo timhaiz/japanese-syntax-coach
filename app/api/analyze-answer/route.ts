@@ -15,7 +15,7 @@ export async function POST(req:Request){
   try{
     const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
     // Third-party compatible endpoints may need a few extra seconds on cold start.
-    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.6-sol',input:prompt,store:false}),signal:AbortSignal.timeout(20000)})
+    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false}),signal:AbortSignal.timeout(20000)})
     if(!response.ok)return NextResponse.json({analysis:`AI 服务返回 ${response.status}，请检查第三方接口地址、Key、模型名和额度。`,source:'fallback',reason:`upstream-${response.status}`})
     const data=await response.json();const outputText=data.output_text||data.output?.flatMap((item:{content?:{text?:string}[]})=>item.content||[]).map((item:{text?:string})=>item.text||'').join('')||''
     let parsed:unknown
