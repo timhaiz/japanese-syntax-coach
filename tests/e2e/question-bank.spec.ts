@@ -91,4 +91,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
       expect(question.prompt.replace('___',question.answer)).toBe(expected)
     }
   })
+
+  test('所有助词题替换答案后不产生明显重复句尾',()=>{
+    for(const lessonId of Array.from({length:24},(_,index)=>index+1)){
+      for(const question of questionsForLesson(lessonId).filter(item=>item.type==='助词')){
+        const sentence=question.prompt.replace('___',question.answer)
+        expect(sentence).not.toMatch(/ですです|ますます|でしょうでしょう|ましたました|ませんません|おいしいい|ましょか/)
+      }
+    }
+  })
 })
