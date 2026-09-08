@@ -29,4 +29,11 @@ test.describe('第 1～24 课题库回归检查',()=>{
       expect(values).toEqual([...values].sort((a,b)=>a-b))
     }
   })
+
+  test('每课都包含选择、助词、翻译和问答四类练习',()=>{
+    for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]){
+      const types=new Set(questionsForLesson(lessonId).map(question=>question.type))
+      expect([...types]).toEqual(expect.arrayContaining(['选择','助词','翻译','问答']))
+    }
+  })
 })
