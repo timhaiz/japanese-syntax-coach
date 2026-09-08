@@ -405,6 +405,8 @@
 
 **最新提交自动部署（2026-09-09）**：GitHub 推送后的 Vercel Production 部署已生成并处于 READY，提交 `a7a9deff` 对应部署 `japanese-syntax-coach-qnybi6xig-timhai06.vercel.app`；确认文档更新已进入自动发布链路。真实 Safari/手机验收仍待设备提供。
 
+**Safari Production 会话检查（2026-09-09）**：用户已打开 Safari，已通过系统脚本访问 Production 首页并确认页面资源正常；Safari 当前为未登录状态（显示“学习者”、第 1 课 0%），与 Chrome 中已登录的 `TIMHAI06` 会话不同。未复制或读取 Chrome 密码/会话，跨设备同步需用户在 Safari 手动登录同一邮箱后继续验证。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
