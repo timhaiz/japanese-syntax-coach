@@ -88,10 +88,10 @@ test('答错后进入错题本并可独立练习',async({page})=>{
 test('未完成整课 20 题不会解锁下一课',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
-  for(let i=0;i<7;i++){
+  for(let i=0;i<6;i++){
     await page.locator('textarea').fill(`答案 ${i}`)
     await page.getByRole('button',{name:/^提交答案/}).click()
-    await page.getByRole('button',{name:i===6?/完成训练/:/下一题/}).click()
+    await page.getByRole('button',{name:/下一题/}).click()
   }
   await page.getByRole('button',{name:/课程/}).click()
   const lesson2=page.getByRole('button',{name:/02 第 2 课/})

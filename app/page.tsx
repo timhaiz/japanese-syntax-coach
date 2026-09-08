@@ -51,7 +51,7 @@ export default function Home(){
  const selectedLesson=displayedLessons[Math.min(active,displayedLessons.length-1)]
  const firstIncompleteLesson=displayedLessons.findIndex(lesson=>!lesson.locked&&lesson.progress<100)
  const nextLessonIndex=firstIncompleteLesson>=0?firstIncompleteLesson:displayedLessons.length-1
- const progress=fullLessonMode?fullLessonProgress:sessionProgress; const sessionLimit=fullLessonMode?(questionsForLesson(selectedLesson.id).length||20):20
+ const progress=fullLessonMode?fullLessonProgress:sessionProgress; const sessionLimit=practiceMode==='mistakes'?mistakes.length:(fullLessonMode?(questionsForLesson(selectedLesson.id).length||20):20)
  const lessonQuestions=questionsForLesson(selectedLesson.id)
  const sourceQuestions=practiceMode==='mistakes'?mistakes:lessonQuestions
  const bankQuestion=sourceQuestions.length?sourceQuestions[progress%sourceQuestions.length]:undefined
@@ -67,8 +67,8 @@ export default function Home(){
  const displayCorrect=aiVerdict?aiVerdict==='correct'||aiVerdict==='mostly_correct':answerMatches
  const startPractice=(_mode:'new'|'review'='new',lessonIndex=active)=>{submittedQuestion.current=null;setSelectedChoice('');setFullLessonMode(true);setFullLessonProgress(0);setSessionProgress(0);setPracticeMode('lesson');setActive(lessonIndex);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}
  const startLessonPractice=(lessonIndex=active)=>{submittedQuestion.current=null;setSelectedChoice('');setFullLessonMode(true);setFullLessonProgress(0);setSessionProgress(0);setLessonCorrect(value=>({...value,[lessonIndex]:0}));setActive(lessonIndex);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}
- const startMistakePractice=()=>{if(mistakes.length){submittedQuestion.current=null;setPracticeMode('mistakes');setSessionProgress(0);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}}
- const nextQuestion=()=>{const complete=progress>=sessionLimit-1;const finalCorrect=(lessonCorrect[active]??0)+(answerMatches?1:0);setFullLessonProgress(value=>value+1);setLessonDone(value=>({...value,[active]:Math.min(questionsForLesson(active+1).length||20,(value[active]??0)+1)}));setLessonCorrect(value=>({...value,[active]:finalCorrect}));if(complete&&finalCorrect/sessionLimit>=0.9)setCompletedLessons(value=>value.includes(active)?value:[...value,active]);setSessionProgress(value=>value+1);submittedQuestion.current=null;setSelectedChoice('');setInput('');setGraded(false);if(complete)setTab('home')}
+ const startMistakePractice=()=>{if(mistakes.length){submittedQuestion.current=null;setPracticeMode('mistakes');setFullLessonMode(false);setSessionProgress(0);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}}
+ const nextQuestion=()=>{const complete=progress>=sessionLimit-1;const finalCorrect=(lessonCorrect[active]??0)+(answerMatches?1:0);if(practiceMode==='lesson'){setFullLessonProgress(value=>value+1);setLessonDone(value=>({...value,[active]:Math.min(questionsForLesson(active+1).length||20,(value[active]??0)+1)}));setLessonCorrect(value=>({...value,[active]:finalCorrect}));if(complete&&finalCorrect/sessionLimit>=0.9)setCompletedLessons(value=>value.includes(active)?value:[...value,active])}setSessionProgress(value=>value+1);submittedQuestion.current=null;setSelectedChoice('');setInput('');setGraded(false);if(complete)setTab('home')}
  const currentLesson=displayedLessons[nextLessonIndex]??displayedLessons[0]
  const overallProgress=Math.round(displayedLessons.reduce((sum,lesson)=>sum+lesson.progress,0)/displayedLessons.length)
  const learnerName=userEmail?userEmail.split('@')[0]:'学习者'
