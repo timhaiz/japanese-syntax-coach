@@ -7,12 +7,19 @@ test.describe('第 1～24 课题库回归检查',()=>{
       const questions=questionsForLesson(lessonId)
       expect(questions.length).toBeGreaterThanOrEqual(20)
       expect(new Set(questions.map(question=>question.id)).size).toBe(questions.length)
+      expect(new Set(questions.map(question=>`${question.type}:${question.prompt}`)).size).toBe(questions.length)
       for(const question of questions){
         expect(question.id).toMatch(new RegExp(`^L${String(lessonId).padStart(2,'0')}-Q\\d{3}$`))
         expect(question.lessonId).toBe(lessonId)
         expect(question.prompt.length).toBeGreaterThan(0)
         expect(question.answer.length).toBeGreaterThan(0)
         expect(question.hint.length).toBeGreaterThan(0)
+        if(question.type==='选择'){
+          expect(question.options,'选择题必须提供可见选项').toBeDefined()
+          expect(question.options!.length).toBeGreaterThanOrEqual(2)
+          expect(question.options!.every(option=>/^[A-Z]：/.test(option))).toBeTruthy()
+          expect(question.options!.some(option=>option.startsWith(`${question.answer}：`))).toBeTruthy()
+        }
         if(question.options){
           expect(question.options.length).toBeGreaterThanOrEqual(2)
           const answerInOptions=question.options.some(option=>option.startsWith(`${question.answer}：`)||option.endsWith(`：${question.answer}`))
