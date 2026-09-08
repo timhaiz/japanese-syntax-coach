@@ -11,4 +11,5 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toContain('const submittedAnswer=selectedChoiceText||input')
   expect(pageSource).toContain('answer:submittedAnswer')
   expect(pageSource).toContain('const expectedAnswerText=presentedQuestion.options')
+  expect(pageSource).toContain('const practiceInstruction=presentedQuestion.type')
 })
