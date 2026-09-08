@@ -403,6 +403,8 @@
 
 **最终本地回归（2026-09-09）**：在当前工作树重新运行 `npm run build` 与 `CI=1 npm run test:e2e -- --workers=5`，Build 成功，E2E 56/56 通过。Chrome 生产会话可用；Safari 与手机设备仍不可用，未将其结果误标为通过。
 
+**最新提交自动部署（2026-09-09）**：GitHub 推送后的 Vercel Production 部署已生成并处于 READY，提交 `a7a9deff` 对应部署 `japanese-syntax-coach-qnybi6xig-timhai06.vercel.app`；确认文档更新已进入自动发布链路。真实 Safari/手机验收仍待设备提供。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
