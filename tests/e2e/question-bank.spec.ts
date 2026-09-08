@@ -100,4 +100,15 @@ test.describe('第 1～24 课题库回归检查',()=>{
       }
     }
   })
+
+  test('每课题干去标点后仍保持跨题型唯一',()=>{
+    for(const lessonId of Array.from({length:24},(_,index)=>index+1)){
+      const seen=new Set<string>()
+      for(const question of questionsForLesson(lessonId)){
+        const normalized=question.prompt.replace(/[“”"。！？!?，,、：:（）()\s]/g,'')
+        expect(seen.has(normalized),`${question.id} 与同课题目重复`).toBeFalsy()
+        seen.add(normalized)
+      }
+    }
+  })
 })

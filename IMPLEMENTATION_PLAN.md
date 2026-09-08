@@ -349,6 +349,8 @@
 
 **错题本参考答案显示修复（2026-09-08）**：错题本列表现在与练习页一样，将选择题的字母答案解析为完整日文选项，避免用户只看到 `A/B/C` 而无法复习。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（51/51）通过。Vercel Production 部署 `dpl_65X8kSaRZwSqAwroYMrPXMJGmh2T` 已 READY，并已绑定主域名。
 
+**题干重复审计护栏（2026-09-08）**：对第 1～24 课题干执行去标点、去空格后的跨题型重复检查，未发现同课重复题；新增 E2E 回归测试覆盖该规则。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（52/52）通过。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
