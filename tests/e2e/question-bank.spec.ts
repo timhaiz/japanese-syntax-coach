@@ -1,5 +1,6 @@
 import {test,expect} from '@playwright/test'
 import {isAnswerAccepted,questionsForLesson} from '../../lib/question-bank'
+import {courses} from '../../lib/courses'
 
 test.describe('第 1～24 课题库回归检查',()=>{
   for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]){
@@ -41,6 +42,22 @@ test.describe('第 1～24 课题库回归检查',()=>{
     for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]){
       const types=new Set(questionsForLesson(lessonId).map(question=>question.type))
       expect([...types]).toEqual(expect.arrayContaining(['选择','助词','翻译','问答']))
+    }
+  })
+
+  test('每课课程页都有具体语法说明，不保留占位语法',()=>{
+    expect(courses).toHaveLength(24)
+    for(const lesson of courses){
+      expect(lesson.title.length).toBeGreaterThan(0)
+      expect(lesson.goal.length).toBeGreaterThan(0)
+      expect(lesson.grammar.length).toBeGreaterThanOrEqual(3)
+      for(const grammar of lesson.grammar){
+        expect(grammar.pattern).not.toBe('综合表达')
+        expect(grammar.meaning.length).toBeGreaterThan(0)
+        expect(grammar.connection.length).toBeGreaterThan(0)
+        expect(grammar.explanation.length).toBeGreaterThan(0)
+        expect(grammar.example.length).toBeGreaterThan(0)
+      }
     }
   })
 
