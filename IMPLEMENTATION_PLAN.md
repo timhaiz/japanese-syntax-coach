@@ -361,7 +361,7 @@
 
 **重练统计 E2E 验收（2026-09-08）**：新增高层测试：预置第 1 课 20/20 和已完成状态，重练第一题并答错，确认本地整课进度仍为 20，不会因重练污染原统计。全量 E2E 共 53/53 通过；Vercel Production 部署 `dpl_9qwbNq4oKuC1GMG1RxGeReYWrmCd` 已 READY，并已绑定主域名。
 
-**AI 响应结构校验（2026-09-08）**：为 `/api/analyze-answer` 和 `lib/ai.ts` 增加运行时字段校验；非法 JSON、缺失字段或错误 verdict 不再标记为 AI 成功，而是回到明确兜底。新增架构回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（54/54）通过，待部署后发布。
+**AI 响应结构校验（2026-09-08）**：为 `/api/analyze-answer` 和 `lib/ai.ts` 增加运行时字段校验；非法 JSON、缺失字段或错误 verdict 不再标记为 AI 成功，而是回到明确兜底。新增架构回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（54/54）通过。Vercel Production 部署 `dpl_8SsKjS5Kpi5hT9gNLchXp9bVrcbU` 已 READY，并已绑定主域名。
 
 ## 6. 测试护栏
 
