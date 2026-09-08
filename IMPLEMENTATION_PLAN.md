@@ -369,6 +369,8 @@
 
 **全局题目 ID 护栏（2026-09-08）**：新增回归测试，将 24 课全部题目合并后检查稳定 ID 全局唯一，确保错题本、云端 `answer_attempts` 和综合混练不会发生跨课串题。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（56/56）通过。
 
+**AI 分析超时处理优化（2026-09-08）**：生产回归发现第三方 Responses 接口在冷启动时超过原 8 秒限制，导致可用接口被误判为 fallback。将 `/api/analyze-answer` 请求超时提高到 20 秒，并将超时与网络错误分开返回明确提示；本地 `npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（56/56）通过。生产重新部署后仍需再次验证 `source: "ai"`。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
