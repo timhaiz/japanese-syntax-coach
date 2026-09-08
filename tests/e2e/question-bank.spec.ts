@@ -55,6 +55,11 @@ test.describe('第 1～24 课题库回归检查',()=>{
     }
   })
 
+  test('24 课题目 ID 在全局范围内唯一',()=>{
+    const all=Array.from({length:24},(_,index)=>questionsForLesson(index+1)).flat()
+    expect(new Set(all.map(question=>question.id)).size).toBe(all.length)
+  })
+
   test('每课课程页都有具体语法说明，不保留占位语法',()=>{
     expect(courses).toHaveLength(24)
     for(const lesson of courses){
