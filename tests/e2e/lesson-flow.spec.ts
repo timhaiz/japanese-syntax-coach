@@ -151,6 +151,14 @@ test('学习记录 API 拒绝未授权或未配置请求',async({page})=>{
   expect([401,503]).toContain(record.status())
 })
 
+test('服务端判分接受等价答案且规则正确结果优先',async({page})=>{
+  const response=await page.request.post('/api/grade-answer',{data:{answer:'私は先生じゃありません',standardAnswer:'私は先生ではありません。',acceptedAnswers:['私は先生じゃありません。']}})
+  expect(response.ok()).toBeTruthy()
+  const result=await response.json()
+  expect(result.verdict).toBe('correct')
+  expect(result.source).toBe('rule')
+})
+
 test('第 1 课展示判断、疑问应答和名词所属说明',async({page})=>{
   await page.getByRole('button',{name:/课程/}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
