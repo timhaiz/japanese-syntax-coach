@@ -281,7 +281,7 @@
 
 **整课练习固定 20 题（2026-09-08）**：修复题库扩充后整课练习显示 22/23 题、进度门槛与产品要求不一致的问题。新增 `LESSON_QUESTION_LIMIT=20` 和核心题目切片；整课会话、课程进度百分比、完成解锁判断和课程按钮统一按 20 题计算，题库额外题保留给后续混练使用。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过；代码提交 `95bbe15f`；Vercel production 部署 `dpl_HAYhGMBKtNZm4Rop5maYmuzDtnK5` 已 READY，并已绑定主域名。
 
-**AI 分析超时兜底（2026-09-08）**：为 `/api/analyze-answer` 的第三方 Responses API 请求增加 8 秒超时。接口超时、网络错误、非法 JSON 或上游错误时继续返回中文兜底说明，不阻塞答题结果；正常响应格式保持不变。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过。
+**AI 分析超时兜底（2026-09-08）**：为 `/api/analyze-answer` 的第三方 Responses API 请求增加 8 秒超时。接口超时、网络错误、非法 JSON 或上游错误时继续返回中文兜底说明，不阻塞答题结果；正常响应格式保持不变。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）通过；代码提交 `79fdcaa8`；Vercel production 部署 `dpl_Gq7PViXuYNAucpyC2sbqJM26aZ5y` 已 READY，并已绑定主域名。
 
 ## 6. 测试护栏
 
