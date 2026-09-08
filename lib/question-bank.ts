@@ -373,6 +373,18 @@ questionBank[12].push(
   {id:'L12-Q021',lessonId:12,type:'选择',prompt:'“比起肉，我更喜欢鱼。”选择正确项。',answer:'B',hint:'偏好比较用「N1よりN2のほうがいいです」。',options:['A：肉より魚はいいです。','B：肉より魚のほうがいいです。','C：肉が魚よりほうがいいです。']},
   {id:'L12-Q022',lessonId:12,type:'助词',prompt:'最近___少し太りました。',answer:'は',hint:'「最近」作话题时用「は」。',options:['A：は','B：を','C：に']}
 )
+questionBank[13].push(
+  {id:'L13-Q021',lessonId:13,type:'选择',prompt:'“去邮局寄东西。”选择正确项。',answer:'A',hint:'移动目的用动词词干＋に行きます。',options:['A：郵便局へ荷物を出しに行きます。','B：郵便局へ荷物を出して行きます。','C：郵便局で荷物を出すに行きます。']},
+  {id:'L13-Q022',lessonId:13,type:'助词',prompt:'このケーキは3個___500円です。',answer:'で',hint:'数量计价单位用「で」。',options:['A：で','B：に','C：を']}
+)
+questionBank[14].push(
+  {id:'L14-Q021',lessonId:14,type:'选择',prompt:'“这辆公交车经过车站前。”选择正确项。',answer:'B',hint:'经过地点用「を＋通ります」。',options:['A：このバスは駅前に通ります。','B：このバスは駅前を通ります。','C：このバスは駅前で通ります。']},
+  {id:'L14-Q022',lessonId:14,type:'助词',prompt:'毎朝7時に家___出ます。',answer:'を',hint:'离开地点用「を＋出ます」。',options:['A：を','B：に','C：で']}
+)
+questionBank[15].push(
+  {id:'L15-Q021',lessonId:15,type:'选择',prompt:'“森先生有车。”选择正确项。',answer:'C',hint:'持有的结果状态用「持っています」。',options:['A：森さんは車を持ちます。','B：森さんは車が持っています。','C：森さんは車を持っています。']},
+  {id:'L15-Q022',lessonId:15,type:'助词',prompt:'まだ結婚し___いません。',answer:'て',hint:'“还没有”用「まだVていません」。',options:['A：て','B：た','C：ない']}
+)
 for(const lessonId of [18,19,20,21,22,23,24]) questionBank[lessonId]=build(lessonId,drafts(lessonId<=21?laterLessonRows[lessonId]:supplementalRows(lessonId)))
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
