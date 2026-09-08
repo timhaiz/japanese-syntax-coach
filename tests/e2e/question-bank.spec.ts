@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test'
-import {questionsForLesson} from '../../lib/question-bank'
+import {isAnswerAccepted,questionsForLesson} from '../../lib/question-bank'
 
 test.describe('第 1～24 课题库回归检查',()=>{
   for(const lessonId of [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]){
@@ -42,5 +42,11 @@ test.describe('第 1～24 课题库回归检查',()=>{
       const types=new Set(questionsForLesson(lessonId).map(question=>question.type))
       expect([...types]).toEqual(expect.arrayContaining(['选择','助词','翻译','问答']))
     }
+  })
+
+  test('教材常见的じゃありません表达可作为可接受答案',()=>{
+    const question=questionsForLesson(1).find(item=>item.id==='L01-Q002')!
+    expect(isAnswerAccepted(question,'私は先生じゃありません。')).toBeTruthy()
+    expect(isAnswerAccepted(question,'私は先生です。')).toBeFalsy()
   })
 })

@@ -1,5 +1,5 @@
 export type QuestionType = '翻译' | '助词' | '选择' | '问答'
-export type Question = { id: string; lessonId: number; type: QuestionType; prompt: string; answer: string; hint: string; options?: string[] }
+export type Question = { id: string; lessonId: number; type: QuestionType; prompt: string; answer: string; hint: string; options?: string[]; acceptedAnswers?: string[] }
 type Draft = Omit<Question, 'id' | 'lessonId'>
 const build = (lessonId:number, drafts:Draft[]):Question[] => drafts.map((q,i)=>({...q,lessonId,id:`L${String(lessonId).padStart(2,'0')}-Q${String(i+1).padStart(3,'0')}`}))
 const drafts = (rows:Array<[string,string,string,string,string[]?]>):Draft[] => rows.map(([type,prompt,answer,hint,options])=>({type:type as QuestionType,prompt,answer,hint,...(options?{options}:{})}))
@@ -423,6 +423,25 @@ questionBank[24].push(
   {id:'L24-Q022',lessonId:24,type:'助词',prompt:'日本の文化___説明します。',answer:'について',hint:'表示“关于……”用「Nについて」。',options:['A：について','B：にとって','C：によって']},
   {id:'L24-Q023',lessonId:24,type:'选择',prompt:'“儿子终于大学毕业了。”选择正确项。',answer:'C',hint:'表示经过一段时间后终于发生，用副词「とうとう」。',options:['A：息子がいつも大学を卒業しました。','B：息子がまだ大学を卒業しました。','C：息子がとうとう大学を卒業しました。']}
 )
+// 允许教材中常见的礼貌体同义表达；标准答案仍用于展示和提示。
+const acceptedAnswers:Record<string,string[]>= {
+  'L01-Q002':['私は先生じゃありません。'],
+  'L01-Q006':['李さんは医者じゃありません。'],
+  'L01-Q009':['私は大学生じゃありません。'],
+  'L01-Q012':['私は日本人じゃありません。'],
+  'L02-Q014':['これは私の辞書じゃありません。'],
+  'L02-Q022':['この日本語の本は私のじゃありません。'],
+  'L03-Q017':['ここは病院じゃありません。']
+}
+for(const questions of Object.values(questionBank)) for(const question of questions){
+  const alternatives=acceptedAnswers[question.id]
+  if(alternatives) question.acceptedAnswers=alternatives
+}
+export const normalizeAnswer=(value:string)=>value.replace(/[\s。！？!?，,、．.]/g,'')
+export const isAnswerAccepted=(question:Question,value:string)=>{
+  const normalized=normalizeAnswer(value)
+  return [question.answer,...(question.acceptedAnswers??[])].some(answer=>normalizeAnswer(answer)===normalized)
+}
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
 export function questionForId(questionId:string){return Object.values(questionBank).flat().find(question=>question.id===questionId)}

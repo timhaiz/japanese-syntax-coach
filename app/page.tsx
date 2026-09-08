@@ -2,7 +2,7 @@
 import {useEffect,useRef,useState} from 'react'
 import {courses} from '@/lib/courses'
 import {getSupabaseBrowser} from '@/lib/supabase'
-import {questionsForLesson, type Question} from '@/lib/question-bank'
+import {isAnswerAccepted,normalizeAnswer,questionsForLesson, type Question} from '@/lib/question-bank'
 import {createMixedReviewSet} from '@/lib/review-set'
 
 const courseLessons=courses.map((c)=>({...c,progress:0,locked:false}))
@@ -58,9 +58,9 @@ export default function Home(){
  const bankQuestion=sourceQuestions.length?sourceQuestions[progress%sourceQuestions.length]:undefined
  const ex=bankQuestion??{id:`L${String(active+1).padStart(2,'0')}-Q${String(progress+1).padStart(3,'0')}`,lessonId:active+1,type:'翻译' as const,prompt:'本课题目正在准备中。',answer:'',hint:'请返回课程页后重试。'}
  const presentedQuestion=graded&&submittedQuestion.current?submittedQuestion.current:ex
- const cleaned=(s:string)=>s.replace(/[\s。！？!?，,、．.]/g,'')
+ const cleaned=normalizeAnswer
  const selectedChoiceText=presentedQuestion.options?.find(option=>option.startsWith(`${selectedChoice}：`))?.slice(2).trim()
- const localAnswerMatches=presentedQuestion.options?cleaned(selectedChoiceText||input)===cleaned(presentedQuestion.answer)||cleaned(input)===cleaned(presentedQuestion.answer):cleaned(input)===cleaned(presentedQuestion.answer)
+ const localAnswerMatches=presentedQuestion.options?isAnswerAccepted(presentedQuestion,selectedChoiceText||input)||isAnswerAccepted(presentedQuestion,input):isAnswerAccepted(presentedQuestion,input)
  const answerMatches=aiVerdict?aiVerdict==='correct'||aiVerdict==='mostly_correct':localAnswerMatches
  const missingPunctuation=answerMatches&&/[。．.]$/.test(presentedQuestion.answer)&&!/[。．.]$/.test(input.trim())
  const grade=()=>{const question=ex;submittedQuestion.current=question;setAiVerdict(null);setAnalysis(null);setGradeExplanation(localAnswerMatches?'句型结构正确，继续保持主动输出。':explainAnswerDifference(question.answer,selectedChoiceText||input));setGradeSource('rule');if(!localAnswerMatches){setMistakes(value=>value.some(item=>item.id===question.id)?value:[...value,question])}else if(practiceMode==='mistakes'){setMistakes(value=>value.filter(item=>item.id!==question.id))}if(userId)void (async()=>{try{const response=await fetch('/api/record-answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({questionId:question.id,lessonId:question.lessonId,answer:input,correct:localAnswerMatches,errorTags:localAnswerMatches?[]:['句型顺序'],mode:practiceMode==='lesson'?'lesson':'review'})});if(!response.ok)return;await response.json()}catch{console.warn('Unable to persist answer; using local fallback')}})();setGraded(true)}
