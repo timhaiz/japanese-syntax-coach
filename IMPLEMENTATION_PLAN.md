@@ -283,6 +283,8 @@
 
 **服务端判分一致性修复（2026-09-08）**：`/api/grade-answer` 现在支持 `acceptedAnswers`，并在规则层判定等价答案时跳过 AI 覆盖，确保确定性规则优先；新增 API 回归测试验证「ではありません／じゃありません」和漏标点均判定正确。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（46/46）全部通过；提交 `81eb3877` 并推送 GitHub；Vercel production 部署 `dpl_6iTfCPjrHCYzzTaF91estEZbTx5D` 已 READY。
 
+**生产环境变量核对（2026-09-08）**：通过 `npx vercel env ls` 仅核对变量名称（未读取密钥值）。Production 已配置 `NEXT_PUBLIC_SUPABASE_URL`、`NEXT_PUBLIC_SUPABASE_ANON_KEY`、`OPENAI_API_KEY`、`OPENAI_BASE_URL`、`OPENAI_MODEL`，满足 Supabase 登录/同步和第三方 OpenAI-compatible AI 接口所需配置。
+
 **第 19～24 课内容抽检执行记录（2026-09-08）**：继续依据教材语法页核对并补全课程说明：第 19 课 `Vないでください`、`Vなければなりません／ないといけません`、`Vなくてもいいです` 和疑问词主语的 `が`；第 20 课疑问词＋`か`、`みんなで`；第 21 课 `Vたことがあります`、`Vたり`、`Vた／Vないほうがいい`、`Vた後で`、`Vましょうか`；第 22 课普通体、`と思います`、`と言いました`、`けど`；第 23 课普通体修饰名词、疑问词＋普通体＋`か`、`かどうか`、`Vる／Vたとき`；第 24 课 `んです`、`どうやって`、`について`。在批量题库构建之后追加 12 道稳定题（`L19-Q021`～`Q022`、`L20-Q021`～`Q022`、`L21-Q021`～`Q022`、`L22-Q021`～`Q022`、`L23-Q021`～`Q022`、`L24-Q021`～`Q022`），每课仍保持选择→助词→翻译→问答顺序。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过；代码提交 `5d8901de`；Vercel production 部署 `dpl_2Tu9MBKB8DH43ifzYZst92T1oEz1` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题核对标准答案、可接受答案和提示，不能视为最终教材校对完成。
 
 **题库质量回归加固（2026-09-08）**：对第 1～24 课执行静态审计，发现并修正第 3 课 3 道选择题缺少可见选项的问题；修正第 18 课重复的“把房间打扫干净”翻译题，并将重复的第 13 课课程语法项改为“何＋量词”问句、第 17 课重复的疑问词语法项改为“疑问词＋も＋否定”。回归测试新增选择题必须带 `A/B/C` 选项、答案必须对应选项及同题型题干唯一性护栏。静态审计结果无缺失选项、无重复题干；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过。代码提交 `35f99f50`；Vercel production 部署 `dpl_Fhe6nvsK76KMPJyFGC8vASLrm8LN` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题抽检教材答案和提示。
