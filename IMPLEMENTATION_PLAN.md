@@ -261,7 +261,7 @@
 
 **PWA 发布质量执行记录（2026-09-08）**：检查发现项目已有 `public/manifest.webmanifest`，但此前没有 Service Worker。新增生产环境专用 `app/pwa-register.tsx` 与 `public/sw.js`：安装时缓存首页和 manifest，导航网络失败时回退缓存首页，静态资源采用缓存优先；开发环境不注册，避免影响热更新。该离线能力仅作为渐进增强，答题提交仍需联网。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（42/42）全部通过；提交 `86752708` 并推送 GitHub；Vercel production 部署 `dpl_3vbbG8dSdksJNcDBGRpQmFAX4wWg` 已 READY，主域名 `https://japanese-syntax-coach.vercel.app` 已更新。真实设备安装与离线打开仍待验收。
 
-**PWA 安装元数据补强（2026-09-08）**：新增品牌图标 `public/icon.svg`，并在 manifest 声明 `any maskable` 图标，修复原 manifest `icons: []` 导致部分浏览器无法提示安装的问题。本轮 TypeScript、Build、E2E（42/42）均通过；待部署后在手机浏览器确认安装提示和离线打开。
+**PWA 安装元数据补强（2026-09-08）**：新增品牌图标 `public/icon.svg`，并在 manifest 声明 `any maskable` 图标，修复原 manifest `icons: []` 导致部分浏览器无法提示安装的问题。本轮 TypeScript、Build、E2E（42/42）均通过；提交 `0252af8c` 并推送 GitHub；Vercel production 部署 `dpl_CskBN3cH2QkA2DSvQVVxeXCVgPq2` 已 READY，主域名已更新。待在手机浏览器确认安装提示和离线打开。
 
 **第 19～24 课内容抽检执行记录（2026-09-08）**：继续依据教材语法页核对并补全课程说明：第 19 课 `Vないでください`、`Vなければなりません／ないといけません`、`Vなくてもいいです` 和疑问词主语的 `が`；第 20 课疑问词＋`か`、`みんなで`；第 21 课 `Vたことがあります`、`Vたり`、`Vた／Vないほうがいい`、`Vた後で`、`Vましょうか`；第 22 课普通体、`と思います`、`と言いました`、`けど`；第 23 课普通体修饰名词、疑问词＋普通体＋`か`、`かどうか`、`Vる／Vたとき`；第 24 课 `んです`、`どうやって`、`について`。在批量题库构建之后追加 12 道稳定题（`L19-Q021`～`Q022`、`L20-Q021`～`Q022`、`L21-Q021`～`Q022`、`L22-Q021`～`Q022`、`L23-Q021`～`Q022`、`L24-Q021`～`Q022`），每课仍保持选择→助词→翻译→问答顺序。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过；代码提交 `5d8901de`；Vercel production 部署 `dpl_2Tu9MBKB8DH43ifzYZst92T1oEz1` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题核对标准答案、可接受答案和提示，不能视为最终教材校对完成。
 
