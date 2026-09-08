@@ -279,7 +279,7 @@
 
 **云端正确率解锁边界修复（2026-09-08）**：修复 hydration 仅依据 `answered_count >= 20` 推导完成的问题。现在从云端进度推导解锁必须同时具备 `correct_count` 且正确率达到 90%；显式的 `completed_at/completedLessons` 记录继续作为已确认完成状态。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（45/45）全部通过；提交 `bcb25263` 并推送 GitHub；Vercel production 部署 `dpl_3F3DVb6dj8vmPNCFMWp93Gcivbxg` 已 READY。
 
-**AI 批改请求超时保护（2026-09-08）**：为备用 `lib/ai.ts` 的 OpenAI-compatible Responses API 请求增加 8 秒超时，第三方接口无响应时及时回到规则兜底，避免 `/api/grade-answer` 长时间挂起。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（45/45）全部通过；待提交并部署。
+**AI 批改请求超时保护（2026-09-08）**：为备用 `lib/ai.ts` 的 OpenAI-compatible Responses API 请求增加 8 秒超时，第三方接口无响应时及时回到规则兜底，避免 `/api/grade-answer` 长时间挂起。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（45/45）全部通过；提交 `298a0fb8` 并推送 GitHub；Vercel production 部署 `dpl_8qYQg6tUA5LPvCZVEgnCaHWvgn19` 已 READY。
 
 **第 19～24 课内容抽检执行记录（2026-09-08）**：继续依据教材语法页核对并补全课程说明：第 19 课 `Vないでください`、`Vなければなりません／ないといけません`、`Vなくてもいいです` 和疑问词主语的 `が`；第 20 课疑问词＋`か`、`みんなで`；第 21 课 `Vたことがあります`、`Vたり`、`Vた／Vないほうがいい`、`Vた後で`、`Vましょうか`；第 22 课普通体、`と思います`、`と言いました`、`けど`；第 23 课普通体修饰名词、疑问词＋普通体＋`か`、`かどうか`、`Vる／Vたとき`；第 24 课 `んです`、`どうやって`、`について`。在批量题库构建之后追加 12 道稳定题（`L19-Q021`～`Q022`、`L20-Q021`～`Q022`、`L21-Q021`～`Q022`、`L22-Q021`～`Q022`、`L23-Q021`～`Q022`、`L24-Q021`～`Q022`），每课仍保持选择→助词→翻译→问答顺序。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过；代码提交 `5d8901de`；Vercel production 部署 `dpl_2Tu9MBKB8DH43ifzYZst92T1oEz1` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题核对标准答案、可接受答案和提示，不能视为最终教材校对完成。
 
