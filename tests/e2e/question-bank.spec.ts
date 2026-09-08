@@ -68,4 +68,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
     const adjective=questionsForLesson(9).find(item=>item.id==='L09-Q006')!
     expect(isAnswerAccepted(adjective,'このりんごは甘くありません。')).toBeTruthy()
   })
+
+  test('填空题空格边界不会重复题干中的句尾',()=>{
+    const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
+    expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')
+    expect(nominalized.answer).toBe('こと')
+    const offer=questionsForLesson(21).find(item=>item.id==='L21-Q022')!
+    expect(offer.prompt).toBe('荷物を持ち___か。')
+    expect(offer.answer).toBe('ましょ')
+  })
 })

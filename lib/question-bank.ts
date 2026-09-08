@@ -424,6 +424,16 @@ questionBank[24].push(
   {id:'L24-Q022',lessonId:24,type:'助词',prompt:'日本の文化___説明します。',answer:'について',hint:'表示“关于……”用「Nについて」。',options:['A：について','B：にとって','C：によって']},
   {id:'L24-Q023',lessonId:24,type:'选择',prompt:'“儿子终于大学毕业了。”选择正确项。',answer:'C',hint:'表示经过一段时间后终于发生，用副词「とうとう」。',options:['A：息子がいつも大学を卒業しました。','B：息子がまだ大学を卒業しました。','C：息子がとうとう大学を卒業しました。']}
 )
+// 修正填空题的空格边界：答案不能与题干中已经存在的句尾重复。
+Object.assign(questionBank[20].find(question=>question.id==='L20-Q007')!, {
+  prompt:'趣味は写真を撮る___です。',
+  answer:'こと',
+  hint:'动词基本形后接「こと」名词化，再用「です」作谓语。',
+  options:['A：こと','B：の','C：もの']
+})
+Object.assign(questionBank[21].find(question=>question.id==='L21-Q022')!, {
+  prompt:'荷物を持ち___か。'
+})
 // 允许教材中常见的礼貌体同义表达；标准答案仍用于展示和提示。
 const acceptedAnswers:Record<string,string[]>= {
   'L01-Q002':['私は先生じゃありません。'],
