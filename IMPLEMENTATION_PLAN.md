@@ -379,6 +379,8 @@
 
 **AI 默认模型统一（2026-09-09）**：将 `/api/analyze-answer` 未设置 `OPENAI_MODEL` 时的默认值统一为 `gpt-5.4-mini`，与 `lib/ai.ts` 及产品约定一致。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（56/56）通过；待部署后验证生产环境变量实际模型。
 
+**生产模型变量修正（2026-09-09）**：发现 Vercel Production 原变量为 `gpt-5.5`，已通过 Vercel CLI 删除并重新添加 `OPENAI_MODEL=gpt-5.4-mini`（按 Secret 保存，值未输出）。代码部署仍受 Vercel 免费部署额度限制，待下次发布后验证线上接口。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
