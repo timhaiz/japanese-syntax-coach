@@ -371,6 +371,8 @@
 
 **AI 分析超时处理优化（2026-09-08）**：生产回归发现第三方 Responses 接口在冷启动时超过原 8 秒限制，导致可用接口被误判为 fallback。将 `/api/analyze-answer` 请求超时提高到 20 秒，并将超时与网络错误分开返回明确提示；本地 `npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（56/56）通过。生产重新部署后仍需再次验证 `source: "ai"`。
 
+**部署限制记录（2026-09-08）**：提交 `a1945927` 已推送至 GitHub；手动 `vercel --prod --yes` 被 Vercel 免费额度 `api-deployments-free-per-day` 拒绝（当日部署次数超过 100），因此当前生产别名仍指向上一版本 `dpl_8SsKjS5Kpi5hT9gNLchXp9bVrcbU`。待额度恢复或升级后需重新部署并复测 AI 分析超时修复。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
