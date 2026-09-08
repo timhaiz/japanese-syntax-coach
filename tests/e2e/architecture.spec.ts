@@ -15,3 +15,11 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toContain('setReplayMode(existingAnswered>=LESSON_QUESTION_LIMIT)')
   expect(pageSource).toContain('if(!replayMode)')
 })
+
+test('AI 接口包含严格的响应结构校验',()=>{
+  const analyzeSource=readFileSync(resolve(process.cwd(),'app/api/analyze-answer/route.ts'),'utf8')
+  const aiSource=readFileSync(resolve(process.cwd(),'lib/ai.ts'),'utf8')
+  expect(analyzeSource).toContain('isAnalysisResult')
+  expect(analyzeSource).toContain('invalid-response-shape')
+  expect(aiSource).toContain('isGradeResult')
+})
