@@ -361,6 +361,18 @@ questionBank[9].push(
   {id:'L09-Q021',lessonId:9,type:'选择',prompt:'“我不喝咖啡（对比说明）。”选择正确项。',answer:'B',hint:'对比宾语时用「は」替换「を」，不能说「をは」。',options:['A：私はコーヒーをは飲みません。','B：私はコーヒーは飲みません。','C：私はコーヒーが飲みません。']},
   {id:'L09-Q022',lessonId:9,type:'助词',prompt:'これはおいしい___料理です。',answer:'い',hint:'い形容词直接修饰名词。',options:['A：い','B：な','C：の']}
 )
+questionBank[10].push(
+  {id:'L10-Q021',lessonId:10,type:'选择',prompt:'“昨天是休息日。”选择正确项。',answer:'A',hint:'名词过去式用「でした」。',options:['A：昨日は休みでした。','B：昨日は休みなでした。','C：昨日は休みくでした。']},
+  {id:'L10-Q022',lessonId:10,type:'助词',prompt:'この町は静かです。___、少し不便です。',answer:'でも',hint:'转折连接用「でも」。',options:['A：そして','B：でも','C：だから']}
+)
+questionBank[11].push(
+  {id:'L11-Q021',lessonId:11,type:'选择',prompt:'“我喜欢摇滚、流行音乐等。”选择正确项。',answer:'C',hint:'只列举代表项目用「や～など」。',options:['A：ロックとポップスが好きです。','B：ロックをポップスなどが好きです。','C：ロックやポップスなどが好きです。']},
+  {id:'L11-Q022',lessonId:11,type:'助词',prompt:'お酒が好きです___、毎日飲みます。',answer:'から',hint:'原因小句句尾用「から」。',options:['A：から','B：まで','C：しか']}
+)
+questionBank[12].push(
+  {id:'L12-Q021',lessonId:12,type:'选择',prompt:'“比起肉，我更喜欢鱼。”选择正确项。',answer:'B',hint:'偏好比较用「N1よりN2のほうがいいです」。',options:['A：肉より魚はいいです。','B：肉より魚のほうがいいです。','C：肉が魚よりほうがいいです。']},
+  {id:'L12-Q022',lessonId:12,type:'助词',prompt:'最近___少し太りました。',answer:'は',hint:'「最近」作话题时用「は」。',options:['A：は','B：を','C：に']}
+)
 for(const lessonId of [18,19,20,21,22,23,24]) questionBank[lessonId]=build(lessonId,drafts(lessonId<=21?laterLessonRows[lessonId]:supplementalRows(lessonId)))
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
