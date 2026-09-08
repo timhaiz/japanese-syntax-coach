@@ -17,9 +17,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
         expect(question.hint.length).toBeGreaterThan(0)
         if(question.type==='选择'){
           expect(question.options,'选择题必须提供可见选项').toBeDefined()
-          expect(question.options!.length).toBeGreaterThanOrEqual(2)
+          expect(question.options!.length).toBe(3)
           expect(question.options!.every(option=>/^[A-Z]：/.test(option))).toBeTruthy()
           expect(question.options!.some(option=>option.startsWith(`${question.answer}：`))).toBeTruthy()
+        }
+        if(question.type==='助词'){
+          expect(question.options,'助词题必须提供 A/B/C 选项').toBeDefined()
+          expect(question.options!.length).toBe(3)
         }
         if(question.options){
           expect(question.options.length).toBeGreaterThanOrEqual(2)
