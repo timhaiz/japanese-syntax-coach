@@ -36,7 +36,7 @@
 - [x] 修复选择题判分：选项字母会解析为对应选项内容；助词题选择 `B` 会按「の」与标准答案比较。
 - [x] 作答、复习项目和课程进度已迁移至 Supabase 数据表；旧用户元数据保留为兼容回退，旧版每日任务不再参与当前练习。
 - [x] 已建立 Playwright 端到端测试脚本，覆盖第 1 课主路径和认证表单基础校验。
-- [ ] Vercel Git 自动部署连接尚需单独确认；当前仍通过 CLI 手动部署。
+- [x] Vercel Git 自动部署已连接 GitHub 仓库；手动 CLI 部署仍可作为紧急发布方式。
 
 ## 3. 精简后的开发范围
 
@@ -264,6 +264,8 @@
 **PWA 安装元数据补强（2026-09-08）**：新增品牌图标 `public/icon.svg`，并在 manifest 声明 `any maskable` 图标，修复原 manifest `icons: []` 导致部分浏览器无法提示安装的问题。本轮 TypeScript、Build、E2E（42/42）均通过；提交 `0252af8c` 并推送 GitHub；Vercel production 部署 `dpl_CskBN3cH2QkA2DSvQVVxeXCVgPq2` 已 READY，主域名已更新。待在手机浏览器确认安装提示和离线打开。
 
 **课程语法结构回归护栏（2026-09-08）**：新增课程数据测试，要求第 1～24 课均存在具体标题、目标和至少 3 个语法点，每个语法点必须包含含义、接续、说明和例句，并拒绝遗留的「综合表达」占位项。`CI=1 npm run test:e2e -- --workers=5` 共 43 项全部通过；提交 `0c905b8d` 并推送 GitHub；Vercel production 部署 `dpl_9uxfzBCFsMSaELVkgn1PCgV6AKRn` 已 READY，主域名已更新。
+
+**Vercel Git 自动部署连接（2026-09-08）**：通过 `npx vercel git connect https://github.com/timhaiz/japanese-syntax-coach.git --non-interactive` 将项目连接到 GitHub 仓库，命令返回 `Connected`。后续推送到仓库即可触发 Vercel 自动部署；仍需在下一次实际推送后确认自动部署事件。
 
 **第 19～24 课内容抽检执行记录（2026-09-08）**：继续依据教材语法页核对并补全课程说明：第 19 课 `Vないでください`、`Vなければなりません／ないといけません`、`Vなくてもいいです` 和疑问词主语的 `が`；第 20 课疑问词＋`か`、`みんなで`；第 21 课 `Vたことがあります`、`Vたり`、`Vた／Vないほうがいい`、`Vた後で`、`Vましょうか`；第 22 课普通体、`と思います`、`と言いました`、`けど`；第 23 课普通体修饰名词、疑问词＋普通体＋`か`、`かどうか`、`Vる／Vたとき`；第 24 课 `んです`、`どうやって`、`について`。在批量题库构建之后追加 12 道稳定题（`L19-Q021`～`Q022`、`L20-Q021`～`Q022`、`L21-Q021`～`Q022`、`L22-Q021`～`Q022`、`L23-Q021`～`Q022`、`L24-Q021`～`Q022`），每课仍保持选择→助词→翻译→问答顺序。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（41/41）通过；代码提交 `5d8901de`；Vercel production 部署 `dpl_2Tu9MBKB8DH43ifzYZst92T1oEz1` 已 READY，并已绑定主域名。第 1～24 课仍需人工逐题核对标准答案、可接受答案和提示，不能视为最终教材校对完成。
 
