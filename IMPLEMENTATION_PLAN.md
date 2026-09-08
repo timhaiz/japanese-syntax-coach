@@ -359,7 +359,7 @@
 
 **已完成课程重练隔离（2026-09-08）**：修复重练已完成课程时旧 `lessonCorrect` 被继续累加、导致正确率虚高或错误改变解锁状态的问题。新增 `replayMode`：已完成课程重练只更新本次练习游标，不再修改整课完成统计；新增架构回归断言。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（52/52）通过。Vercel Production 部署 `dpl_DPvMUXsQERQ2ttbxMRA5BidgSqrY` 已 READY，并已绑定主域名。
 
-**重练统计 E2E 验收（2026-09-08）**：新增高层测试：预置第 1 课 20/20 和已完成状态，重练第一题并答错，确认本地整课进度仍为 20，不会因重练污染原统计。全量 E2E 共 53/53 通过。
+**重练统计 E2E 验收（2026-09-08）**：新增高层测试：预置第 1 课 20/20 和已完成状态，重练第一题并答错，确认本地整课进度仍为 20，不会因重练污染原统计。全量 E2E 共 53/53 通过；Vercel Production 部署 `dpl_9qwbNq4oKuC1GMG1RxGeReYWrmCd` 已 READY，并已绑定主域名。
 
 ## 6. 测试护栏
 
