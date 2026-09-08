@@ -383,6 +383,8 @@
 
 **题库答案格式审计（2026-09-09）**：对第 1～24 课全部题目执行静态格式检查：翻译题答案均含日文字符，助词题答案无异常长文本，未发现中文误作标准答案；现有 56 条 E2E 继续通过。再次尝试 Production 部署仍返回 `api-deployments-free-per-day`，线上验收保持待办。
 
+**Production 自动部署与 AI 验收（2026-09-09）**：GitHub 自动部署已生成并切换主域名到提交 `0e8d2d31` 对应的 READY 部署 `dpl_A7Q4FAtiKCMePmSSD1CNxoPdySd7`（`japanese-syntax-coach-r72e9582m-timhai06.vercel.app`）。调用主域名 `/api/analyze-answer` 返回 HTTP 200、`source: "ai"`，确认线上 AI 分析链路已恢复；此前 CLI 部署额度限制不再阻塞该版本上线。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
