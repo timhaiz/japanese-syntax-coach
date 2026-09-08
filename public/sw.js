@@ -16,6 +16,9 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const request = event.request
   if(request.method !== 'GET' || !request.url.startsWith(self.location.origin)) return
+  const url = new URL(request.url)
+  // Never cache authenticated or user-specific responses.
+  if(url.pathname.startsWith('/api/') || url.pathname.startsWith('/auth/')) return
   // Navigation falls back to the cached shell; static assets use cache-first.
   if(request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match('/')))
