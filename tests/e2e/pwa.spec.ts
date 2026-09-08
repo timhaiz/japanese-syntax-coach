@@ -20,3 +20,10 @@ test('PWA manifest、图标和 Service Worker 资源可用', async ({request})=>
   expect(worker).toContain("self.addEventListener('install'")
   expect(worker).toContain("self.addEventListener('fetch'")
 })
+
+test('手机窄屏首页不产生横向滚动', async ({page})=>{
+  await page.setViewportSize({width:390,height:844})
+  await page.goto('/')
+  const widths=await page.evaluate(()=>({body:document.body.scrollWidth,viewport:window.innerWidth}))
+  expect(widths.body).toBeLessThanOrEqual(widths.viewport)
+})
