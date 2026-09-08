@@ -16,24 +16,16 @@ test.beforeEach(async({page})=>{
   await page.reload()
 })
 
-test('首页入口会进入今日新题模式',async({page})=>{
-  await expect(page.getByText('今天完成 10 道主动输出练习，约需 20 分钟。')).toBeVisible()
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+test('首页入口会进入当前课程整课练习',async({page})=>{
+  await expect(page.getByText('完成本课 20 道题，正确率达到 90% 后解锁下一课。')).toBeVisible()
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await expect(page.getByText('第 1 课 · 练习')).toBeVisible()
-  await expect(page.getByText('4 / 10')).toBeVisible()
-})
-
-test('每日训练从当前课程第 1 题开始，不沿用整课题号',async({page})=>{
-  await page.evaluate(()=>localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({'0':3})))
-  await page.reload()
-  await page.getByRole('button',{name:/开始今日训练/}).click()
-  await expect(page.getByText('1 / 10')).toBeVisible()
-  await expect(page.locator('.prompt')).toHaveText('“我是学生。”选择正确项。')
+  await expect(page.getByText('4 / 20')).toBeVisible()
 })
 
 test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await page.locator('textarea').fill('私は先生ではありません')
   await page.getByRole('button',{name:/^提交答案/}).click()
@@ -42,7 +34,7 @@ test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
 })
 
 test('提交后保持当前题目，点击下一题才切换',async({page})=>{
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await expect(page.locator('.prompt')).toHaveText('我不是老师。')
   await page.locator('textarea').fill('私は先生ではありません。')
@@ -55,7 +47,7 @@ test('提交后保持当前题目，点击下一题才切换',async({page})=>{
 })
 
 test('句尾假名错误会指出具体缺少的字',async({page})=>{
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await page.locator('textarea').fill('私は先生ではありません。')
   await page.getByRole('button',{name:/^提交答案/}).click()
@@ -66,7 +58,7 @@ test('句尾假名错误会指出具体缺少的字',async({page})=>{
 })
 
 test('助词选择题按选项内容判分',async({page})=>{
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   for(let i=0;i<3;i++){
     const choices=page.locator('.choice-list button')
     await choices.nth(i===0?0:1).click()
@@ -77,7 +69,7 @@ test('助词选择题按选项内容判分',async({page})=>{
 })
 
 test('答错后进入错题本并可独立练习',async({page})=>{
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await page.locator('textarea').fill('完全不同的答案')
   await page.getByRole('button',{name:/^提交答案/}).click()
@@ -93,8 +85,8 @@ test('答错后进入错题本并可独立练习',async({page})=>{
   await expect(page.getByText('目前没有错题')).toBeVisible()
 })
 
-test('每日完成 10 题不会直接解锁下一课',async({page})=>{
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+test('未完成整课 20 题不会解锁下一课',async({page})=>{
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   for(let i=0;i<7;i++){
     await page.locator('textarea').fill(`答案 ${i}`)
@@ -107,14 +99,15 @@ test('每日完成 10 题不会直接解锁下一课',async({page})=>{
   await expect(lesson2).toContainText('🔒')
 })
 
-test('刷新后保留当日训练进度',async({page})=>{
-  await page.getByRole('button',{name:/开始今日训练/}).click()
+test('完成部分整课练习后刷新仍保留课程进度',async({page})=>{
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await page.locator('textarea').fill('答案')
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/下一题/}).click()
   await page.reload()
-  await expect(page.getByText('今日 4 / 10')).toBeVisible()
+  await expect(page.getByText('一课一课练习，')).toBeVisible()
+  await expect(page.getByText('第 1 课', {exact:false}).first()).toBeVisible()
 })
 
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
