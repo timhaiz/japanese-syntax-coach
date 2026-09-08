@@ -49,6 +49,12 @@ test.describe('第 1～24 课题库回归检查',()=>{
     }
   })
 
+  test('整课核心练习每课固定 20 题',()=>{
+    for(const lessonId of Array.from({length:24},(_,index)=>index+1)){
+      expect(questionsForLesson(lessonId).slice(0,20)).toHaveLength(20)
+    }
+  })
+
   test('每课课程页都有具体语法说明，不保留占位语法',()=>{
     expect(courses).toHaveLength(24)
     for(const lesson of courses){

@@ -363,6 +363,8 @@
 
 **AI 响应结构校验（2026-09-08）**：为 `/api/analyze-answer` 和 `lib/ai.ts` 增加运行时字段校验；非法 JSON、缺失字段或错误 verdict 不再标记为 AI 成功，而是回到明确兜底。新增架构回归测试；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（54/54）通过。Vercel Production 部署 `dpl_8SsKjS5Kpi5hT9gNLchXp9bVrcbU` 已 READY，并已绑定主域名。
 
+**整课题量固定护栏（2026-09-08）**：新增回归测试，逐课确认 `questionsForLesson(...).slice(0,20)` 恰好包含 20 题，防止题库扩充或排序变化导致整课入口少题/超题。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（55/55）通过。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
