@@ -341,6 +341,8 @@
 
 **AI 生产接口验收（2026-09-08）**：使用无个人信息的示例句调用生产 `/api/analyze-answer`，返回 HTTP 200，响应包含 `analysis`、`words`、`pitfalls`，且 `source` 为 `ai`（不是 fallback），确认 Production 的第三方 OpenAI-compatible 配置和 Responses 请求链路已生效；未读取或暴露密钥。
 
+**选择题答案记录修复（2026-09-08）**：修复选择题提交时仅把 `A/B/C` 字母写入作答记录和 AI 分析的问题；现在统一使用对应的日文选项文本，规则判分、Supabase `answer_attempts` 和 AI 记忆分析看到的是同一份实际答案。新增架构回归断言；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（51/51）通过。待部署后进行生产冒烟复查。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
