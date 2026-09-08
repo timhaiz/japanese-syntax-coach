@@ -333,6 +333,8 @@
 
 **选择题答案映射审计（2026-09-08）**：逐课输出并核对全部选择题的“标准选项字母 → 日文选项内容”，确认每道题的答案字母均指向对应正确选项，未发现新的映射错误；该检查已由既有题库回归测试持续覆盖。人工教材语境校对仍需继续。
 
+**生产发布健康检查（2026-09-08）**：Git 推送后 Vercel 自动生成最新 Production 部署并返回 `Ready`（最新预览域名 `japanese-syntax-coach-j6hznpd0l-timhai06.vercel.app`）。通过 Node fetch 检查主域名：`/`、`/login`、`/manifest.webmanifest`、`/sw.js` 返回 200；未登录访问 `/api/study-state` 返回 401，未登录访问仅 POST 的 `/api/record-answer` 返回 405，符合路由保护预期。真实账号登录、Chrome/Safari 跨设备同步和手机离线安装仍需设备验收。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
