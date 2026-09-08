@@ -48,5 +48,7 @@ test.describe('第 1～24 课题库回归检查',()=>{
     const question=questionsForLesson(1).find(item=>item.id==='L01-Q002')!
     expect(isAnswerAccepted(question,'私は先生じゃありません。')).toBeTruthy()
     expect(isAnswerAccepted(question,'私は先生です。')).toBeFalsy()
+    const adjective=questionsForLesson(9).find(item=>item.id==='L09-Q006')!
+    expect(isAnswerAccepted(adjective,'このりんごは甘くありません。')).toBeTruthy()
   })
 })

@@ -440,7 +440,12 @@ for(const questions of Object.values(questionBank)) for(const question of questi
 export const normalizeAnswer=(value:string)=>value.replace(/[\s。！？!?，,、．.]/g,'')
 export const isAnswerAccepted=(question:Question,value:string)=>{
   const normalized=normalizeAnswer(value)
-  return [question.answer,...(question.acceptedAnswers??[])].some(answer=>normalizeAnswer(answer)===normalized)
+  const variants=[question.answer,...(question.acceptedAnswers??[])]
+  if(question.answer.includes('ではありません'))variants.push(question.answer.replaceAll('ではありません','じゃありません'))
+  if(question.answer.includes('ではありませんでした'))variants.push(question.answer.replaceAll('ではありませんでした','じゃありませんでした'))
+  if(question.answer.includes('くないです'))variants.push(question.answer.replaceAll('くないです','くありません'))
+  if(question.answer.includes('くなかったです'))variants.push(question.answer.replaceAll('くなかったです','くありませんでした'))
+  return variants.some(answer=>normalizeAnswer(answer)===normalized)
 }
 const questionTypeOrder:Record<QuestionType,number>={选择:0,助词:1,翻译:2,问答:3}
 export function questionsForLesson(lessonId:number){return [...(questionBank[lessonId]??[])].sort((a,b)=>questionTypeOrder[a.type]-questionTypeOrder[b.type])}
