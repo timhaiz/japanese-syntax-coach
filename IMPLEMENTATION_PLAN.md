@@ -411,6 +411,8 @@
 
 **当前课程跳转修复（2026-09-09）**：发现旧云端元数据可能残留第 24 课等未来课程完成标记，首页直接使用孤立标记计算 `nextLessonIndex`，会错误显示第 24 课。新增连续完成前缀归一化：只有从第 1 课开始连续完成的课程才能解锁后续课程；孤立未来标记不再影响当前课程、锁定状态或综合混练。新增 E2E 回归“未来课程陈旧标记不会跳到第 24 课”；`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（57/57）通过。待自动部署后复测 Production。
 
+**当前课程跳转 Production 部署（2026-09-09）**：提交 `d4dd2ff9` 已由 GitHub 自动触发 Vercel Production 部署 `japanese-syntax-coach-gh0une5bk-timhai06.vercel.app`，状态 READY。线上真实账号页面需刷新并重新完成云端 hydration 后验证；本地回归已覆盖陈旧未来课程标记场景。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
