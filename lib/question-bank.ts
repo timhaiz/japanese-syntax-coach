@@ -422,7 +422,9 @@ questionBank[16].push(
 )
 questionBank[17].push(
   {id:'L17-Q023',lessonId:17,type:'选择',prompt:'“我什么都可以吃。”选择正确项。',answer:'C',hint:'疑问词加「でも」表示全面肯定。',options:['A：何も食べていいです。','B：何が食べていいです。','C：何でも食べていいです。']},
-  {id:'L17-Q024',lessonId:17,type:'助词',prompt:'どこ___行きたくないです。',answer:'も',hint:'疑问词＋も＋否定表示哪里都不去。',options:['A：も','B：で','C：が']}
+  {id:'L17-Q024',lessonId:17,type:'助词',prompt:'どこ___行きたくないです。',answer:'も',hint:'疑问词＋も＋否定表示哪里都不去。',options:['A：も','B：で','C：が']},
+  {id:'L17-Q025',lessonId:17,type:'选择',prompt:'“随时都可以打电话。”选择正确项。',answer:'A',hint:'「いつでも」表示任何时间都可以，后接肯定句。',options:['A：いつでも電話をしてください。','B：いつも電話をしません。','C：いつか電話をしないでください。']},
+  {id:'L17-Q026',lessonId:17,type:'问答',prompt:'新しいパソコンが欲しいですね。（是啊。）',answer:'そうですね。',hint:'句尾「ね」传达共鸣；回应可用「そうですね」。'}
 )
 for(const lessonId of [18,19,20,21,22,23,24]) questionBank[lessonId]=build(lessonId,drafts(lessonId<=21?laterLessonRows[lessonId]:supplementalRows(lessonId)))
 questionBank[18].push(
