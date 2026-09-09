@@ -119,6 +119,13 @@ test('未完成课程再次进入时从已答题数继续，不重复第一题',
   await expect(page.locator('.prompt')).not.toHaveText('“我是学生。”选择正确项。')
 })
 
+test('未来课程的陈旧完成标记不会把当前课程跳到第24课',async({page})=>{
+  await page.evaluate(()=>localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([23])))
+  await page.reload()
+  await expect(page.getByRole('button',{name:/开始第 1 课/})).toBeVisible()
+  await expect(page.getByText('第 24 课 · 练习')).not.toBeVisible()
+})
+
 test('已完成课程重练不会污染原有整课统计',async({page})=>{
   await page.evaluate(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
