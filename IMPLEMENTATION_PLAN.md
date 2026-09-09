@@ -415,6 +415,8 @@
 
 **当前课程真实账号修复（2026-09-09）**：进一步确认旧 `completedLessons` 列表即使没有对应 `lessonDone/correct` 证据也会被信任，导致已登录用户显示第 24 课。现在完成标记必须同时满足实际答题数不少于 20 且正确率至少 90%，再按连续课程前缀解锁；新增云端脏标记回归测试。`npx tsc --noEmit`、`npm run build`、`CI=1 npm run test:e2e -- --workers=5`（58/58）通过，待自动部署后请刷新 Chrome/Safari 验证。
 
+**当前课程修复部署完成（2026-09-09）**：提交 `180935e1` 已自动部署到 Vercel Production，部署 `japanese-syntax-coach-o01enjx1o-timhai06.vercel.app` 状态 READY。请用户刷新已登录浏览器并等待同步完成后确认当前课程显示第 1 课。
+
 ## 6. 测试护栏
 
 每个里程碑开始前必须确认工作区干净；完成后必须运行：
