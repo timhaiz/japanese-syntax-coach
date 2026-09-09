@@ -1,3 +1,4 @@
+import './design-tokens.css'
 import './globals.css'
 import './profile.css'
 import './header.css'
