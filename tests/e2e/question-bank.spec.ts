@@ -147,6 +147,14 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(questions.some(item=>item.answer==='そこはわたしの席ですが…。')).toBeTruthy()
     expect(courses.find(item=>item.id===12)?.grammar.map(item=>item.pattern)).toEqual(expect.arrayContaining(['やっぱり','句尾 が…']))
   })
+  test('第 14 课覆盖それから、そうしてください、なかなか和礼貌请求',()=>{
+    const questions=questionsForLesson(14)
+    expect(questions.some(item=>item.options?.some(option=>option.includes('それから家へ帰ります。')))).toBeTruthy()
+    expect(questions.some(item=>item.answer==='はい、そうしてください。')).toBeTruthy()
+    expect(questions.some(item=>item.answer==='すみませんが、この手紙を出してください。')).toBeTruthy()
+    expect(questions.some(item=>item.answer==='なかなかおいしいです。')).toBeTruthy()
+    expect(courses.find(item=>item.id===14)?.grammar.map(item=>item.pattern)).toEqual(expect.arrayContaining(['それから','なかなか','そうして ください','すみませんが']))
+  })
 
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!

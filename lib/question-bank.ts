@@ -406,7 +406,11 @@ questionBank[13].push(
 )
 questionBank[14].push(
   {id:'L14-Q021',lessonId:14,type:'选择',prompt:'“这辆公交车经过车站前。”选择正确项。',answer:'B',hint:'经过地点用「を＋通ります」。',options:['A：このバスは駅前に通ります。','B：このバスは駅前を通ります。','C：このバスは駅前で通ります。']},
-  {id:'L14-Q022',lessonId:14,type:'助词',prompt:'毎朝7時に家___出ます。',answer:'を',hint:'离开地点用「を＋出ます」。',options:['A：を','B：に','C：で']}
+  {id:'L14-Q022',lessonId:14,type:'助词',prompt:'毎朝7時に家___出ます。',answer:'を',hint:'离开地点用「を＋出ます」。',options:['A：を','B：に','C：で']},
+  {id:'L14-Q023',lessonId:14,type:'选择',prompt:'“然后回家。”选择正确项。',answer:'A',hint:'顺序连接下一个动作时用「それから」。',options:['A：それから家へ帰ります。','B：それから家を帰ります。','C：それから家が帰ります。']},
+  {id:'L14-Q024',lessonId:14,type:'问答',prompt:'この書類をコピーしますか。（好的，请那样做。）',answer:'はい、そうしてください。',hint:'承接前文请求时用「そうしてください」。'},
+  {id:'L14-Q025',lessonId:14,type:'翻译',prompt:'不好意思，请把这封信寄出。',answer:'すみませんが、この手紙を出してください。',hint:'礼貌请求前可用「すみませんが」。'},
+  {id:'L14-Q026',lessonId:14,type:'问答',prompt:'小野さんの料理はどうですか。（相当好吃。）',answer:'なかなかおいしいです。',hint:'超出预期的肯定评价用「なかなか」。'}
 )
 questionBank[15].push(
   {id:'L15-Q021',lessonId:15,type:'选择',prompt:'“森先生有车。”选择正确项。',answer:'C',hint:'持有的结果状态用「持っています」。',options:['A：森さんは車を持ちます。','B：森さんは車が持っています。','C：森さんは車を持っています。']},
