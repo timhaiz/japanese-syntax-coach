@@ -84,6 +84,15 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(isAnswerAccepted(adjective,'このりんごは甘くありません。')).toBeTruthy()
   })
 
+  test('第 1 课题目只覆盖教材的判断、应答和名词所属',()=>{
+    const questions=questionsForLesson(1)
+    expect(questions.find(item=>item.id==='L01-Q003')?.prompt).toBe('李さんはJC企画___社員です。')
+    expect(questions.find(item=>item.id==='L01-Q007')?.prompt).toBe('北京旅行社は中国___企業です。')
+    expect(questions.find(item=>item.id==='L01-Q016')?.answer).toBe('はい、小野です。')
+    expect(questions.find(item=>item.id==='L01-Q017')?.answer).toBe('分かりません。')
+    expect(questions.some(item=>/これ|それ|あれ|何ですか/.test(item.prompt))).toBeFalsy()
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')
