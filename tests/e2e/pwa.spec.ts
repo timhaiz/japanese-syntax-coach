@@ -20,6 +20,7 @@ test('PWA manifest、图标和 Service Worker 资源可用', async ({request})=>
   expect(worker).toContain("self.addEventListener('install'")
   expect(worker).toContain("self.addEventListener('fetch'")
   expect(worker).toContain("url.pathname.startsWith('/api/')")
+  expect(worker).toContain("syntax-coach-shell-v3")
 })
 
 test('手机窄屏首页不产生横向滚动', async ({page})=>{
