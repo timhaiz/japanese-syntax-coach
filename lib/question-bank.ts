@@ -442,7 +442,11 @@ questionBank[19].push(
 )
 questionBank[20].push(
   {id:'L20-Q021',lessonId:20,type:'选择',prompt:'“有没有什么想买的东西？”选择正确项。',answer:'A',hint:'疑问词加「か」表示不确定的对象。',options:['A：何か買いたいものがありますか。','B：何も買いたいものがありますか。','C：何でも買いたいものがありますか。']},
-  {id:'L20-Q022',lessonId:20,type:'助词',prompt:'みんな___旅行に行きます。',answer:'で',hint:'表示大家共同做某事时用「みんなで」。',options:['A：を','B：で','C：に']}
+  {id:'L20-Q022',lessonId:20,type:'助词',prompt:'みんな___旅行に行きます。',answer:'で',hint:'表示大家共同做某事时用「みんなで」。',options:['A：を','B：で','C：に']},
+  {id:'L20-Q023',lessonId:20,type:'选择',prompt:'“大家一起包饺子。”选择正确项。',answer:'B',hint:'共同动作主体用「みんなで」。',options:['A：みんなに餃子を作ります。','B：みんなで餃子を作ります。','C：みんなを餃子が作ります。']},
+  {id:'L20-Q024',lessonId:20,type:'翻译',prompt:'当然可以。',answer:'もちろんです。',hint:'表示理所当然的肯定，用「もちろんです」。'},
+  {id:'L20-Q025',lessonId:20,type:'问答',prompt:'いつか日本料理をごちそうしてください。（好的。）',answer:'もちろんです。',hint:'接受请客邀请可用「もちろんです」。'},
+  {id:'L20-Q026',lessonId:20,type:'翻译',prompt:'我请小李吃日本料理。',answer:'李さんに日本料理をごちそうします。',hint:'请别人吃饭用「人に食事をごちそうします」。'}
 )
 questionBank[21].push(
   {id:'L21-Q021',lessonId:21,type:'选择',prompt:'“做完作业后看电视。”选择正确项。',answer:'C',hint:'动作完成后用「た形＋後で」。',options:['A：宿題をする後でテレビを見ます。','B：宿題をして後でテレビを見ます。','C：宿題をした後でテレビを見ます。']},
