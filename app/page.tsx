@@ -35,7 +35,7 @@ const errorTagsForAnswer=(question:Question,actual:string)=>{
 }
 type WordToken={id:string;text:string}
 const tokenPatterns=['なければなりません','なくてもいいです','ないでください','ではありません','ませんでした','かもしれません','と思います','ましょうか','ています','ください','ましょう','でしょう','ですか','ました','ません','です']
-const tokenParticles=new Set(['は','が','を','に','で','と','の','も','へ','から','まで','か'])
+const tokenParticles=['から','まで','は','が','を','に','で','と','の','も','へ','か']
 const tokenizeAnswer=(answer:string):string[]=>{
  const tokens:string[]=[];let index=0
  while(index<answer.length){
@@ -43,10 +43,10 @@ const tokenizeAnswer=(answer:string):string[]=>{
   if(punctuation){tokens.push(punctuation[0]);index+=punctuation[0].length;continue}
   const pattern=tokenPatterns.find(value=>rest.startsWith(value))
   if(pattern){tokens.push(pattern);index+=pattern.length;continue}
-  const char=answer[index]
-  if(tokenParticles.has(char)){tokens.push(char);index+=1;continue}
+  const particle=tokenParticles.find(value=>rest.startsWith(value))
+  if(particle){tokens.push(particle);index+=particle.length;continue}
   let end=index+1
-  while(end<answer.length&&!tokenParticles.has(answer[end])&&!/[。！？!?、，．.]/.test(answer[end])&&!tokenPatterns.some(value=>answer.slice(end).startsWith(value)))end+=1
+  while(end<answer.length&&!tokenParticles.some(value=>answer.slice(end).startsWith(value))&&!/[。！？!?、，．.]/.test(answer[end])&&!tokenPatterns.some(value=>answer.slice(end).startsWith(value)))end+=1
   tokens.push(answer.slice(index,end));index=end
  }
  return tokens.filter(Boolean)

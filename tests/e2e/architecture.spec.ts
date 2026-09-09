@@ -16,6 +16,7 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toContain('if(!replayMode)')
   expect(pageSource).toContain('createWordTokens')
   expect(pageSource).toContain('tokenQuestion')
+  expect(pageSource).toContain("tokenParticles=['から','まで'")
 })
 
 test('AI 接口包含严格的响应结构校验',()=>{
