@@ -120,6 +120,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(core.find(item=>item.id==='L05-Q018')?.answer).toContain('小野さんは今日は休みます。')
   })
 
+  test('第 7 课核心 20 题覆盖宾语、场所、选择和请求',()=>{
+    const core=questionsForLesson(7).slice(0,20)
+    expect(core.some(item=>item.answer==='この本をください。')).toBeTruthy()
+    expect(core.some(item=>item.answer==='パンかお粥を食べます。')).toBeTruthy()
+    expect(core.some(item=>item.answer==='一緒に勉強しましょう。')).toBeTruthy()
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')
