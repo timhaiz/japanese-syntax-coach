@@ -137,6 +137,17 @@ test('没有实际进度的云端完成标记不会解锁课程',async({page})=>
   await expect(page.getByRole('button',{name:/02 第 2 课/})).toContainText('🔒')
 })
 
+test('陈旧的100%答题进度但没有正确率证明时仍从第一课开始',async({page})=>{
+  await page.evaluate(()=>{
+    const progress=Object.fromEntries(Array.from({length:24},(_,index)=>[index,20]))
+    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify(progress))
+    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
+  })
+  await page.reload()
+  await expect(page.getByRole('button',{name:/开始第 1 课/})).toBeVisible()
+  await expect(page.getByRole('button',{name:/开始第 24 课/})).not.toBeVisible()
+})
+
 test('已完成课程重练不会污染原有整课统计',async({page})=>{
   await page.evaluate(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))

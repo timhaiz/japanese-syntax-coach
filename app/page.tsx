@@ -65,7 +65,7 @@ export default function Home(){
  const displayedLessons=courseLessons.map((lesson,index)=>{const total=LESSON_QUESTION_LIMIT;return {...lesson,progress:Math.min(100,Math.round(((lessonDone[index]??0)/total)*100)),locked:index>0&&!effectiveCompletedLessons.includes(index-1)}})
  const lessons=displayedLessons
  const selectedLesson=displayedLessons[Math.min(active,displayedLessons.length-1)]
- const firstIncompleteLesson=displayedLessons.findIndex(lesson=>!lesson.locked&&lesson.progress<100)
+ const firstIncompleteLesson=displayedLessons.findIndex(lesson=>!effectiveCompletedLessons.includes(lesson.id-1))
  const nextLessonIndex=firstIncompleteLesson>=0?firstIncompleteLesson:displayedLessons.length-1
  const progress=fullLessonMode?fullLessonProgress:sessionProgress; const sessionLimit=practiceMode==='mistakes'?mistakes.length:practiceMode==='mixed'?mixedQuestions.length:LESSON_QUESTION_LIMIT
  const lessonQuestions=coreQuestionsForLesson(selectedLesson.id)
