@@ -120,7 +120,7 @@ test('未完成课程再次进入时从已答题数继续，不重复第一题',
 })
 
 test('未来课程的陈旧完成标记不会把当前课程跳到第24课',async({page})=>{
-  await page.evaluate(()=>localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([23])))
+  await page.evaluate(()=>localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify(Array.from({length:24},(_,index)=>index))))
   await page.reload()
   await expect(page.getByRole('button',{name:/开始第 1 课/})).toBeVisible()
   await expect(page.getByText('第 24 课 · 练习')).not.toBeVisible()
