@@ -5,6 +5,7 @@ import {getSupabaseBrowser} from '@/lib/supabase'
 import {isAnswerAccepted,normalizeAnswer,questionsForLesson, type Question} from '@/lib/question-bank'
 import {createMixedReviewSet} from '@/lib/review-set'
 import {BottomNav} from '@/components/BottomNav'
+import {AppHeader} from '@/components/AppHeader'
 
 const courseLessons=courses.map((c)=>({...c,progress:0,locked:false}))
 const LESSON_QUESTION_LIMIT=20
@@ -129,7 +130,7 @@ const lessonUnlockMessage=effectiveCompletedLessons.includes(active)?'本课已�
  const registrationDate=registeredAt?new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(registeredAt)):'—'
  const totalAnswered=Object.values(lessonDone).reduce((sum,count)=>sum+count,0)
  return <main className="shell">
-   <header><div className="brand"><span className="brand-mark">文</span><div><strong>句型教练</strong><small>标准日本语 · 上册</small></div></div><div className="streak">第 {currentLesson.id} 课</div><button className="avatar" onClick={()=>setTab('me')}>{learnerName.slice(0,1).toUpperCase()}</button></header>
+   <AppHeader lessonId={currentLesson.id} learnerName={learnerName} onProfile={()=>setTab('me')} />
   {tab==='home'&&<><section className="hero home-hero"><div className="hero-copy"><p className="eyebrow">早上好，{learnerName}</p><h1>一课一练，<em>把句型练成反射。</em></h1><p className="muted">每课 20 道主动输出题：先看句型骨架，再练到能快速组织日语。</p><button className="primary" onClick={()=>startLessonPractice(nextLessonIndex)}>开始第 {currentLesson.id} 课 <span>→</span></button></div><div className="orb" style={{background:`conic-gradient(var(--green) 0 ${currentLesson.progress}%,#dfe9e3 ${currentLesson.progress}%`}}><div className="orb-inner">本课<br/><b>{currentLesson.progress}%</b></div></div></section>
    {effectiveCompletedLessons.some(index=>(index+1)%5===0)&&<button className="primary wide" onClick={startMixedPractice}>开始综合混练（已完成课程） <span>→</span></button>}
    <section className="stats"><div><b>{currentLesson.progress}%</b><span>本课进度</span></div><div><b>第 {currentLesson.id} 课</b><span>继续学习</span></div><div><b>{overallProgress}%</b><span>整体掌握</span></div></section>

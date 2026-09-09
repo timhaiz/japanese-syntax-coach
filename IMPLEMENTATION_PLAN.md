@@ -570,3 +570,5 @@ npm run test:e2e       # M0 建立后启用
 **M7.56 设计 Token 基础接入（2026-09-09）**：新增 `app/design-tokens.css`，集中定义颜色、圆角、4px 间距和 44px 触控尺寸；`app/layout.tsx` 全局引入 Token；全局样式补充触控安全高度及 iPhone safe-area 底部间距。未修改业务逻辑。`npx tsc --noEmit`、课程流程 E2E 21/21、`npm run build`、`git diff --check` 均通过。
 
 **M7.57 底部导航组件化（2026-09-09）**：将首页底部导航抽离至 `components/BottomNav.tsx`，保留首页、课程、错题本、我的四个入口及当前选中状态；`app/page.tsx` 仅传递导航状态和回调，业务逻辑与现有 CSS selector 不变。`npx tsc --noEmit`、`git diff --check` 通过。
+
+**M7.58 顶部品牌栏组件化（2026-09-09）**：将品牌、当前课程和用户头像栏抽离至 `components/AppHeader.tsx`；首页仅传递显示数据和个人页回调，保留原有 class、视觉样式和登录状态逻辑。
