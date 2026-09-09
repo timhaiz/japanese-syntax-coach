@@ -127,6 +127,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(core.some(item=>item.answer==='一緒に勉強しましょう。')).toBeTruthy()
   })
 
+  test('第 8 课核心 20 题覆盖授受、会面以及もう／よ',()=>{
+    const core=questionsForLesson(8).slice(0,20)
+    expect(core.some(item=>item.answer==='私はもう昼ご飯を食べました。')).toBeTruthy()
+    expect(core.some(item=>item.answer==='もう帰りましたよ。')).toBeTruthy()
+    expect(core.some(item=>item.answer==='小野さんは私にチョコレートをくれました。')).toBeTruthy()
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')

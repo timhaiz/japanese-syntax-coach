@@ -9,6 +9,9 @@ async function passFirstChoice(page:any){
     await page.getByRole('button',{name:/下一题|完成训练/}).click()
   }
 }
+async function pickTokens(page:any,tokens:string[]){
+  for(const token of tokens) await page.locator('.token-bank .token-button').filter({hasText:new RegExp(`^${token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}$`)}).first().click()
+}
 
 test.beforeEach(async({page})=>{
   await page.goto('/')
@@ -27,7 +30,7 @@ test('首页入口会进入当前课程整课练习',async({page})=>{
 test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
-  await page.locator('textarea').fill('私は先生ではありません')
+  await pickTokens(page,['私','は','先生','ではありません'])
   await page.getByRole('button',{name:/^提交答案/}).click()
   await expect(page.getByText('✓ 很好，句型正确')).toBeVisible()
   await expect(page.getByText('下次书写时不要忘记写标点符号。')).toBeVisible()
@@ -37,24 +40,24 @@ test('提交后保持当前题目，点击下一题才切换',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await expect(page.locator('.prompt')).toHaveText('我不是老师。')
-  await page.locator('textarea').fill('私は先生ではありません。')
+  await pickTokens(page,['私','は','先生','ではありません','。'])
   await page.getByRole('button',{name:/^提交答案/}).click()
   await expect(page.locator('.prompt')).toHaveText('我不是老师。')
-  await expect(page.locator('textarea')).toHaveValue('私は先生ではありません。')
+  await expect(page.locator('.token-answer')).toContainText('私は先生ではありません。')
   await page.getByRole('button',{name:/下一题/}).click()
   await expect(page.locator('.prompt')).toContainText('田中先生')
-  await expect(page.locator('textarea')).toHaveValue('')
+  await expect(page.locator('.token-answer')).toContainText('点击下方词块组成答案')
 })
 
-test('句尾假名错误会指出具体缺少的字',async({page})=>{
+test('候选词块可组成问句并提交判分',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
-  await page.locator('textarea').fill('私は先生ではありません。')
+  await pickTokens(page,['私','は','先生','ではありません','。'])
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/下一题/}).click()
-  await page.locator('textarea').fill('田中さんは学生でか。')
+  await pickTokens(page,['田中さん','は','学生','ですか','。'])
   await page.getByRole('button',{name:/^提交答案/}).click()
-  await expect(page.getByText(/句尾疑问形式错误.*でか.*ですか.*缺少.*す/)).toBeVisible()
+  await expect(page.getByText('✓ 很好，句型正确')).toBeVisible()
 })
 
 test('助词选择题按选项内容判分',async({page})=>{
@@ -71,14 +74,14 @@ test('助词选择题按选项内容判分',async({page})=>{
 test('答错后进入错题本并可独立练习',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
-  await page.locator('textarea').fill('完全不同的答案')
+  await page.locator('.token-bank .token-button').first().click()
   await page.getByRole('button',{name:/^提交答案/}).click()
   await expect(page.getByText('△ 句型或词语还需要调整')).toBeVisible()
   await page.getByRole('button',{name:/错题本/}).click()
   await expect(page.getByText('我不是老师。')).toBeVisible()
   await page.getByRole('button',{name:/开始错题练习/}).click()
   await passFirstChoice(page)
-  await page.locator('textarea').fill('私は先生ではありません。')
+  await pickTokens(page,['私','は','先生','ではありません','。'])
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/完成训练/}).click()
   await page.getByRole('button',{name:/错题本/}).click()
@@ -89,7 +92,7 @@ test('未完成整课 20 题不会解锁下一课',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   for(let i=0;i<6;i++){
-    await page.locator('textarea').fill(`答案 ${i}`)
+    await page.locator('.token-bank .token-button').first().click()
     await page.getByRole('button',{name:/^提交答案/}).click()
     await page.getByRole('button',{name:/下一题/}).click()
   }
@@ -102,7 +105,7 @@ test('未完成整课 20 题不会解锁下一课',async({page})=>{
 test('完成部分整课练习后刷新仍保留课程进度',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
-  await page.locator('textarea').fill('答案')
+  await page.locator('.token-bank .token-button').first().click()
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/下一题/}).click()
   await page.reload()
