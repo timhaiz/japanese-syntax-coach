@@ -574,3 +574,5 @@ npm run test:e2e       # M0 建立后启用
 **M7.58 顶部品牌栏组件化（2026-09-09）**：将品牌、当前课程和用户头像栏抽离至 `components/AppHeader.tsx`；首页仅传递显示数据和个人页回调，保留原有 class、视觉样式和登录状态逻辑。
 
 **M7.59 首页 Hero 组件化（2026-09-09）**：将首页欢迎文案、当前课程启动按钮和进度环抽离至 `components/HomeHero.tsx`；`app/page.tsx` 仅传递用户名称、课程号、进度和启动回调，保留既有 `.hero`、`.home-hero`、`.hero-copy`、`.orb` 选择器及练习入口行为。完整 Playwright E2E 72/72 通过。
+
+**M7.60 课程语法列表组件化（2026-09-09）**：将课程详情中的语法讲解、例句朗读、应答和易错点列表抽离至 `components/GrammarList.tsx`；课程状态、解锁判定和整课练习入口仍由 `app/page.tsx` 管理。
