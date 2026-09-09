@@ -436,7 +436,9 @@ questionBank[18].push(
 )
 questionBank[19].push(
   {id:'L19-Q021',lessonId:19,type:'选择',prompt:'“明天必须来学校。”选择正确项。',answer:'B',hint:'义务可用「ない形去ない＋なければなりません」或「ないといけません」。',options:['A：明日学校へ来なくてもいいです。','B：明日学校へ来なければなりません。','C：明日学校へ来ないでください。']},
-  {id:'L19-Q022',lessonId:19,type:'助词',prompt:'だれ___来ましたか。',answer:'が',hint:'疑问词作主语、回答新信息时用「が」。',options:['A：は','B：を','C：が']}
+  {id:'L19-Q022',lessonId:19,type:'助词',prompt:'だれ___来ましたか。',answer:'が',hint:'疑问词作主语、回答新信息时用「が」。',options:['A：は','B：を','C：が']},
+  {id:'L19-Q023',lessonId:19,type:'选择',prompt:'“终于上个月进公司了。”选择正确项。',answer:'A',hint:'经过等待或努力终于实现，用「やっと」。',options:['A：やっと先月入社しました。','B：だいぶ先月入社しません。','C：やっと先月入社しないでください。']},
+  {id:'L19-Q024',lessonId:19,type:'翻译',prompt:'身体已经好多了。',answer:'体はだいぶよくなりました。',hint:'表示程度有明显改善，用「だいぶ」。'}
 )
 questionBank[20].push(
   {id:'L20-Q021',lessonId:20,type:'选择',prompt:'“有没有什么想买的东西？”选择正确项。',answer:'A',hint:'疑问词加「か」表示不确定的对象。',options:['A：何か買いたいものがありますか。','B：何も買いたいものがありますか。','C：何でも買いたいものがありますか。']},
