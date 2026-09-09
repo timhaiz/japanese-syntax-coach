@@ -69,6 +69,19 @@ test('候选词块不显示句末标点，触控后不会把相邻词显示为�
   await expect(page.locator('.token-bank .token-selected')).toHaveCount(0)
 })
 
+test('选择候选词后提交答案按钮保持原位',async({page})=>{
+  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await passFirstChoice(page)
+  const submit=page.getByRole('button',{name:/^提交答案/})
+  const before=await submit.boundingBox()
+  await page.locator('.token-bank').getByRole('button',{name:'私',exact:true}).click()
+  await page.locator('.token-bank').getByRole('button',{name:'は',exact:true}).click()
+  const after=await submit.boundingBox()
+  expect(before?.y).toBeDefined()
+  expect(after?.y).toBe(before?.y)
+  await expect(page.locator('.token-bank .token-slot')).toHaveCount(2)
+})
+
 test('助词选择题按选项内容判分',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   for(let i=0;i<3;i++){
