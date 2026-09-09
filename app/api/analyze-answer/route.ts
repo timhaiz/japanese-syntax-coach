@@ -15,8 +15,11 @@ export async function POST(req:Request){
   try{
     const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
     // Third-party compatible endpoints may need a few extra seconds on cold start.
-    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false}),signal:AbortSignal.timeout(20000)})
-    if(!response.ok)return NextResponse.json({analysis:`AI 服务返回 ${response.status}，请检查第三方接口地址、Key、模型名和额度。`,source:'fallback',reason:`upstream-${response.status}`})
+    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false}),signal:AbortSignal.timeout(8000)})
+    if(!response.ok){
+      const message=response.status===401||response.status===403?'AI 鉴权失败，请检查 API Key。':response.status===429?'AI 当前额度不足或请求过于频繁，请稍后重试。':`AI 服务暂时不可用（${response.status}），请检查接口地址和模型设置。`
+      return NextResponse.json({analysis:message,source:'fallback',reason:`upstream-${response.status}`})
+    }
     const data=await response.json();const outputText=data.output_text||data.output?.flatMap((item:{content?:{text?:string}[]})=>item.content||[]).map((item:{text?:string})=>item.text||'').join('')||''
     let parsed:unknown
     try{parsed=JSON.parse(outputText||'{}')}catch{return NextResponse.json({analysis:'AI 返回的内容不是合法 JSON，请稍后重试；你仍可使用规则批改结果。',source:'fallback',reason:'invalid-json'})}
