@@ -6,6 +6,7 @@ import {isAnswerAccepted,normalizeAnswer,questionsForLesson, type Question} from
 import {createMixedReviewSet} from '@/lib/review-set'
 import {BottomNav} from '@/components/BottomNav'
 import {AppHeader} from '@/components/AppHeader'
+import {HomeHero} from '@/components/HomeHero'
 
 const courseLessons=courses.map((c)=>({...c,progress:0,locked:false}))
 const LESSON_QUESTION_LIMIT=20
@@ -131,7 +132,7 @@ const lessonUnlockMessage=effectiveCompletedLessons.includes(active)?'本课已�
  const totalAnswered=Object.values(lessonDone).reduce((sum,count)=>sum+count,0)
  return <main className="shell">
    <AppHeader lessonId={currentLesson.id} learnerName={learnerName} onProfile={()=>setTab('me')} />
-  {tab==='home'&&<><section className="hero home-hero"><div className="hero-copy"><p className="eyebrow">早上好，{learnerName}</p><h1>一课一练，<em>把句型练成反射。</em></h1><p className="muted">每课 20 道主动输出题：先看句型骨架，再练到能快速组织日语。</p><button className="primary" onClick={()=>startLessonPractice(nextLessonIndex)}>开始第 {currentLesson.id} 课 <span>→</span></button></div><div className="orb" style={{background:`conic-gradient(var(--green) 0 ${currentLesson.progress}%,#dfe9e3 ${currentLesson.progress}%`}}><div className="orb-inner">本课<br/><b>{currentLesson.progress}%</b></div></div></section>
+  {tab==='home'&&<><HomeHero learnerName={learnerName} lessonId={currentLesson.id} progress={currentLesson.progress} onStart={()=>startLessonPractice(nextLessonIndex)} />
    {effectiveCompletedLessons.some(index=>(index+1)%5===0)&&<button className="primary wide" onClick={startMixedPractice}>开始综合混练（已完成课程） <span>→</span></button>}
    <section className="stats"><div><b>{currentLesson.progress}%</b><span>本课进度</span></div><div><b>第 {currentLesson.id} 课</b><span>继续学习</span></div><div><b>{overallProgress}%</b><span>整体掌握</span></div></section>
    <section className="section-head"><div><p className="eyebrow">本课路径</p><h2>{currentLesson.progress>0?'接着练这一课':'先学句型，再开始练习'}</h2></div><button className="link" onClick={()=>setTab('lessons')}>课程地图 →</button></section>
