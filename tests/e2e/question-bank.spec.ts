@@ -114,6 +114,12 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(core.find(item=>item.id==='L04-Q020')?.answer).toBe('何もありません。')
   })
 
+  test('第 5 课核心 20 题覆盖ごろ和时间对比',()=>{
+    const core=questionsForLesson(5).slice(0,20)
+    expect(core.find(item=>item.id==='L05-Q010')?.answer).toBe('私は昨日12時半ごろ寝ました。')
+    expect(core.find(item=>item.id==='L05-Q018')?.answer).toContain('小野さんは今日は休みます。')
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')
