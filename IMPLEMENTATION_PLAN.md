@@ -568,3 +568,5 @@ npm run test:e2e       # M0 建立后启用
 **M7.55 候选词占位稳定布局（2026-09-09）**：选择候选词后，候选区以不可见、等尺寸的占位词块保留原有 Flex 布局；因此下方“提交答案”按钮不再随候选词减少而向上跳动。标点仍不显示为候选词。新增浏览器回归测试，实际测量选词前后提交按钮的纵坐标相同，并断言占位词块存在；`npx tsc --noEmit`、课程流程 E2E 21/21 和 `npm run build` 通过。
 
 **M7.56 设计 Token 基础接入（2026-09-09）**：新增 `app/design-tokens.css`，集中定义颜色、圆角、4px 间距和 44px 触控尺寸；`app/layout.tsx` 全局引入 Token；全局样式补充触控安全高度及 iPhone safe-area 底部间距。未修改业务逻辑。`npx tsc --noEmit`、课程流程 E2E 21/21、`npm run build`、`git diff --check` 均通过。
+
+**M7.57 底部导航组件化（2026-09-09）**：将首页底部导航抽离至 `components/BottomNav.tsx`，保留首页、课程、错题本、我的四个入口及当前选中状态；`app/page.tsx` 仅传递导航状态和回调，业务逻辑与现有 CSS selector 不变。`npx tsc --noEmit`、`git diff --check` 通过。
