@@ -20,7 +20,8 @@ test.beforeEach(async({page})=>{
 })
 
 test('首页入口会进入当前课程整课练习',async({page})=>{
-  await expect(page.getByText('完成本课 20 道题，正确率达到 90% 后解锁下一课。')).toBeVisible()
+  await expect(page.getByText('一课一练，',{exact:false})).toBeVisible()
+  await expect(page.getByText('每课 20 道主动输出题：先看句型骨架，再练到能快速组织日语。')).toBeVisible()
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await expect(page.getByText('第 1 课 · 练习')).toBeVisible()
@@ -118,7 +119,7 @@ test('未完成整课 20 题不会解锁下一课',async({page})=>{
     await page.getByRole('button',{name:/^提交答案/}).click()
     await page.getByRole('button',{name:/下一题/}).click()
   }
-  await page.getByRole('button',{name:/课程/}).click()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
   const lesson2=page.getByRole('button',{name:/02 第 2 课/})
   await expect(lesson2).toBeVisible()
   await expect(lesson2).toContainText('🔒')
@@ -131,7 +132,7 @@ test('完成部分整课练习后刷新仍保留课程进度',async({page})=>{
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/下一题/}).click()
   await page.reload()
-  await expect(page.getByText('一课一课练习，')).toBeVisible()
+  await expect(page.getByText('一课一练，',{exact:false})).toBeVisible()
   await expect(page.getByText('第 1 课', {exact:false}).first()).toBeVisible()
 })
 
@@ -158,7 +159,7 @@ test('没有实际进度的云端完成标记不会解锁课程',async({page})=>
   })
   await page.reload()
   await expect(page.getByRole('button',{name:/开始第 1 课/})).toBeVisible()
-  await page.getByRole('button',{name:/课程/}).click()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
   await expect(page.getByRole('button',{name:/02 第 2 课/})).toContainText('🔒')
 })
 
@@ -179,7 +180,7 @@ test('已完成课程重练不会污染原有整课统计',async({page})=>{
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0]))
   })
   await page.reload()
-  await page.getByRole('button',{name:/课程/}).click()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await page.getByRole('button',{name:/开始整课练习/}).click()
   await page.locator('.choice-list button').nth(1).click()
@@ -230,7 +231,7 @@ test('服务端判分接受等价答案且规则正确结果优先',async({page}
 })
 
 test('第 1 课展示判断、疑问应答和名词所属说明',async({page})=>{
-  await page.getByRole('button',{name:/课程/}).click()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await expect(page.getByText('N は N ですか。')).toBeVisible()
   await expect(page.getByText(/肯定：はい、そうです。/)).toBeVisible()
