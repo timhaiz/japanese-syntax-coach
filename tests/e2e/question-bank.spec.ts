@@ -100,6 +100,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(core.find(item=>item.id==='L02-Q020')?.answer).toBe('小野さんの机はどの机ですか。')
   })
 
+  test('第 3 课核心 20 题覆盖也、选择疑问和价格问句',()=>{
+    const core=questionsForLesson(3).slice(0,20)
+    expect(core.find(item=>item.id==='L03-Q005')?.answer).toBe('あそこもJC企画のビルです。')
+    expect(core.find(item=>item.id==='L03-Q017')?.answer).toBe('かばん売り場は1階ですか、2階ですか。')
+    expect(core.find(item=>item.id==='L03-Q020')?.answer).toBe('その車はいくらですか。')
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')
