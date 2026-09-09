@@ -378,7 +378,9 @@ questionBank[8].push(
 )
 questionBank[9].push(
   {id:'L09-Q021',lessonId:9,type:'选择',prompt:'“我不喝咖啡（对比说明）。”选择正确项。',answer:'B',hint:'对比宾语时用「は」替换「を」，不能说「をは」。',options:['A：私はコーヒーをは飲みません。','B：私はコーヒーは飲みません。','C：私はコーヒーが飲みません。']},
-  {id:'L09-Q022',lessonId:9,type:'助词',prompt:'これはおいしい___料理です。',answer:'い',hint:'い形容词直接修饰名词。',options:['A：い','B：な','C：の']}
+  {id:'L09-Q022',lessonId:9,type:'助词',prompt:'これはおいしい___料理です。',answer:'い',hint:'い形容词直接修饰名词。',options:['A：い','B：な','C：の']},
+  {id:'L09-Q023',lessonId:9,type:'选择',prompt:'“这件浴衣正合适。”选择正确项。',answer:'C',hint:'表示大小、温度或程度恰好合适，用「ちょうどいいです」。',options:['A：この浴衣はちょうどいです。','B：この浴衣はちょうどなです。','C：この浴衣はちょうどいいです。']},
+  {id:'L09-Q024',lessonId:9,type:'问答',prompt:'この水はとてもおいしいですか。（是的，很好喝哦。）',answer:'はい、とてもおいしいですよ。',hint:'句尾「よ」用于把对方不知道的信息告诉对方。'}
 )
 questionBank[10].push(
   {id:'L10-Q021',lessonId:10,type:'选择',prompt:'“昨天是休息日。”选择正确项。',answer:'A',hint:'名词过去式用「でした」。',options:['A：昨日は休みでした。','B：昨日は休みなでした。','C：昨日は休みくでした。']},

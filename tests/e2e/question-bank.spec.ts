@@ -134,6 +134,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(core.some(item=>item.answer==='小野さんは私にチョコレートをくれました。')).toBeTruthy()
   })
 
+  test('第 9 课覆盖ちょうどいい和句尾よ',()=>{
+    const questions=questionsForLesson(9)
+    expect(questions.some(item=>item.options?.some(option=>option.includes('この浴衣はちょうどいいです。')))).toBeTruthy()
+    expect(questions.some(item=>item.answer==='はい、とてもおいしいですよ。')).toBeTruthy()
+    expect(courses.find(item=>item.id===9)?.grammar.map(item=>item.pattern)).toEqual(expect.arrayContaining(['ちょうど いいです。','句尾 よ']))
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')
