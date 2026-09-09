@@ -155,6 +155,20 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(questions.some(item=>item.answer==='なかなかおいしいです。')).toBeTruthy()
     expect(courses.find(item=>item.id===14)?.grammar.map(item=>item.pattern)).toEqual(expect.arrayContaining(['それから','なかなか','そうして ください','すみませんが']))
   })
+  test('第 16～20 课覆盖教材表达及会话应答',()=>{
+    const checks:[number,string[],string[]][]=[
+      [16,['持っています','結婚しています'],['Nを持っています／住んでいます。']],
+      [17,['いつでも電話をしてください。','そうですね。'],['いつでも／だれでも','句尾 ね']],
+      [18,['お正月の食料品をまとめて買います。','もうすぐ春になります。'],['まとめて','NはNが似合います']],
+      [19,['やっと先月入社しました。','体はだいぶよくなりました。'],['やっと','だいぶ']],
+      [20,['もちろんです。','李さんに日本料理をごちそうします。'],['ごちそうします','いつか／もちろん']]
+    ]
+    for(const [lesson,answers,patterns] of checks){
+      const questions=questionsForLesson(lesson)
+      for(const answer of answers)expect(questions.some(item=>item.answer.includes(answer)||item.options?.some(option=>option.includes(answer)))).toBeTruthy()
+      expect(courses.find(item=>item.id===lesson)?.grammar.map(item=>item.pattern)).toEqual(expect.arrayContaining(patterns))
+    }
+  })
 
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
