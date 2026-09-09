@@ -429,7 +429,10 @@ questionBank[17].push(
 for(const lessonId of [18,19,20,21,22,23,24]) questionBank[lessonId]=build(lessonId,drafts(lessonId<=21?laterLessonRows[lessonId]:supplementalRows(lessonId)))
 questionBank[18].push(
   {id:'L18-Q021',lessonId:18,type:'选择',prompt:'“把房间变干净。”选择正确项。',answer:'B',hint:'人为改变用「Nをきれいにします」。',options:['A：部屋がきれいになります。','B：部屋をきれいにします。','C：部屋できれいになります。']},
-  {id:'L18-Q022',lessonId:18,type:'助词',prompt:'息子は医者___なりました。',answer:'に',hint:'名词变化用「Nになります」。',options:['A：に','B：を','C：で']}
+  {id:'L18-Q022',lessonId:18,type:'助词',prompt:'息子は医者___なりました。',answer:'に',hint:'名词变化用「Nになります」。',options:['A：に','B：を','C：で']},
+  {id:'L18-Q023',lessonId:18,type:'选择',prompt:'“把春节用品一次买齐。”选择正确项。',answer:'A',hint:'集中、一次性处理用「まとめて」。',options:['A：お正月の食料品をまとめて買います。','B：お正月の食料品をすぐ買いません。','C：お正月の食料品を似合って買います。']},
+  {id:'L18-Q024',lessonId:18,type:'助词',prompt:'小野さんは赤い服___よく似合います。',answer:'が',hint:'「人は物が似合います」中相称的物品用「が」。',options:['A：を','B：が','C：に']},
+  {id:'L18-Q025',lessonId:18,type:'翻译',prompt:'春天马上就要到了。',answer:'もうすぐ春になります。',hint:'“不久、马上”用「もうすぐ」。'}
 )
 questionBank[19].push(
   {id:'L19-Q021',lessonId:19,type:'选择',prompt:'“明天必须来学校。”选择正确项。',answer:'B',hint:'义务可用「ない形去ない＋なければなりません」或「ないといけません」。',options:['A：明日学校へ来なくてもいいです。','B：明日学校へ来なければなりません。','C：明日学校へ来ないでください。']},
