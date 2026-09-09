@@ -93,6 +93,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(questions.some(item=>/これ|それ|あれ|何ですか/.test(item.prompt))).toBeFalsy()
   })
 
+  test('第 2 课核心 20 题覆盖教材的指示、疑问和选择表达',()=>{
+    const core=questionsForLesson(2).slice(0,20)
+    expect(core.find(item=>item.id==='L02-Q014')?.answer).toBe('あの人はだれですか。')
+    expect(core.find(item=>item.id==='L02-Q019')?.answer).toBe('森さんのかばんはどれですか。')
+    expect(core.find(item=>item.id==='L02-Q020')?.answer).toBe('小野さんの机はどの机ですか。')
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')
