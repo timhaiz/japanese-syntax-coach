@@ -382,6 +382,10 @@ questionBank[9].push(
   {id:'L09-Q023',lessonId:9,type:'选择',prompt:'“这件浴衣正合适。”选择正确项。',answer:'C',hint:'表示大小、温度或程度恰好合适，用「ちょうどいいです」。',options:['A：この浴衣はちょうどいです。','B：この浴衣はちょうどなです。','C：この浴衣はちょうどいいです。']},
   {id:'L09-Q024',lessonId:9,type:'问答',prompt:'この水はとてもおいしいですか。（是的，很好喝哦。）',answer:'はい、とてもおいしいですよ。',hint:'句尾「よ」用于把对方不知道的信息告诉对方。'}
 )
+questionBank[11].push(
+  {id:'L11-Q023',lessonId:11,type:'选择',prompt:'“张先生会做饭。”选择正确项。',answer:'B',hint:'直接表达会做某项技能时，用「Nができます」。',options:['A：張さんは料理をできます。','B：張さんは料理ができます。','C：張さんは料理にできます。']},
+  {id:'L11-Q024',lessonId:11,type:'翻译',prompt:'小李会打网球。',answer:'李さんはテニスができます。',hint:'技能能力用「Nができます」。'}
+)
 questionBank[10].push(
   {id:'L10-Q021',lessonId:10,type:'选择',prompt:'“昨天是休息日。”选择正确项。',answer:'A',hint:'名词过去式用「でした」。',options:['A：昨日は休みでした。','B：昨日は休みなでした。','C：昨日は休みくでした。']},
   {id:'L10-Q022',lessonId:10,type:'助词',prompt:'この町は静かです。___、少し不便です。',answer:'でも',hint:'转折连接用「でも」。',options:['A：そして','B：でも','C：だから']}
