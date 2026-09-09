@@ -141,6 +141,13 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(courses.find(item=>item.id===9)?.grammar.map(item=>item.pattern)).toEqual(expect.arrayContaining(['ちょうど いいです。','句尾 よ']))
   })
 
+  test('第 12 课覆盖やっぱり和句尾が的委婉停顿',()=>{
+    const questions=questionsForLesson(12)
+    expect(questions.some(item=>item.options?.some(option=>option.includes('やっぱりウーロン茶です。')))).toBeTruthy()
+    expect(questions.some(item=>item.answer==='そこはわたしの席ですが…。')).toBeTruthy()
+    expect(courses.find(item=>item.id===12)?.grammar.map(item=>item.pattern)).toEqual(expect.arrayContaining(['やっぱり','句尾 が…']))
+  })
+
   test('填空题空格边界不会重复题干中的句尾',()=>{
     const nominalized=questionsForLesson(20).find(item=>item.id==='L20-Q007')!
     expect(nominalized.prompt).toBe('趣味は写真を撮る___です。')

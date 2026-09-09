@@ -396,7 +396,9 @@ questionBank[11].push(
 )
 questionBank[12].push(
   {id:'L12-Q021',lessonId:12,type:'选择',prompt:'“比起肉，我更喜欢鱼。”选择正确项。',answer:'B',hint:'偏好比较用「N1よりN2のほうがいいです」。',options:['A：肉より魚はいいです。','B：肉より魚のほうがいいです。','C：肉が魚よりほうがいいです。']},
-  {id:'L12-Q022',lessonId:12,type:'助词',prompt:'最近___少し太りました。',answer:'は',hint:'「最近」作话题时用「は」。',options:['A：は','B：を','C：に']}
+  {id:'L12-Q022',lessonId:12,type:'助词',prompt:'最近___少し太りました。',answer:'は',hint:'「最近」作话题时用「は」。',options:['A：は','B：を','C：に']},
+  {id:'L12-Q023',lessonId:12,type:'选择',prompt:'“结果还是乌龙茶。”选择正确项。',answer:'C',hint:'「やっぱり」表示经过考虑后仍与预想一致或最终确定。',options:['A：やっぱりウーロン茶でしたか。','B：やっぱりウーロン茶をです。','C：やっぱりウーロン茶です。']},
+  {id:'L12-Q024',lessonId:12,type:'问答',prompt:'すみません、そこはあなたの席ですか。（是我的座位，不过……）',answer:'そこはわたしの席ですが…。',hint:'句尾「が…」表示委婉停顿，把后半句留给对方理解。'}
 )
 questionBank[13].push(
   {id:'L13-Q021',lessonId:13,type:'选择',prompt:'“去邮局寄东西。”选择正确项。',answer:'A',hint:'移动目的用动词词干＋に行きます。',options:['A：郵便局へ荷物を出しに行きます。','B：郵便局へ荷物を出して行きます。','C：郵便局で荷物を出すに行きます。']},
