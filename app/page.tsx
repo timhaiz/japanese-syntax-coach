@@ -9,7 +9,7 @@ const courseLessons=courses.map((c)=>({...c,progress:0,locked:false}))
 const LESSON_QUESTION_LIMIT=20
 const coreQuestionsForLesson=(lessonId:number)=>questionsForLesson(lessonId).slice(0,LESSON_QUESTION_LIMIT)
 const contiguousCompletedLessons=(values:number[])=>{const set=new Set(values);const result:number[]=[];for(let index=0;index<courses.length&&set.has(index);index++)result.push(index);return result}
-const completedFromLessonProgress=(progress:Record<number,number>,explicit:unknown,correct:Record<number,number>={})=>{const qualifies=(index:number)=>{const answered=progress[index];const right=correct[index];return typeof answered==='number'&&answered>=LESSON_QUESTION_LIMIT&&typeof right==='number'&&right/answered>=0.9};const values=Array.isArray(explicit)?explicit.filter((n):n is number=>Number.isInteger(n)&&n>=0&&n<courses.length&&qualifies(n)):[];const derived=Object.entries(progress).filter(([index])=>qualifies(Number(index))).map(([index])=>Number(index));return contiguousCompletedLessons(Array.from(new Set([...values,...derived])).sort((a,b)=>a-b))}
+const completedFromLessonProgress=(progress:Record<number,number>,explicit:unknown,correct:Record<number,number>={})=>{const qualifies=(index:number)=>{const answered=progress[index];const right=correct[index];const requiredCorrect=Math.ceil(LESSON_QUESTION_LIMIT*0.9);return typeof answered==='number'&&answered>=LESSON_QUESTION_LIMIT&&typeof right==='number'&&right>=requiredCorrect};const values=Array.isArray(explicit)?explicit.filter((n):n is number=>Number.isInteger(n)&&n>=0&&n<courses.length&&qualifies(n)):[];const derived=Object.entries(progress).filter(([index])=>qualifies(Number(index))).map(([index])=>Number(index));return contiguousCompletedLessons(Array.from(new Set([...values,...derived])).sort((a,b)=>a-b))}
 const explainAnswerDifference=(expected:string,actual:string)=>{
  const clean=(value:string)=>value.replace(/[。！？!?，,、．.\s]/g,'')
  const expectedClean=clean(expected);const actualClean=clean(actual)
@@ -81,11 +81,11 @@ export default function Home(){
  useEffect(()=>{if(mistakesLoaded)localStorage.setItem('syntax-coach-mistakes',JSON.stringify(mistakes))},[mistakes,mistakesLoaded])
  useEffect(()=>{if(!lessonLoaded)return;try{const saved=JSON.parse(localStorage.getItem('syntax-coach-lesson-progress')||'{}');const merged={...saved,...Object.fromEntries(Object.entries(lessonDone).map(([index,count])=>[index,Math.max(Number(saved?.[index])||0,Number(count)||0)]))};localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify(merged))}catch{localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify(lessonDone))}},[lessonDone,lessonLoaded])
  useEffect(()=>{if(completedLoaded)localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify(completedLessons))},[completedLessons,completedLoaded])
- useEffect(()=>{const answered=lessonDone[active]??0;const correct=lessonCorrect[active]??0;if(answered>=LESSON_QUESTION_LIMIT&&correct/Math.max(1,answered)>=0.9)setCompletedLessons(value=>value.includes(active)?value:[...value,active])},[active,lessonDone,lessonCorrect])
+ useEffect(()=>{const answered=lessonDone[active]??0;const correct=lessonCorrect[active]??0;if(answered>=LESSON_QUESTION_LIMIT&&correct>=Math.ceil(LESSON_QUESTION_LIMIT*0.9))setCompletedLessons(value=>value.includes(active)?value:[...value,active])},[active,lessonDone,lessonCorrect])
  useEffect(()=>{if(!graded)setAiVerdict(null)},[graded])
  const activeLessonDone=lessonDone[active]??0
  const activeLessonCorrect=lessonCorrect[active]??0
- const activeLessonAccuracy=activeLessonDone?Math.round(activeLessonCorrect/activeLessonDone*100):0
+ const activeLessonAccuracy=activeLessonDone?Math.min(100,Math.round(Math.min(activeLessonCorrect,LESSON_QUESTION_LIMIT)/Math.min(activeLessonDone,LESSON_QUESTION_LIMIT)*100)):0
  const effectiveCompletedLessons=completedFromLessonProgress(lessonDone,completedLessons,lessonCorrect)
  const displayedLessons=courseLessons.map((lesson,index)=>{const total=LESSON_QUESTION_LIMIT;return {...lesson,progress:Math.min(100,Math.round(((lessonDone[index]??0)/total)*100)),locked:index>0&&!effectiveCompletedLessons.includes(index-1)}})
  const lessons=displayedLessons
