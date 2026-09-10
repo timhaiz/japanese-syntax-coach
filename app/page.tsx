@@ -958,11 +958,15 @@ export default function Home() {
             <small>{lessonUnlockMessage}</small>
           </div>
           <GrammarList grammar={selectedLesson.grammar} />
-          <button className="primary wide" onClick={() => startLessonPractice(active)}>
+          <button
+            className="primary wide"
+            onClick={() => startLessonPractice(active)}
+            disabled={activeLessonDone >= LESSON_QUESTION_LIMIT && mistakes.filter((item) => item.lessonId === selectedLesson.id).length === 0}
+          >
             {activeLessonDone >= LESSON_QUESTION_LIMIT && mistakes.filter((item) => item.lessonId === selectedLesson.id).length > 0
               ? `重练本课错题（${mistakes.filter((item) => item.lessonId === selectedLesson.id).length} 题）`
               : activeLessonDone >= LESSON_QUESTION_LIMIT
-                ? '本课已完成，可再次复习'
+                ? '本课已完成，无错题需要重练'
                 : `开始整课练习（${LESSON_QUESTION_LIMIT} 题）`} <span>→</span>
           </button>
           {active < displayedLessons.length - 1 && (
