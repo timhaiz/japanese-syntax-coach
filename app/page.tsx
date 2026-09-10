@@ -8,6 +8,7 @@ import {BottomNav} from '@/components/BottomNav'
 import {AppHeader} from '@/components/AppHeader'
 import {HomeHero} from '@/components/HomeHero'
 import {GrammarList} from '@/components/GrammarList'
+import {ProgressSummary} from '@/components/ProgressSummary'
 
 const courseLessons=courses.map((c)=>({...c,progress:0,locked:false}))
 const LESSON_QUESTION_LIMIT=20
@@ -137,7 +138,7 @@ const lessonUnlockMessage=effectiveCompletedLessons.includes(active)?'本课已�
    <AppHeader lessonId={currentLesson.id} learnerName={learnerName} onProfile={()=>setTab('me')} />
   {tab==='home'&&<>{lessonSummary&&<section className="lesson-summary"><p className="eyebrow">本课完成</p><h2>第 {lessonSummary.lessonId} 课练习完成</h2><p>正确率 <b>{lessonSummary.accuracy}%</b></p><p>{lessonSummary.mistakeTypes.length?`需要巩固：${lessonSummary.mistakeTypes.join('、')}`:'本课没有新增错题，保持得很好。'}</p>{lessonSummary.nextLessonId&&<button className="primary" onClick={()=>{setLessonSummary(null);setActive(lessonSummary.nextLessonId!-1);setTab('lesson')}}>进入第 {lessonSummary.nextLessonId} 课 <span>→</span></button>}</section>}<HomeHero learnerName={learnerName} lessonId={currentLesson.id} progress={currentLesson.progress} onStart={()=>startLessonPractice(nextLessonIndex)} />
    {effectiveCompletedLessons.some(index=>(index+1)%5===0)&&<button className="primary wide" onClick={startMixedPractice}>开始综合混练（已完成课程） <span>→</span></button>}
-   <section className="stats"><div><b>{currentLesson.progress}%</b><span>本课进度</span></div><div><b>第 {currentLesson.id} 课</b><span>继续学习</span></div><div><b>{overallProgress}%</b><span>整体掌握</span></div></section>
+   <ProgressSummary lessonProgress={currentLesson.progress} lessonId={currentLesson.id} overallProgress={overallProgress} />
    <section className="section-head"><div><p className="eyebrow">本课路径</p><h2>{currentLesson.progress>0?'接着练这一课':'先学句型，再开始练习'}</h2></div><button className="link" onClick={()=>setTab('lessons')}>课程地图 →</button></section>
 <div className="lesson-card" onClick={()=>{setActive(nextLessonIndex);setTab('lesson')}}><div className="lesson-no">{String(currentLesson.id).padStart(2,'0')}</div><div className="lesson-info"><div className="tag">第 {currentLesson.id} 课 · 句型训练</div><h3>{currentLesson.title}</h3><p>{currentLesson.grammar.map(g=>g.pattern).join(' · ')}</p><div className="progress"><i style={{width:`${currentLesson.progress}%`}}/></div><small>{currentLesson.progress?`已完成 ${currentLesson.progress}% · 继续巩固句型`:'查看本课句型，然后完成 20 道练习'}</small></div><span className="arrow">→</span></div>
   </>}
