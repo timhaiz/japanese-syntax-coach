@@ -107,6 +107,7 @@ test.describe('第 1～24 课题库回归检查',()=>{
     expect(core.find(item=>item.id==='L03-Q020')?.answer).toBe('その車はいくらですか。')
   })
 
+
   test('第 4 课核心 20 题覆盖确认句和疑问词全面否定',()=>{
     const core=questionsForLesson(4).slice(0,20)
     expect(core.find(item=>item.id==='L04-Q018')?.answer).toBe('あそこに犬がいますね。')

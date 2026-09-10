@@ -44,12 +44,15 @@ const errorTagsForAnswer=(question:Question,actual:string)=>{
 type WordToken={id:string;text:string}
 const tokenPatterns=['なければなりません','なくてもいいです','ないでください','ではありません','ませんでした','かもしれません','と思います','ましょうか','ています','ください','ましょう','でしょう','ですか','ました','ません','です']
 const tokenParticles=['から','まで','は','が','を','に','で','と','の','も','へ','か']
+const tokenWords=['かばん','売り場','銀行','郵便局','デパート','会社','学校','駅']
 const tokenizeAnswer=(answer:string):string[]=>{
  const tokens:string[]=[];let index=0
  while(index<answer.length){
   const rest=answer.slice(index);const punctuation=rest.match(/^[。！？!?、，．.]/)
   // 标点保留在标准答案中用于展示和漏写提醒，但不作为可点击词块。
   if(punctuation){index+=punctuation[0].length;continue}
+  const word=tokenWords.find(value=>rest.startsWith(value))
+  if(word){tokens.push(word);index+=word.length;continue}
   const pattern=tokenPatterns.find(value=>rest.startsWith(value))
   if(pattern){tokens.push(pattern);index+=pattern.length;continue}
   const particle=tokenParticles.find(value=>rest.startsWith(value))
