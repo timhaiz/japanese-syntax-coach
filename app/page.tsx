@@ -827,12 +827,20 @@ export default function Home() {
       }
     }
     setSessionProgress((value) => value + 1)
+    const currentQuestion = submittedQuestion.current
     submittedQuestion.current = null
     setSelectedChoice('')
     setInput('')
     setGraded(false)
     if (complete) {
-      const types = mistakes.filter((item) => item.lessonId === active + 1).map((item) => item.type)
+      const remainingMistakes = mistakes
+        .filter((item) => item.lessonId === active + 1)
+        .filter((item) => !answerMatches || item.id !== currentQuestion?.id)
+      const summaryMistakes =
+        !answerMatches && currentQuestion
+          ? [...remainingMistakes, currentQuestion]
+          : remainingMistakes
+      const types = summaryMistakes.map((item) => item.type)
       setLessonSummary({
         lessonId: active + 1,
         accuracy: Math.round((finalCorrect / LESSON_QUESTION_LIMIT) * 100),
