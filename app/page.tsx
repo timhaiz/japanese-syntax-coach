@@ -1,158 +1,1220 @@
 'use client'
-import {useEffect,useRef,useState} from 'react'
-import {courses} from '@/lib/courses'
-import {getSupabaseBrowser} from '@/lib/supabase'
-import {isAnswerAccepted,normalizeAnswer,questionsForLesson, type Question} from '@/lib/question-bank'
-import {createMixedReviewSet} from '@/lib/review-set'
-import {BottomNav} from '@/components/BottomNav'
-import {AppHeader} from '@/components/AppHeader'
-import {HomeHero} from '@/components/HomeHero'
-import {GrammarList} from '@/components/GrammarList'
-import {ProgressSummary} from '@/components/ProgressSummary'
-import {CurrentLessonCard} from '@/components/CurrentLessonCard'
-import {LessonGrid} from '@/components/LessonGrid'
-import {ProfileOverview} from '@/components/ProfileOverview'
+import { useEffect, useRef, useState } from 'react'
+import { courses } from '@/lib/courses'
+import { getSupabaseBrowser } from '@/lib/supabase'
+import {
+  isAnswerAccepted,
+  normalizeAnswer,
+  questionsForLesson,
+  type Question,
+} from '@/lib/question-bank'
+import { createMixedReviewSet } from '@/lib/review-set'
+import { BottomNav } from '@/components/BottomNav'
+import { AppHeader } from '@/components/AppHeader'
+import { HomeHero } from '@/components/HomeHero'
+import { GrammarList } from '@/components/GrammarList'
+import { ProgressSummary } from '@/components/ProgressSummary'
+import { CurrentLessonCard } from '@/components/CurrentLessonCard'
+import { LessonGrid } from '@/components/LessonGrid'
+import { ProfileOverview } from '@/components/ProfileOverview'
 
-const courseLessons=courses.map((c)=>({...c,progress:0,locked:false}))
-const LESSON_QUESTION_LIMIT=20
-const coreQuestionsForLesson=(lessonId:number)=>questionsForLesson(lessonId).slice(0,LESSON_QUESTION_LIMIT)
-const contiguousCompletedLessons=(values:number[])=>{const set=new Set(values);const result:number[]=[];for(let index=0;index<courses.length&&set.has(index);index++)result.push(index);return result}
-const completedFromLessonProgress=(progress:Record<number,number>,explicit:unknown,correct:Record<number,number>={})=>{const qualifies=(index:number)=>{const answered=progress[index];const right=correct[index];const requiredCorrect=Math.ceil(LESSON_QUESTION_LIMIT*0.9);return typeof answered==='number'&&answered>=LESSON_QUESTION_LIMIT&&typeof right==='number'&&right>=requiredCorrect};const values=Array.isArray(explicit)?explicit.filter((n):n is number=>Number.isInteger(n)&&n>=0&&n<courses.length&&qualifies(n)):[];const derived=Object.entries(progress).filter(([index])=>qualifies(Number(index))).map(([index])=>Number(index));return contiguousCompletedLessons(Array.from(new Set([...values,...derived])).sort((a,b)=>a-b))}
-const explainAnswerDifference=(expected:string,actual:string)=>{
- const clean=(value:string)=>value.replace(/[。！？!?，,、．.\s]/g,'')
- const expectedClean=clean(expected);const actualClean=clean(actual)
- if(expectedClean===actualClean)return '句型和词语正确，但书写时请补上句末标点。'
- if(expected.includes('ですか')&&actual.includes('でか'))return '句尾疑问形式错误：你写成了「でか」，应为完整的「ですか」（缺少「す」）。'
- if(expected.includes('ではありません')&&actual.includes('でわありません'))return '否定形式的假名错误：「でわ」应写作「では」。'
- const limit=Math.min(expectedClean.length,actualClean.length);let index=0
- while(index<limit&&expectedClean[index]===actualClean[index])index++
- if(index<limit)return `第 ${index+1} 个字有误：你写的是「${actualClean[index]}」，应为「${expectedClean[index]}」。`
- if(actualClean.length<expectedClean.length)return `答案少了内容：第 ${actualClean.length+1} 个字应为「${expectedClean[actualClean.length]}」，请检查是否漏写。`
- if(actualClean.length>expectedClean.length)return `答案多了内容：请检查第 ${expectedClean.length+1} 个字「${actualClean[expectedClean.length]}」附近。`
- return '请逐字对照参考答案，检查助词、活用和句尾形式。'
+const courseLessons = courses.map((c) => ({ ...c, progress: 0, locked: false }))
+const LESSON_QUESTION_LIMIT = 20
+const coreQuestionsForLesson = (lessonId: number) =>
+  questionsForLesson(lessonId).slice(0, LESSON_QUESTION_LIMIT)
+const contiguousCompletedLessons = (values: number[]) => {
+  const set = new Set(values)
+  const result: number[] = []
+  for (let index = 0; index < courses.length && set.has(index); index++) result.push(index)
+  return result
 }
-const errorTagsForAnswer=(question:Question,actual:string)=>{
- if(question.type==='助词')return ['助词']
- const expected=question.answer
- if(expected.includes('ですか')&&actual.includes('でか'))return ['假名']
- if(expected.includes('ではありません')&&actual.includes('でわありません'))return ['假名']
- if(expected.includes('なければ')||expected.includes('なくても')||expected.includes('ないで'))return ['活用']
- if(expected.includes('ています')||expected.includes('ました')||expected.includes('ません'))return ['活用']
- if(actual.length!==expected.length)return ['词汇']
- return ['句型顺序']
+const completedFromLessonProgress = (
+  progress: Record<number, number>,
+  explicit: unknown,
+  correct: Record<number, number> = {},
+) => {
+  const qualifies = (index: number) => {
+    const answered = progress[index]
+    const right = correct[index]
+    const requiredCorrect = Math.ceil(LESSON_QUESTION_LIMIT * 0.9)
+    return (
+      typeof answered === 'number' &&
+      answered >= LESSON_QUESTION_LIMIT &&
+      typeof right === 'number' &&
+      right >= requiredCorrect
+    )
+  }
+  const values = Array.isArray(explicit)
+    ? explicit.filter(
+        (n): n is number => Number.isInteger(n) && n >= 0 && n < courses.length && qualifies(n),
+      )
+    : []
+  const derived = Object.entries(progress)
+    .filter(([index]) => qualifies(Number(index)))
+    .map(([index]) => Number(index))
+  return contiguousCompletedLessons(
+    Array.from(new Set([...values, ...derived])).sort((a, b) => a - b),
+  )
 }
-type WordToken={id:string;text:string}
-const tokenPatterns=['なければなりません','なくてもいいです','ないでください','ではありません','ませんでした','かもしれません','と思います','ましょうか','ています','ください','ましょう','でしょう','ですか','ました','ません','です']
-const tokenParticles=['から','まで','は','が','を','に','で','と','の','も','へ','か']
-const tokenWords=['かばん','売り場','銀行','郵便局','デパート','会社','学校','駅']
-const tokenizeAnswer=(answer:string):string[]=>{
- const tokens:string[]=[];let index=0
- while(index<answer.length){
-  const rest=answer.slice(index);const punctuation=rest.match(/^[。！？!?、，．.]/)
-  // 标点保留在标准答案中用于展示和漏写提醒，但不作为可点击词块。
-  if(punctuation){index+=punctuation[0].length;continue}
-  const word=tokenWords.find(value=>rest.startsWith(value))
-  if(word){tokens.push(word);index+=word.length;continue}
-  const pattern=tokenPatterns.find(value=>rest.startsWith(value))
-  if(pattern){tokens.push(pattern);index+=pattern.length;continue}
-  const particle=tokenParticles.find(value=>rest.startsWith(value))
-  if(particle){tokens.push(particle);index+=particle.length;continue}
-  let end=index+1
-  while(end<answer.length&&!tokenParticles.some(value=>answer.slice(end).startsWith(value))&&!/[。！？!?、，．.]/.test(answer[end])&&!tokenPatterns.some(value=>answer.slice(end).startsWith(value)))end+=1
-  tokens.push(answer.slice(index,end));index=end
- }
- return tokens.filter(Boolean)
+const explainAnswerDifference = (expected: string, actual: string) => {
+  const clean = (value: string) => value.replace(/[。！？!?，,、．.\s]/g, '')
+  const expectedClean = clean(expected)
+  const actualClean = clean(actual)
+  if (expectedClean === actualClean) return '句型和词语正确，但书写时请补上句末标点。'
+  if (expected.includes('ですか') && actual.includes('でか'))
+    return '句尾疑问形式错误：你写成了「でか」，应为完整的「ですか」（缺少「す」）。'
+  if (expected.includes('ではありません') && actual.includes('でわありません'))
+    return '否定形式的假名错误：「でわ」应写作「では」。'
+  const limit = Math.min(expectedClean.length, actualClean.length)
+  let index = 0
+  while (index < limit && expectedClean[index] === actualClean[index]) index++
+  if (index < limit)
+    return `第 ${index + 1} 个字有误：你写的是「${actualClean[index]}」，应为「${expectedClean[index]}」。`
+  if (actualClean.length < expectedClean.length)
+    return `答案少了内容：第 ${actualClean.length + 1} 个字应为「${expectedClean[actualClean.length]}」，请检查是否漏写。`
+  if (actualClean.length > expectedClean.length)
+    return `答案多了内容：请检查第 ${expectedClean.length + 1} 个字「${actualClean[expectedClean.length]}」附近。`
+  return '请逐字对照参考答案，检查助词、活用和句尾形式。'
 }
-const tokenOrder=(id:string)=>{let hash=2166136261;for(let index=0;index<id.length;index++){hash^=id.charCodeAt(index);hash=Math.imul(hash,16777619)}return hash>>>0}
-const createWordTokens=(question:Question):WordToken[]=>tokenizeAnswer(question.answer).map((text,index)=>({id:`${question.id}-T${String(index+1).padStart(2,'0')}`,text})).sort((a,b)=>tokenOrder(a.id)-tokenOrder(b.id))
-export default function Home(){
- const [tab,setTab]=useState('home'); const [active,setActive]=useState(0); const [input,setInput]=useState(''); const [graded,setGraded]=useState(false); const [userEmail,setUserEmail]=useState(''); const [registeredAt,setRegisteredAt]=useState(''); const [userId,setUserId]=useState(''); const [cloudLoaded,setCloudLoaded]=useState(false); const [syncState,setSyncState]=useState<'local'|'syncing'|'synced'|'failed'>('local'); const [syncRetry,setSyncRetry]=useState(0); const currentUserId=useRef(''); const cloudApplied=useRef(false)
- const [practiceMode,setPracticeMode]=useState<'lesson'|'mistakes'|'mixed'>('lesson'); const [completedLessons,setCompletedLessons]=useState<number[]>([]); const [lessonDone,setLessonDone]=useState<Record<number,number>>({}); const [lessonCorrect,setLessonCorrect]=useState<Record<number,number>>({}); const [mistakes,setMistakes]=useState<Question[]>([]); const [mixedQuestions,setMixedQuestions]=useState<Question[]>([]); const [aiVerdict,setAiVerdict]=useState<'correct'|'mostly_correct'|'needs_fix'|'incorrect'|null>(null); const [gradeExplanation,setGradeExplanation]=useState(''); const [gradeSource,setGradeSource]=useState<'ai'|'rule'|null>(null); const [analysis,setAnalysis]=useState<{analysis?:string;words?:{word:string;kana:string;meaning:string;memory:string}[];pitfalls?:string[];source?:string}|null>(null); const [analysisLoading,setAnalysisLoading]=useState(false); const [completedLoaded,setCompletedLoaded]=useState(false); const [lessonLoaded,setLessonLoaded]=useState(false); const [mistakesLoaded,setMistakesLoaded]=useState(false); const [studyStateLoaded,setStudyStateLoaded]=useState(false)
- const [lessonSummary,setLessonSummary]=useState<{lessonId:number;accuracy:number;mistakeTypes:string[];nextLessonId?:number}|null>(null)
- const submittedQuestion=useRef<Question|null>(null)
- const lessonReplayRef=useRef<{lesson:number;count:number}|null>(null)
- const [fullLessonMode,setFullLessonMode]=useState(false)
- const [replayMode,setReplayMode]=useState(false)
- const [selectedChoice,setSelectedChoice]=useState('')
- const [availableTokens,setAvailableTokens]=useState<WordToken[]>([])
- const [selectedTokens,setSelectedTokens]=useState<WordToken[]>([])
- const [fullLessonProgress,setFullLessonProgress]=useState(0)
- const [sessionProgress,setSessionProgress]=useState(0)
- useEffect(()=>{const s=getSupabaseBrowser();if(!s){setCloudLoaded(true);return}
-  let mounted=true
-  const applyUser=(user:NonNullable<Awaited<ReturnType<typeof s.auth.getUser>>['data']['user']>)=>{if(!mounted)return;cloudApplied.current=true;setSyncState('synced');const accountChanged=Boolean(currentUserId.current&&currentUserId.current!==user.id);if(accountChanged){setLessonDone({});setLessonCorrect({});setCompletedLessons([]);setMistakes([])}currentUserId.current=user.id;setUserId(user.id);setUserEmail(user.email||'');setRegisteredAt(user.created_at||'');const progress=user.user_metadata?.learning_progress;if(progress){const cloudLessonDone=progress.lessonDone&&typeof progress.lessonDone==='object'?progress.lessonDone as Record<number,number>:{};const cloudLessonCorrect=progress.lessonCorrect&&typeof progress.lessonCorrect==='object'?progress.lessonCorrect as Record<number,number>:{};if(Object.keys(cloudLessonDone).length)setLessonDone(cloudLessonDone);if(Object.keys(cloudLessonCorrect).length)setLessonCorrect(cloudLessonCorrect);if(Object.keys(cloudLessonDone).length||Array.isArray(progress.completedLessons))setCompletedLessons(completedFromLessonProgress(cloudLessonDone,progress.completedLessons,cloudLessonCorrect));if(Array.isArray(progress.mistakes))setMistakes(progress.mistakes as Question[])}setCloudLoaded(true)}
-  s.auth.getUser().then(({data})=>{if(!mounted)return;if(data.user)applyUser(data.user);else{cloudApplied.current=false;currentUserId.current='';setUserId('');setUserEmail('');setRegisteredAt('');setSyncState('local');setCloudLoaded(true)}})
-  const {data}=s.auth.onAuthStateChange((event,session)=>{const user=session?.user;if(!user){cloudApplied.current=false;currentUserId.current='';setUserId('');setUserEmail('');setRegisteredAt('');setSyncState('local');setCloudLoaded(true);return}if(event==='SIGNED_IN'&&user.id!==currentUserId.current){setCloudLoaded(false);applyUser(user)}})
-  return ()=>{mounted=false;data.subscription.unsubscribe()}
- },[])
- useEffect(()=>{if(!cloudLoaded||!studyStateLoaded||!userId)return;const s=getSupabaseBrowser();if(!s)return;const syncedCompleted=completedFromLessonProgress(lessonDone,completedLessons,lessonCorrect);const timer=window.setTimeout(()=>{void (async()=>{setSyncState('syncing');const {error}=await s.auth.updateUser({data:{learning_progress:{version:2,lessonDone,lessonCorrect,completedLessons:syncedCompleted,mistakes,updatedAt:new Date().toISOString()}}});if(error){console.error('Failed to sync learning progress',error);setSyncState('failed');return}setSyncState('synced')})()},500);return()=>window.clearTimeout(timer)},[cloudLoaded,studyStateLoaded,userId,lessonDone,lessonCorrect,completedLessons,mistakes,syncRetry])
- useEffect(()=>{if(!userId)return;let cancelled=false;setStudyStateLoaded(false);void (async()=>{try{const response=await fetch('/api/study-state');if(!response.ok)return;const state=await response.json();if(cancelled)return;const persistedLessons=Object.fromEntries((state.lessons||[]).map((lesson:{lesson_id:number;answered_count:number})=>[lesson.lesson_id-1,lesson.answered_count]));const persistedCorrect=Object.fromEntries((state.lessons||[]).filter((lesson:{correct_count?:number})=>typeof lesson.correct_count==='number').map((lesson:{lesson_id:number;correct_count:number})=>[lesson.lesson_id-1,lesson.correct_count]));if(Object.keys(persistedLessons).length){setLessonDone(persistedLessons);if(Object.keys(persistedCorrect).length)setLessonCorrect(persistedCorrect);setCompletedLessons(completedFromLessonProgress(persistedLessons,(state.lessons||[]).filter((lesson:{completed_at:string|null})=>lesson.completed_at).map((lesson:{lesson_id:number})=>lesson.lesson_id-1),persistedCorrect))}}catch{console.warn('Unable to load durable study state; using local fallback')}finally{if(!cancelled)setStudyStateLoaded(true)}})();return()=>{cancelled=true}},[userId])
- useEffect(()=>{if(!userId)return;let cancelled=false;void fetch('/api/study-state').then(response=>response.ok?response.json():null).then(state=>{if(cancelled||!state)return;const persistedCorrect=Object.fromEntries((state.lessons||[]).filter((lesson:{correct_count?:number})=>typeof lesson.correct_count==='number').map((lesson:{lesson_id:number;correct_count:number})=>[lesson.lesson_id-1,lesson.correct_count]));if(Object.keys(persistedCorrect).length)setLessonCorrect(persistedCorrect)}).catch(()=>console.warn('Unable to load lesson accuracy')).finally(()=>{cancelled=true});return()=>{cancelled=true}},[userId])
- useEffect(()=>{if(!cloudLoaded)return;if(cloudApplied.current){setCompletedLoaded(true);return}const saved=localStorage.getItem('syntax-coach-completed-lessons');if(saved){try{const parsed=JSON.parse(saved);if(Array.isArray(parsed))setCompletedLessons(parsed.filter((n):n is number=>Number.isInteger(n)&&n>=0&&n<courses.length))}catch{localStorage.removeItem('syntax-coach-completed-lessons')}}setCompletedLoaded(true)},[cloudLoaded])
- useEffect(()=>{if(!cloudLoaded)return;if(cloudApplied.current){setLessonLoaded(true);return}const saved=localStorage.getItem('syntax-coach-lesson-progress');if(saved){try{const parsed=JSON.parse(saved);if(parsed&&typeof parsed==='object'){const normalized=Object.fromEntries(Object.entries(parsed).filter(([index,count])=>Number.isInteger(Number(index))&&Number(index)>=0&&Number(index)<courses.length&&typeof count==='number').map(([index,count])=>[Number(index),Math.max(0,Math.min(100,count as number))]));setLessonDone(normalized);setCompletedLessons(value=>completedFromLessonProgress(normalized,value))}}catch{localStorage.removeItem('syntax-coach-lesson-progress')}}setLessonLoaded(true)},[cloudLoaded])
- useEffect(()=>{if(!cloudLoaded)return;if(cloudApplied.current){setMistakesLoaded(true);return}const saved=localStorage.getItem('syntax-coach-mistakes');if(saved){try{const parsed=JSON.parse(saved);if(Array.isArray(parsed))setMistakes(parsed)}catch{localStorage.removeItem('syntax-coach-mistakes')}}setMistakesLoaded(true)},[cloudLoaded])
- useEffect(()=>{if(mistakesLoaded)localStorage.setItem('syntax-coach-mistakes',JSON.stringify(mistakes))},[mistakes,mistakesLoaded])
- useEffect(()=>{if(!lessonLoaded)return;try{const saved=JSON.parse(localStorage.getItem('syntax-coach-lesson-progress')||'{}');const merged={...saved,...Object.fromEntries(Object.entries(lessonDone).map(([index,count])=>[index,Math.max(Number(saved?.[index])||0,Number(count)||0)]))};localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify(merged))}catch{localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify(lessonDone))}},[lessonDone,lessonLoaded])
- useEffect(()=>{if(completedLoaded)localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify(completedLessons))},[completedLessons,completedLoaded])
- useEffect(()=>{const answered=lessonDone[active]??0;const correct=lessonCorrect[active]??0;if(answered>=LESSON_QUESTION_LIMIT&&correct>=Math.ceil(LESSON_QUESTION_LIMIT*0.9))setCompletedLessons(value=>value.includes(active)?value:[...value,active])},[active,lessonDone,lessonCorrect])
- useEffect(()=>{if(!graded)setAiVerdict(null)},[graded])
- const activeLessonDone=lessonDone[active]??0
- const activeLessonCorrect=lessonCorrect[active]??0
-const activeLessonAccuracy=activeLessonDone?Math.min(100,Math.round(Math.min(activeLessonCorrect,LESSON_QUESTION_LIMIT)/Math.min(activeLessonDone,LESSON_QUESTION_LIMIT)*100)):0
-const effectiveCompletedLessons=completedFromLessonProgress(lessonDone,completedLessons,lessonCorrect)
-const lessonUnlockMessage=effectiveCompletedLessons.includes(active)?'本课已达标，下一课已解锁。':activeLessonDone>=LESSON_QUESTION_LIMIT&&activeLessonCorrect<Math.ceil(LESSON_QUESTION_LIMIT*0.9)?`20 题已全部完成，但正确率为 ${activeLessonAccuracy}%；请重练错题，累计至少答对 18 题后解锁下一课。`:`需完成 ${LESSON_QUESTION_LIMIT} 题且至少答对 18 题（90%）才能解锁下一课。`
- const displayedLessons=courseLessons.map((lesson,index)=>{const total=LESSON_QUESTION_LIMIT;return {...lesson,progress:Math.min(100,Math.round(((lessonDone[index]??0)/total)*100)),locked:index>0&&!effectiveCompletedLessons.includes(index-1)}})
- const lessons=displayedLessons
- const selectedLesson=displayedLessons[Math.min(active,displayedLessons.length-1)]
- const firstIncompleteLesson=displayedLessons.findIndex(lesson=>!effectiveCompletedLessons.includes(lesson.id-1))
- const nextLessonIndex=firstIncompleteLesson>=0?firstIncompleteLesson:displayedLessons.length-1
- const progress=fullLessonMode?fullLessonProgress:sessionProgress; const sessionLimit=practiceMode==='mistakes'?mistakes.length:practiceMode==='mixed'?mixedQuestions.length:LESSON_QUESTION_LIMIT
- const lessonQuestions=coreQuestionsForLesson(selectedLesson.id)
- const sourceQuestions=practiceMode==='mistakes'?mistakes:practiceMode==='mixed'?mixedQuestions:lessonQuestions
- const bankQuestion=sourceQuestions.length?sourceQuestions[progress%sourceQuestions.length]:undefined
- const ex=bankQuestion??{id:`L${String(active+1).padStart(2,'0')}-Q${String(progress+1).padStart(3,'0')}`,lessonId:active+1,type:'翻译' as const,prompt:'本课题目正在准备中。',answer:'',hint:'请返回课程页后重试。'}
- const presentedQuestion=graded&&submittedQuestion.current?submittedQuestion.current:ex
- const tokenQuestion=presentedQuestion.type==='翻译'||presentedQuestion.type==='问答'
- const tokenAnswer=selectedTokens.map(token=>token.text).join('')
- const selectedTokenIds=new Set(selectedTokens.map(token=>token.id))
- const candidateTokens=[...availableTokens,...selectedTokens].sort((a,b)=>tokenOrder(a.id)-tokenOrder(b.id))
- useEffect(()=>{if(!bankQuestion||graded)return;if(bankQuestion.type==='翻译'||bankQuestion.type==='问答'){setAvailableTokens(createWordTokens(bankQuestion));setSelectedTokens([])}else{setAvailableTokens([]);setSelectedTokens([])}},[bankQuestion?.id,practiceMode,graded,tab])
- const cleaned=normalizeAnswer
- const selectedChoiceText=presentedQuestion.options?.find(option=>option.startsWith(`${selectedChoice}：`))?.slice(2).trim()
- const expectedAnswerText=presentedQuestion.options?.find(option=>option.startsWith(`${presentedQuestion.answer}：`))?.slice(2).trim()||presentedQuestion.answer
- const practiceInstruction=presentedQuestion.type==='翻译'?'把下面的中文说成日语':presentedQuestion.type==='选择'?'选择正确的日语句子':presentedQuestion.type==='助词'?'选择正确的助词':'根据提示回答问题'
- const responseText=tokenQuestion?tokenAnswer:(selectedChoiceText||input)
- const localAnswerMatches=presentedQuestion.options?isAnswerAccepted(presentedQuestion,selectedChoiceText||input)||isAnswerAccepted(presentedQuestion,input):isAnswerAccepted(presentedQuestion,responseText)
- const answerMatches=aiVerdict?aiVerdict==='correct'||aiVerdict==='mostly_correct':localAnswerMatches
- const missingPunctuation=answerMatches&&/[。．.]$/.test(presentedQuestion.answer)&&!/[。．.]$/.test(responseText.trim())
- const grade=()=>{const question=ex;const submittedAnswer=question.type==='翻译'||question.type==='问答'?tokenAnswer:(selectedChoiceText||input);const expectedAnswer=question.options?.find(option=>option.startsWith(`${question.answer}：`))?.slice(2).trim()||question.answer;submittedQuestion.current=question;setAiVerdict(null);setAnalysis(null);setGradeExplanation(localAnswerMatches?'句型结构正确，继续保持主动输出。':question.options&&!localAnswerMatches?`你选择了「${submittedAnswer}」，正确选项是「${expectedAnswer}」。`:explainAnswerDifference(expectedAnswer,submittedAnswer));setGradeSource('rule');if(!localAnswerMatches){setMistakes(value=>value.some(item=>item.id===question.id)?value:[...value,question])}else if(practiceMode==='mistakes'){setMistakes(value=>value.filter(item=>item.id!==question.id))}if(userId)void (async()=>{try{const response=await fetch('/api/record-answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({questionId:question.id,lessonId:question.lessonId,answer:submittedAnswer,correct:localAnswerMatches,errorTags:localAnswerMatches?[]:errorTagsForAnswer(question,submittedAnswer),mode:practiceMode==='lesson'?'lesson':'review'})});if(!response.ok)return;await response.json()}catch{console.warn('Unable to persist answer; using local fallback')}})();setGraded(true)}
- const analyzeAnswer=async()=>{setAnalysisLoading(true);try{const response=await fetch('/api/analyze-answer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({prompt:presentedQuestion.prompt,answer:responseText,standardAnswer:presentedQuestion.answer,hint:presentedQuestion.hint})});setAnalysis(await response.json())}catch{setAnalysis({analysis:'AI 分析暂时不可用，请对照标准答案拆分词语和句型记忆。',source:'fallback'})}finally{setAnalysisLoading(false)}}
- const displayCorrect=aiVerdict?aiVerdict==='correct'||aiVerdict==='mostly_correct':answerMatches
- const verdictLabel=aiVerdict==='mostly_correct'?'基本正确':aiVerdict==='needs_fix'?'需要修改':aiVerdict==='incorrect'?'句型或词语还需要调整':displayCorrect?'很好，句型正确':'句型或词语还需要调整'
- const resetTokens=()=>{setAvailableTokens([]);setSelectedTokens([])}
- const startPractice=(_mode:'new'|'review'='new',lessonIndex=active)=>{submittedQuestion.current=null;setSelectedChoice('');resetTokens();setFullLessonMode(true);setReplayMode(false);setFullLessonProgress(0);setSessionProgress(0);setPracticeMode('lesson');setActive(lessonIndex);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}
- const startLessonPractice=(lessonIndex=active)=>{submittedQuestion.current=null;setSelectedChoice('');setFullLessonMode(true);let existingAnswered=lessonDone[lessonIndex]??0;if(existingAnswered===0&&typeof window!=='undefined'&&!cloudApplied.current){try{const saved=JSON.parse(localStorage.getItem('syntax-coach-lesson-progress')||'{}');const cached=Number(saved?.[lessonIndex]);if(Number.isFinite(cached))existingAnswered=Math.max(0,Math.min(LESSON_QUESTION_LIMIT,cached))}catch{}}lessonReplayRef.current=existingAnswered>=LESSON_QUESTION_LIMIT?{lesson:lessonIndex,count:existingAnswered}:null;if(existingAnswered>0&&existingAnswered!==(lessonDone[lessonIndex]??0))setLessonDone(value=>({...value,[lessonIndex]:existingAnswered}));setReplayMode(existingAnswered>=LESSON_QUESTION_LIMIT);setFullLessonProgress(existingAnswered>=LESSON_QUESTION_LIMIT?0:Math.min(existingAnswered,LESSON_QUESTION_LIMIT-1));setSessionProgress(0);if(existingAnswered===0)setLessonCorrect(value=>({...value,[lessonIndex]:0}));setActive(lessonIndex);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}
- const startMistakePractice=()=>{if(mistakes.length){submittedQuestion.current=null;setPracticeMode('mistakes');setFullLessonMode(false);setSessionProgress(0);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}}
- const startMixedPractice=()=>{const questions=createMixedReviewSet(effectiveCompletedLessons,20);if(questions.length){setMixedQuestions(questions);submittedQuestion.current=null;setPracticeMode('mixed');setFullLessonMode(false);setSessionProgress(0);setInput('');setAiVerdict(null);setGraded(false);setTab('practice')}}
- const nextQuestion=()=>{const complete=progress>=sessionLimit-1;const finalCorrect=(lessonCorrect[active]??0)+(answerMatches?1:0);if(practiceMode==='lesson'){setFullLessonProgress(value=>value+1);const replayCount=lessonReplayRef.current?.lesson===active?lessonReplayRef.current.count:null;const alreadyCompleted=(lessonDone[active]??0)>=LESSON_QUESTION_LIMIT||replayCount!==null&&replayCount>=LESSON_QUESTION_LIMIT;if(!replayMode){if(!alreadyCompleted){setLessonDone(value=>({...value,[active]:Math.min(LESSON_QUESTION_LIMIT,(value[active]??0)+1)}));setLessonCorrect(value=>({...value,[active]:finalCorrect}));if(complete&&finalCorrect/sessionLimit>=0.9)setCompletedLessons(value=>value.includes(active)?value:[...value,active])}}else if(replayCount!==null){setLessonDone(value=>({...value,[active]:replayCount}))}}setSessionProgress(value=>value+1);submittedQuestion.current=null;setSelectedChoice('');setInput('');setGraded(false);if(complete){const types=mistakes.filter(item=>item.lessonId===active+1).map(item=>item.type);setLessonSummary({lessonId:active+1,accuracy:Math.round(finalCorrect/sessionLimit*100),mistakeTypes:Array.from(new Set(types)),nextLessonId:active<courses.length-1?active+2:undefined});setTab('home')}}
- const currentLesson=displayedLessons[nextLessonIndex]??displayedLessons[0]
- const overallProgress=Math.round(displayedLessons.reduce((sum,lesson)=>sum+lesson.progress,0)/displayedLessons.length)
- const learnerName=userEmail?userEmail.split('@')[0]:'学习者'
- const registrationDate=registeredAt?new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(registeredAt)):'—'
- const totalAnswered=Object.values(lessonDone).reduce((sum,count)=>sum+count,0)
- return <main className="shell">
-   <AppHeader lessonId={currentLesson.id} learnerName={learnerName} onProfile={()=>setTab('me')} />
-  {tab==='home'&&<>{lessonSummary&&<section className="lesson-summary"><p className="eyebrow">本课完成</p><h2>第 {lessonSummary.lessonId} 课练习完成</h2><p>正确率 <b>{lessonSummary.accuracy}%</b></p><p>{lessonSummary.mistakeTypes.length?`需要巩固：${lessonSummary.mistakeTypes.join('、')}`:'本课没有新增错题，保持得很好。'}</p>{lessonSummary.nextLessonId&&<button className="primary" onClick={()=>{setLessonSummary(null);setActive(lessonSummary.nextLessonId!-1);setTab('lesson')}}>进入第 {lessonSummary.nextLessonId} 课 <span>→</span></button>}</section>}<HomeHero learnerName={learnerName} lessonId={currentLesson.id} progress={currentLesson.progress} onStart={()=>startLessonPractice(nextLessonIndex)} />
-   {effectiveCompletedLessons.some(index=>(index+1)%5===0)&&<button className="primary wide" onClick={startMixedPractice}>开始综合混练（已完成课程） <span>→</span></button>}
-   <ProgressSummary lessonProgress={currentLesson.progress} lessonId={currentLesson.id} overallProgress={overallProgress} />
-   <section className="section-head"><div><p className="eyebrow">本课路径</p><h2>{currentLesson.progress>0?'接着练这一课':'先学句型，再开始练习'}</h2></div><button className="link" onClick={()=>setTab('lessons')}>课程地图 →</button></section>
-<CurrentLessonCard lesson={currentLesson} onOpen={()=>{setActive(nextLessonIndex);setTab('lesson')}} />
-  </>}
-  {tab==='lessons'&&<><div className="page-title"><p className="eyebrow">课程地图</p><h1>标准日本语·上册</h1><p className="muted">24 课 · 从句型骨架开始，逐步建立语感</p></div><LessonGrid lessons={lessons} onSelect={index=>{setActive(index);setTab('lesson')}} /></>}
-  {tab==='lesson'&&<><button className="back" onClick={()=>setTab('home')}>← 返回</button><div className="page-title"><div className="tag">第 {selectedLesson.id} 课 · 核心句型</div><h1>{selectedLesson.title}</h1><p className="muted">{selectedLesson.goal}</p></div><div className="lesson-status"><b>已作答 {activeLessonDone} / {LESSON_QUESTION_LIMIT} · 正确 {activeLessonCorrect} 题（{activeLessonAccuracy}%）</b><small>{lessonUnlockMessage}</small></div><GrammarList grammar={selectedLesson.grammar} /><button className="primary wide" onClick={()=>startLessonPractice(active)}>开始整课练习（{LESSON_QUESTION_LIMIT} 题） <span>→</span></button>{active<displayedLessons.length-1&&<div className="next-preview"><b>下一课预告：第 {selectedLesson.id+1} 课</b><p>{displayedLessons[active+1].goal}</p><small>完成本课全部题目且正确率达到 90% 后解锁</small></div>}</>}
-  {tab==='practice'&&<><div className="practice-top"><button className="back" onClick={()=>setTab('home')}>× 退出</button><span>{practiceMode==='mistakes'?'错题练习':`第 ${selectedLesson.id} 课 · 练习`}</span><b>{Math.min(progress+1,sessionLimit)} / {sessionLimit}</b></div><div className="quiz"><div className="quiz-meta"><span className="tag">{presentedQuestion.type}</span><span>句型骨架</span></div><h2>{practiceInstruction}</h2><div className="prompt">{presentedQuestion.prompt}</div>{presentedQuestion.options?<div className="choice-list">{presentedQuestion.options.map(option=><button key={option} className={selectedChoice===option.slice(0,1)?'choice selected':''} onClick={()=>{if(!graded){const value=option.slice(0,1);setSelectedChoice(value);setInput(value)}}} disabled={graded}>{option}</button>)}</div>:<div className="token-builder"><div className="token-answer" aria-label="已选答案">{selectedTokens.length?selectedTokens.map(token=><button type="button" className="token-button token-selected" key={token.id} onClick={event=>{event.currentTarget.blur();if(!graded){setSelectedTokens(value=>value.filter(item=>item.id!==token.id));setAvailableTokens(value=>[...value,token])}}} disabled={graded}>{token.text}</button>):<span className="token-placeholder">点击下方词块组成答案</span>}</div><div className="token-bank" aria-label="候选词块">{candidateTokens.map(token=>selectedTokenIds.has(token.id)?<span aria-hidden="true" className="token-slot" key={token.id}>{token.text}</span>:<button type="button" className="token-button" key={token.id} onClick={event=>{event.currentTarget.blur();if(!graded){setAvailableTokens(value=>value.filter(item=>item.id!==token.id));setSelectedTokens(value=>[...value,token])}}} disabled={graded}>{token.text}</button>)}</div></div>} {graded&&<div className={'feedback '+(answerMatches?'ok':'warn')}><b>{answerMatches?'✓ '+verdictLabel:'△ '+verdictLabel}</b><p>你的答案：{responseText||'未作答'}</p><p>参考答案：{expectedAnswerText}</p>{gradeExplanation&&<small>{gradeSource==='ai'?'AI 批改：':'规则批改：'}{gradeExplanation}</small>}{missingPunctuation&&<small>答案判定正确；下次书写时不要忘记写标点符号。</small>}{!answerMatches&&<><small>提示：{presentedQuestion.hint}<br/>书写时不要忘记写标点符号，标点不影响判分。</small></>}{!analysis&&<button className="analysis-button" onClick={analyzeAnswer} disabled={analysisLoading}>{analysisLoading?'分析中…':'AI 分析记忆方法'}</button>}{analysis&&<div className="analysis"><p>{analysis.analysis}</p>{analysis.words?.map(word=><div key={word.word}><b>{word.word}（{word.kana}）</b><span>{word.meaning} · {word.memory}</span></div>)}{analysis.pitfalls?.map(pitfall=><small key={pitfall}>易错点：{pitfall}</small>)}</div>}</div>}<button className="primary wide" onClick={()=>graded?nextQuestion():grade()} disabled={!graded&&((presentedQuestion.type==='选择'&&!selectedChoice)||((presentedQuestion.type==='翻译'||presentedQuestion.type==='问答')&&!selectedTokens.length))}>{graded?(progress>=sessionLimit-1?'完成训练':'下一题'):'提交答案'} <span>→</span></button></div></>}
-  {tab==='mistakes'&&<><div className="page-title"><p className="eyebrow">复习重点</p><h1>错题本</h1><p className="muted">把容易忘的地方，再练一次。</p></div>{mistakes.length>0&&<button className="primary wide" onClick={startMistakePractice}>开始错题练习（{mistakes.length} 题）</button>}{mistakes.map(item=><div className="mistake-card" key={item.id}><div className="mistake-icon">文</div><div><b>{item.prompt}</b><p>第 {item.lessonId} 课 · {item.type}</p><small>参考答案：{item.options?.find(option=>option.startsWith(`${item.answer}：`))?.slice(2).trim()||item.answer}</small></div><span>→</span></div>)}{mistakes.length===0&&<div className="empty-note">目前没有错题<br/>完成练习后，错题会自动收录。</div>}</>}
-  {tab==='me'&&<><div className="page-title"><p className="eyebrow">个人中心</p><h1>我的</h1><p className="muted">学习记录会在登录后同步到云端。</p></div><ProfileOverview email={userEmail} registrationDate={registrationDate} lessonId={currentLesson.id} progress={overallProgress} totalAnswered={totalAnswered} completedCount={completedLessons.length} syncLabel={userEmail?(syncState==='failed'?'需要重试':syncState==='syncing'?'同步中':syncState==='synced'?'已同步':'仅本机'):'登录后同步'} onLogin={()=>location.href='/login'} />{userEmail&&<div className={'sync-note '+syncState}>{syncState==='syncing'?'正在同步学习记录…':syncState==='failed'?'同步失败，请检查网络后重试。':syncState==='synced'?'学习记录已同步到云端。':'仅保存在当前设备。'}{syncState==='failed'&&<button onClick={()=>setSyncRetry(value=>value+1)}>重试</button>}</div>}</>}
-  <BottomNav activeTab={tab} onNavigate={setTab} />
- </main>
+const errorTagsForAnswer = (question: Question, actual: string) => {
+  if (question.type === '助词') return ['助词']
+  const expected = question.answer
+  if (expected.includes('ですか') && actual.includes('でか')) return ['假名']
+  if (expected.includes('ではありません') && actual.includes('でわありません')) return ['假名']
+  if (expected.includes('なければ') || expected.includes('なくても') || expected.includes('ないで'))
+    return ['活用']
+  if (expected.includes('ています') || expected.includes('ました') || expected.includes('ません'))
+    return ['活用']
+  if (actual.length !== expected.length) return ['词汇']
+  return ['句型顺序']
+}
+type WordToken = { id: string; text: string }
+const tokenPatterns = [
+  'なければなりません',
+  'なくてもいいです',
+  'ないでください',
+  'ではありません',
+  'ませんでした',
+  'かもしれません',
+  'と思います',
+  'ましょうか',
+  'ています',
+  'ください',
+  'ましょう',
+  'でしょう',
+  'ですか',
+  'ました',
+  'ません',
+  'です',
+]
+const tokenParticles = ['から', 'まで', 'は', 'が', 'を', 'に', 'で', 'と', 'の', 'も', 'へ', 'か']
+const tokenWords = ['かばん', '売り場', '銀行', '郵便局', 'デパート', '会社', '学校', '駅']
+const tokenizeAnswer = (answer: string): string[] => {
+  const tokens: string[] = []
+  let index = 0
+  while (index < answer.length) {
+    const rest = answer.slice(index)
+    const punctuation = rest.match(/^[。！？!?、，．.]/)
+    // 标点保留在标准答案中用于展示和漏写提醒，但不作为可点击词块。
+    if (punctuation) {
+      index += punctuation[0].length
+      continue
+    }
+    const word = tokenWords.find((value) => rest.startsWith(value))
+    if (word) {
+      tokens.push(word)
+      index += word.length
+      continue
+    }
+    const pattern = tokenPatterns.find((value) => rest.startsWith(value))
+    if (pattern) {
+      tokens.push(pattern)
+      index += pattern.length
+      continue
+    }
+    const particle = tokenParticles.find((value) => rest.startsWith(value))
+    if (particle) {
+      tokens.push(particle)
+      index += particle.length
+      continue
+    }
+    let end = index + 1
+    while (
+      end < answer.length &&
+      !tokenParticles.some((value) => answer.slice(end).startsWith(value)) &&
+      !/[。！？!?、，．.]/.test(answer[end]) &&
+      !tokenPatterns.some((value) => answer.slice(end).startsWith(value))
+    )
+      end += 1
+    tokens.push(answer.slice(index, end))
+    index = end
+  }
+  return tokens.filter(Boolean)
+}
+const tokenOrder = (id: string) => {
+  let hash = 2166136261
+  for (let index = 0; index < id.length; index++) {
+    hash ^= id.charCodeAt(index)
+    hash = Math.imul(hash, 16777619)
+  }
+  return hash >>> 0
+}
+const createWordTokens = (question: Question): WordToken[] =>
+  tokenizeAnswer(question.answer)
+    .map((text, index) => ({ id: `${question.id}-T${String(index + 1).padStart(2, '0')}`, text }))
+    .sort((a, b) => tokenOrder(a.id) - tokenOrder(b.id))
+export default function Home() {
+  const [tab, setTab] = useState('home')
+  const [active, setActive] = useState(0)
+  const [input, setInput] = useState('')
+  const [graded, setGraded] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+  const [registeredAt, setRegisteredAt] = useState('')
+  const [userId, setUserId] = useState('')
+  const [cloudLoaded, setCloudLoaded] = useState(false)
+  const [syncState, setSyncState] = useState<'local' | 'syncing' | 'synced' | 'failed'>('local')
+  const [syncRetry, setSyncRetry] = useState(0)
+  const currentUserId = useRef('')
+  const cloudApplied = useRef(false)
+  const [practiceMode, setPracticeMode] = useState<'lesson' | 'mistakes' | 'mixed'>('lesson')
+  const [completedLessons, setCompletedLessons] = useState<number[]>([])
+  const [lessonDone, setLessonDone] = useState<Record<number, number>>({})
+  const [lessonCorrect, setLessonCorrect] = useState<Record<number, number>>({})
+  const [mistakes, setMistakes] = useState<Question[]>([])
+  const [mixedQuestions, setMixedQuestions] = useState<Question[]>([])
+  const [aiVerdict, setAiVerdict] = useState<
+    'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
+  >(null)
+  const [gradeExplanation, setGradeExplanation] = useState('')
+  const [gradeSource, setGradeSource] = useState<'ai' | 'rule' | null>(null)
+  const [analysis, setAnalysis] = useState<{
+    analysis?: string
+    words?: { word: string; kana: string; meaning: string; memory: string }[]
+    pitfalls?: string[]
+    source?: string
+  } | null>(null)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+  const [completedLoaded, setCompletedLoaded] = useState(false)
+  const [lessonLoaded, setLessonLoaded] = useState(false)
+  const [mistakesLoaded, setMistakesLoaded] = useState(false)
+  const [studyStateLoaded, setStudyStateLoaded] = useState(false)
+  const [lessonSummary, setLessonSummary] = useState<{
+    lessonId: number
+    accuracy: number
+    mistakeTypes: string[]
+    nextLessonId?: number
+  } | null>(null)
+  const [retryQuestions, setRetryQuestions] = useState<Question[]>([])
+  const submittedQuestion = useRef<Question | null>(null)
+  const lessonReplayRef = useRef<{ lesson: number; count: number } | null>(null)
+  const [fullLessonMode, setFullLessonMode] = useState(false)
+  const [replayMode, setReplayMode] = useState(false)
+  const [selectedChoice, setSelectedChoice] = useState('')
+  const [availableTokens, setAvailableTokens] = useState<WordToken[]>([])
+  const [selectedTokens, setSelectedTokens] = useState<WordToken[]>([])
+  const [fullLessonProgress, setFullLessonProgress] = useState(0)
+  const [sessionProgress, setSessionProgress] = useState(0)
+  useEffect(() => {
+    const s = getSupabaseBrowser()
+    if (!s) {
+      setCloudLoaded(true)
+      return
+    }
+    let mounted = true
+    const applyUser = (
+      user: NonNullable<Awaited<ReturnType<typeof s.auth.getUser>>['data']['user']>,
+    ) => {
+      if (!mounted) return
+      cloudApplied.current = true
+      setSyncState('synced')
+      const accountChanged = Boolean(currentUserId.current && currentUserId.current !== user.id)
+      if (accountChanged) {
+        setLessonDone({})
+        setLessonCorrect({})
+        setCompletedLessons([])
+        setMistakes([])
+      }
+      currentUserId.current = user.id
+      setUserId(user.id)
+      setUserEmail(user.email || '')
+      setRegisteredAt(user.created_at || '')
+      const progress = user.user_metadata?.learning_progress
+      if (progress) {
+        const cloudLessonDone =
+          progress.lessonDone && typeof progress.lessonDone === 'object'
+            ? (progress.lessonDone as Record<number, number>)
+            : {}
+        const cloudLessonCorrect =
+          progress.lessonCorrect && typeof progress.lessonCorrect === 'object'
+            ? (progress.lessonCorrect as Record<number, number>)
+            : {}
+        if (Object.keys(cloudLessonDone).length) setLessonDone(cloudLessonDone)
+        if (Object.keys(cloudLessonCorrect).length) setLessonCorrect(cloudLessonCorrect)
+        if (Object.keys(cloudLessonDone).length || Array.isArray(progress.completedLessons))
+          setCompletedLessons(
+            completedFromLessonProgress(
+              cloudLessonDone,
+              progress.completedLessons,
+              cloudLessonCorrect,
+            ),
+          )
+        if (Array.isArray(progress.mistakes)) setMistakes(progress.mistakes as Question[])
+      }
+      setCloudLoaded(true)
+    }
+    s.auth.getUser().then(({ data }) => {
+      if (!mounted) return
+      if (data.user) applyUser(data.user)
+      else {
+        cloudApplied.current = false
+        currentUserId.current = ''
+        setUserId('')
+        setUserEmail('')
+        setRegisteredAt('')
+        setSyncState('local')
+        setCloudLoaded(true)
+      }
+    })
+    const { data } = s.auth.onAuthStateChange((event, session) => {
+      const user = session?.user
+      if (!user) {
+        cloudApplied.current = false
+        currentUserId.current = ''
+        setUserId('')
+        setUserEmail('')
+        setRegisteredAt('')
+        setSyncState('local')
+        setCloudLoaded(true)
+        return
+      }
+      if (event === 'SIGNED_IN' && user.id !== currentUserId.current) {
+        setCloudLoaded(false)
+        applyUser(user)
+      }
+    })
+    return () => {
+      mounted = false
+      data.subscription.unsubscribe()
+    }
+  }, [])
+  useEffect(() => {
+    if (!cloudLoaded || !studyStateLoaded || !userId) return
+    const s = getSupabaseBrowser()
+    if (!s) return
+    const syncedCompleted = completedFromLessonProgress(lessonDone, completedLessons, lessonCorrect)
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setSyncState('syncing')
+        const { error } = await s.auth.updateUser({
+          data: {
+            learning_progress: {
+              version: 2,
+              lessonDone,
+              lessonCorrect,
+              completedLessons: syncedCompleted,
+              mistakes,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+        })
+        if (error) {
+          console.error('Failed to sync learning progress', error)
+          setSyncState('failed')
+          return
+        }
+        setSyncState('synced')
+      })()
+    }, 500)
+    return () => window.clearTimeout(timer)
+  }, [
+    cloudLoaded,
+    studyStateLoaded,
+    userId,
+    lessonDone,
+    lessonCorrect,
+    completedLessons,
+    mistakes,
+    syncRetry,
+  ])
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    setStudyStateLoaded(false)
+    void (async () => {
+      try {
+        const response = await fetch('/api/study-state')
+        if (!response.ok) return
+        const state = await response.json()
+        if (cancelled) return
+        const persistedLessons = Object.fromEntries(
+          (state.lessons || []).map((lesson: { lesson_id: number; answered_count: number }) => [
+            lesson.lesson_id - 1,
+            lesson.answered_count,
+          ]),
+        )
+        const persistedCorrect = Object.fromEntries(
+          (state.lessons || [])
+            .filter(
+              (lesson: { correct_count?: number }) => typeof lesson.correct_count === 'number',
+            )
+            .map((lesson: { lesson_id: number; correct_count: number }) => [
+              lesson.lesson_id - 1,
+              lesson.correct_count,
+            ]),
+        )
+        if (Object.keys(persistedLessons).length) {
+          setLessonDone(persistedLessons)
+          if (Object.keys(persistedCorrect).length) setLessonCorrect(persistedCorrect)
+          setCompletedLessons(
+            completedFromLessonProgress(
+              persistedLessons,
+              (state.lessons || [])
+                .filter((lesson: { completed_at: string | null }) => lesson.completed_at)
+                .map((lesson: { lesson_id: number }) => lesson.lesson_id - 1),
+              persistedCorrect,
+            ),
+          )
+        }
+      } catch {
+        console.warn('Unable to load durable study state; using local fallback')
+      } finally {
+        if (!cancelled) setStudyStateLoaded(true)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    void fetch('/api/study-state')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((state) => {
+        if (cancelled || !state) return
+        const persistedCorrect = Object.fromEntries(
+          (state.lessons || [])
+            .filter(
+              (lesson: { correct_count?: number }) => typeof lesson.correct_count === 'number',
+            )
+            .map((lesson: { lesson_id: number; correct_count: number }) => [
+              lesson.lesson_id - 1,
+              lesson.correct_count,
+            ]),
+        )
+        if (Object.keys(persistedCorrect).length) setLessonCorrect(persistedCorrect)
+      })
+      .catch(() => console.warn('Unable to load lesson accuracy'))
+      .finally(() => {
+        cancelled = true
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+  useEffect(() => {
+    if (!cloudLoaded) return
+    if (cloudApplied.current) {
+      setCompletedLoaded(true)
+      return
+    }
+    const saved = localStorage.getItem('syntax-coach-completed-lessons')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed))
+          setCompletedLessons(
+            parsed.filter((n): n is number => Number.isInteger(n) && n >= 0 && n < courses.length),
+          )
+      } catch {
+        localStorage.removeItem('syntax-coach-completed-lessons')
+      }
+    }
+    setCompletedLoaded(true)
+  }, [cloudLoaded])
+  useEffect(() => {
+    if (!cloudLoaded) return
+    if (cloudApplied.current) {
+      setLessonLoaded(true)
+      return
+    }
+    const saved = localStorage.getItem('syntax-coach-lesson-progress')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed && typeof parsed === 'object') {
+          const normalized = Object.fromEntries(
+            Object.entries(parsed)
+              .filter(
+                ([index, count]) =>
+                  Number.isInteger(Number(index)) &&
+                  Number(index) >= 0 &&
+                  Number(index) < courses.length &&
+                  typeof count === 'number',
+              )
+              .map(([index, count]) => [
+                Number(index),
+                Math.max(0, Math.min(100, count as number)),
+              ]),
+          )
+          setLessonDone(normalized)
+          setCompletedLessons((value) => completedFromLessonProgress(normalized, value))
+        }
+      } catch {
+        localStorage.removeItem('syntax-coach-lesson-progress')
+      }
+    }
+    setLessonLoaded(true)
+  }, [cloudLoaded])
+  useEffect(() => {
+    if (!cloudLoaded) return
+    if (cloudApplied.current) {
+      setMistakesLoaded(true)
+      return
+    }
+    const saved = localStorage.getItem('syntax-coach-mistakes')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) setMistakes(parsed)
+      } catch {
+        localStorage.removeItem('syntax-coach-mistakes')
+      }
+    }
+    setMistakesLoaded(true)
+  }, [cloudLoaded])
+  useEffect(() => {
+    if (mistakesLoaded) localStorage.setItem('syntax-coach-mistakes', JSON.stringify(mistakes))
+  }, [mistakes, mistakesLoaded])
+  useEffect(() => {
+    if (!lessonLoaded) return
+    try {
+      const saved = JSON.parse(localStorage.getItem('syntax-coach-lesson-progress') || '{}')
+      const merged = {
+        ...saved,
+        ...Object.fromEntries(
+          Object.entries(lessonDone).map(([index, count]) => [
+            index,
+            Math.max(Number(saved?.[index]) || 0, Number(count) || 0),
+          ]),
+        ),
+      }
+      localStorage.setItem('syntax-coach-lesson-progress', JSON.stringify(merged))
+    } catch {
+      localStorage.setItem('syntax-coach-lesson-progress', JSON.stringify(lessonDone))
+    }
+  }, [lessonDone, lessonLoaded])
+  useEffect(() => {
+    if (completedLoaded)
+      localStorage.setItem('syntax-coach-completed-lessons', JSON.stringify(completedLessons))
+  }, [completedLessons, completedLoaded])
+  useEffect(() => {
+    const answered = lessonDone[active] ?? 0
+    const correct = lessonCorrect[active] ?? 0
+    if (answered >= LESSON_QUESTION_LIMIT && correct >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9))
+      setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
+  }, [active, lessonDone, lessonCorrect])
+  useEffect(() => {
+    if (!graded) setAiVerdict(null)
+  }, [graded])
+  const activeLessonDone = lessonDone[active] ?? 0
+  const activeLessonCorrect = lessonCorrect[active] ?? 0
+  const activeLessonAccuracy = activeLessonDone
+    ? Math.min(
+        100,
+        Math.round(
+          (Math.min(activeLessonCorrect, LESSON_QUESTION_LIMIT) /
+            Math.min(activeLessonDone, LESSON_QUESTION_LIMIT)) *
+            100,
+        ),
+      )
+    : 0
+  const effectiveCompletedLessons = completedFromLessonProgress(
+    lessonDone,
+    completedLessons,
+    lessonCorrect,
+  )
+  const lessonUnlockMessage = effectiveCompletedLessons.includes(active)
+    ? '本课已达标，下一课已解锁。'
+    : activeLessonDone >= LESSON_QUESTION_LIMIT &&
+        activeLessonCorrect < Math.ceil(LESSON_QUESTION_LIMIT * 0.9)
+      ? `20 题已全部完成，但正确率为 ${activeLessonAccuracy}%；请重练错题，累计至少答对 18 题后解锁下一课。`
+      : `需完成 ${LESSON_QUESTION_LIMIT} 题且至少答对 18 题（90%）才能解锁下一课。`
+  const displayedLessons = courseLessons.map((lesson, index) => {
+    const total = LESSON_QUESTION_LIMIT
+    return {
+      ...lesson,
+      progress: Math.min(100, Math.round(((lessonDone[index] ?? 0) / total) * 100)),
+      locked: index > 0 && !effectiveCompletedLessons.includes(index - 1),
+    }
+  })
+  const lessons = displayedLessons
+  const selectedLesson = displayedLessons[Math.min(active, displayedLessons.length - 1)]
+  const firstIncompleteLesson = displayedLessons.findIndex(
+    (lesson) => !effectiveCompletedLessons.includes(lesson.id - 1),
+  )
+  const nextLessonIndex =
+    firstIncompleteLesson >= 0 ? firstIncompleteLesson : displayedLessons.length - 1
+  const progress = fullLessonMode ? fullLessonProgress : sessionProgress
+  const sessionLimit =
+    practiceMode === 'mistakes'
+      ? mistakes.length
+      : practiceMode === 'mixed'
+        ? mixedQuestions.length
+        : replayMode
+          ? retryQuestions.length
+          : LESSON_QUESTION_LIMIT
+  const lessonQuestions = coreQuestionsForLesson(selectedLesson.id)
+  const sourceQuestions =
+    practiceMode === 'mistakes'
+      ? mistakes
+      : practiceMode === 'mixed'
+        ? mixedQuestions
+        : replayMode
+          ? retryQuestions
+          : lessonQuestions
+  const bankQuestion = sourceQuestions.length
+    ? sourceQuestions[progress % sourceQuestions.length]
+    : undefined
+  const ex = bankQuestion ?? {
+    id: `L${String(active + 1).padStart(2, '0')}-Q${String(progress + 1).padStart(3, '0')}`,
+    lessonId: active + 1,
+    type: '翻译' as const,
+    prompt: '本课题目正在准备中。',
+    answer: '',
+    hint: '请返回课程页后重试。',
+  }
+  const presentedQuestion = graded && submittedQuestion.current ? submittedQuestion.current : ex
+  const tokenQuestion = presentedQuestion.type === '翻译' || presentedQuestion.type === '问答'
+  const tokenAnswer = selectedTokens.map((token) => token.text).join('')
+  const selectedTokenIds = new Set(selectedTokens.map((token) => token.id))
+  const candidateTokens = [...availableTokens, ...selectedTokens].sort(
+    (a, b) => tokenOrder(a.id) - tokenOrder(b.id),
+  )
+  useEffect(() => {
+    if (!bankQuestion || graded) return
+    if (bankQuestion.type === '翻译' || bankQuestion.type === '问答') {
+      setAvailableTokens(createWordTokens(bankQuestion))
+      setSelectedTokens([])
+    } else {
+      setAvailableTokens([])
+      setSelectedTokens([])
+    }
+  }, [bankQuestion?.id, practiceMode, graded, tab])
+  const cleaned = normalizeAnswer
+  const selectedChoiceText = presentedQuestion.options
+    ?.find((option) => option.startsWith(`${selectedChoice}：`))
+    ?.slice(2)
+    .trim()
+  const expectedAnswerText =
+    presentedQuestion.options
+      ?.find((option) => option.startsWith(`${presentedQuestion.answer}：`))
+      ?.slice(2)
+      .trim() || presentedQuestion.answer
+  const practiceInstruction =
+    presentedQuestion.type === '翻译'
+      ? '把下面的中文说成日语'
+      : presentedQuestion.type === '选择'
+        ? '选择正确的日语句子'
+        : presentedQuestion.type === '助词'
+          ? '选择正确的助词'
+          : '根据提示回答问题'
+  const responseText = tokenQuestion ? tokenAnswer : selectedChoiceText || input
+  const localAnswerMatches = presentedQuestion.options
+    ? isAnswerAccepted(presentedQuestion, selectedChoiceText || input) ||
+      isAnswerAccepted(presentedQuestion, input)
+    : isAnswerAccepted(presentedQuestion, responseText)
+  const answerMatches = aiVerdict
+    ? aiVerdict === 'correct' || aiVerdict === 'mostly_correct'
+    : localAnswerMatches
+  const missingPunctuation =
+    answerMatches &&
+    /[。．.]$/.test(presentedQuestion.answer) &&
+    !/[。．.]$/.test(responseText.trim())
+  const grade = () => {
+    const question = ex
+    const submittedAnswer =
+      question.type === '翻译' || question.type === '问答'
+        ? tokenAnswer
+        : selectedChoiceText || input
+    const expectedAnswer =
+      question.options
+        ?.find((option) => option.startsWith(`${question.answer}：`))
+        ?.slice(2)
+        .trim() || question.answer
+    submittedQuestion.current = question
+    setAiVerdict(null)
+    setAnalysis(null)
+    setGradeExplanation(
+      localAnswerMatches
+        ? '句型结构正确，继续保持主动输出。'
+        : question.options && !localAnswerMatches
+          ? `你选择了「${submittedAnswer}」，正确选项是「${expectedAnswer}」。`
+          : explainAnswerDifference(expectedAnswer, submittedAnswer),
+    )
+    setGradeSource('rule')
+    if (!localAnswerMatches) {
+      setMistakes((value) =>
+        value.some((item) => item.id === question.id) ? value : [...value, question],
+      )
+    } else if (practiceMode === 'mistakes') {
+      setMistakes((value) => value.filter((item) => item.id !== question.id))
+    }
+    if (userId)
+      void (async () => {
+        try {
+          const response = await fetch('/api/record-answer', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              questionId: question.id,
+              lessonId: question.lessonId,
+              answer: submittedAnswer,
+              correct: localAnswerMatches,
+              errorTags: localAnswerMatches ? [] : errorTagsForAnswer(question, submittedAnswer),
+              mode: practiceMode === 'lesson' ? 'lesson' : 'review',
+            }),
+          })
+          if (!response.ok) return
+          await response.json()
+        } catch {
+          console.warn('Unable to persist answer; using local fallback')
+        }
+      })()
+    setGraded(true)
+  }
+  const analyzeAnswer = async () => {
+    setAnalysisLoading(true)
+    try {
+      const response = await fetch('/api/analyze-answer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: presentedQuestion.prompt,
+          answer: responseText,
+          standardAnswer: presentedQuestion.answer,
+          hint: presentedQuestion.hint,
+        }),
+      })
+      setAnalysis(await response.json())
+    } catch {
+      setAnalysis({
+        analysis: 'AI 分析暂时不可用，请对照标准答案拆分词语和句型记忆。',
+        source: 'fallback',
+      })
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
+  const displayCorrect = aiVerdict
+    ? aiVerdict === 'correct' || aiVerdict === 'mostly_correct'
+    : answerMatches
+  const verdictLabel =
+    aiVerdict === 'mostly_correct'
+      ? '基本正确'
+      : aiVerdict === 'needs_fix'
+        ? '需要修改'
+        : aiVerdict === 'incorrect'
+          ? '句型或词语还需要调整'
+          : displayCorrect
+            ? '很好，句型正确'
+            : '句型或词语还需要调整'
+  const resetTokens = () => {
+    setAvailableTokens([])
+    setSelectedTokens([])
+  }
+  const startPractice = (_mode: 'new' | 'review' = 'new', lessonIndex = active) => {
+    submittedQuestion.current = null
+    setSelectedChoice('')
+    resetTokens()
+    setFullLessonMode(true)
+    setReplayMode(false)
+    setFullLessonProgress(0)
+    setSessionProgress(0)
+    setPracticeMode('lesson')
+    setActive(lessonIndex)
+    setInput('')
+    setAiVerdict(null)
+    setGraded(false)
+    setTab('practice')
+  }
+  const startLessonPractice = (lessonIndex = active) => {
+    submittedQuestion.current = null
+    setSelectedChoice('')
+    setFullLessonMode(true)
+    let existingAnswered = lessonDone[lessonIndex] ?? 0
+    if (existingAnswered === 0 && typeof window !== 'undefined' && !cloudApplied.current) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('syntax-coach-lesson-progress') || '{}')
+        const cached = Number(saved?.[lessonIndex])
+        if (Number.isFinite(cached))
+          existingAnswered = Math.max(0, Math.min(LESSON_QUESTION_LIMIT, cached))
+      } catch {}
+    }
+    lessonReplayRef.current =
+      existingAnswered >= LESSON_QUESTION_LIMIT
+        ? { lesson: lessonIndex, count: existingAnswered }
+        : null
+    const lessonMistakes = mistakes.filter((item) => item.lessonId === lessonIndex + 1)
+    setRetryQuestions(lessonMistakes)
+    if (existingAnswered > 0 && existingAnswered !== (lessonDone[lessonIndex] ?? 0))
+      setLessonDone((value) => ({ ...value, [lessonIndex]: existingAnswered }))
+    setReplayMode(existingAnswered >= LESSON_QUESTION_LIMIT && lessonMistakes.length > 0)
+    setFullLessonProgress(
+      existingAnswered >= LESSON_QUESTION_LIMIT
+        ? 0
+        : Math.min(existingAnswered, LESSON_QUESTION_LIMIT - 1),
+    )
+    setSessionProgress(0)
+    if (existingAnswered === 0) setLessonCorrect((value) => ({ ...value, [lessonIndex]: 0 }))
+    setActive(lessonIndex)
+    setInput('')
+    setAiVerdict(null)
+    setGraded(false)
+    setTab('practice')
+  }
+  const startMistakePractice = () => {
+    if (mistakes.length) {
+      submittedQuestion.current = null
+      setPracticeMode('mistakes')
+      setFullLessonMode(false)
+      setSessionProgress(0)
+      setInput('')
+      setAiVerdict(null)
+      setGraded(false)
+      setTab('practice')
+    }
+  }
+  const startMixedPractice = () => {
+    const questions = createMixedReviewSet(effectiveCompletedLessons, 20)
+    if (questions.length) {
+      setMixedQuestions(questions)
+      submittedQuestion.current = null
+      setPracticeMode('mixed')
+      setFullLessonMode(false)
+      setSessionProgress(0)
+      setInput('')
+      setAiVerdict(null)
+      setGraded(false)
+      setTab('practice')
+    }
+  }
+  const nextQuestion = () => {
+    const complete = progress >= sessionLimit - 1
+    const finalCorrect = (lessonCorrect[active] ?? 0) + (answerMatches ? 1 : 0)
+    if (practiceMode === 'lesson') {
+      setFullLessonProgress((value) => value + 1)
+      const replayCount =
+        lessonReplayRef.current?.lesson === active ? lessonReplayRef.current.count : null
+      const alreadyCompleted =
+        (lessonDone[active] ?? 0) >= LESSON_QUESTION_LIMIT ||
+        (replayCount !== null && replayCount >= LESSON_QUESTION_LIMIT)
+      if (!replayMode) {
+        if (!alreadyCompleted) {
+          setLessonDone((value) => ({
+            ...value,
+            [active]: Math.min(LESSON_QUESTION_LIMIT, (value[active] ?? 0) + 1),
+          }))
+          setLessonCorrect((value) => ({ ...value, [active]: finalCorrect }))
+          if (complete && finalCorrect / sessionLimit >= 0.9)
+            setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
+        }
+      } else if (replayCount !== null) {
+        setLessonDone((value) => ({ ...value, [active]: replayCount }))
+        setLessonCorrect((value) => ({ ...value, [active]: finalCorrect }))
+        if (complete && finalCorrect >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9))
+          setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
+      }
+    }
+    setSessionProgress((value) => value + 1)
+    submittedQuestion.current = null
+    setSelectedChoice('')
+    setInput('')
+    setGraded(false)
+    if (complete) {
+      const types = mistakes.filter((item) => item.lessonId === active + 1).map((item) => item.type)
+      setLessonSummary({
+        lessonId: active + 1,
+        accuracy: Math.round((finalCorrect / LESSON_QUESTION_LIMIT) * 100),
+        mistakeTypes: Array.from(new Set(types)),
+        nextLessonId: active < courses.length - 1 ? active + 2 : undefined,
+      })
+      setTab('home')
+    }
+  }
+  const currentLesson = displayedLessons[nextLessonIndex] ?? displayedLessons[0]
+  const overallProgress = Math.round(
+    displayedLessons.reduce((sum, lesson) => sum + lesson.progress, 0) / displayedLessons.length,
+  )
+  const learnerName = userEmail ? userEmail.split('@')[0] : '学习者'
+  const registrationDate = registeredAt
+    ? new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date(registeredAt))
+    : '—'
+  const totalAnswered = Object.values(lessonDone).reduce((sum, count) => sum + count, 0)
+  return (
+    <main className="shell">
+      <AppHeader
+        lessonId={currentLesson.id}
+        learnerName={learnerName}
+        onProfile={() => setTab('me')}
+      />
+      {tab === 'home' && (
+        <>
+          {lessonSummary && (
+            <section className="lesson-summary">
+              <p className="eyebrow">本课完成</p>
+              <h2>第 {lessonSummary.lessonId} 课练习完成</h2>
+              <p>
+                正确率 <b>{lessonSummary.accuracy}%</b>
+              </p>
+              <p>
+                {lessonSummary.mistakeTypes.length
+                  ? `需要巩固：${lessonSummary.mistakeTypes.join('、')}`
+                  : '本课没有新增错题，保持得很好。'}
+              </p>
+              {lessonSummary.nextLessonId && (
+                <button
+                  className="primary"
+                  onClick={() => {
+                    setLessonSummary(null)
+                    setActive(lessonSummary.nextLessonId! - 1)
+                    setTab('lesson')
+                  }}
+                >
+                  进入第 {lessonSummary.nextLessonId} 课 <span>→</span>
+                </button>
+              )}
+            </section>
+          )}
+          <HomeHero
+            learnerName={learnerName}
+            lessonId={currentLesson.id}
+            progress={currentLesson.progress}
+            onStart={() => startLessonPractice(nextLessonIndex)}
+          />
+          {effectiveCompletedLessons.some((index) => (index + 1) % 5 === 0) && (
+            <button className="primary wide" onClick={startMixedPractice}>
+              开始综合混练（已完成课程） <span>→</span>
+            </button>
+          )}
+          <ProgressSummary
+            lessonProgress={currentLesson.progress}
+            lessonId={currentLesson.id}
+            overallProgress={overallProgress}
+          />
+          <section className="section-head">
+            <div>
+              <p className="eyebrow">本课路径</p>
+              <h2>{currentLesson.progress > 0 ? '接着练这一课' : '先学句型，再开始练习'}</h2>
+            </div>
+            <button className="link" onClick={() => setTab('lessons')}>
+              课程地图 →
+            </button>
+          </section>
+          <CurrentLessonCard
+            lesson={currentLesson}
+            onOpen={() => {
+              setActive(nextLessonIndex)
+              setTab('lesson')
+            }}
+          />
+        </>
+      )}
+      {tab === 'lessons' && (
+        <>
+          <div className="page-title">
+            <p className="eyebrow">课程地图</p>
+            <h1>标准日本语·上册</h1>
+            <p className="muted">24 课 · 从句型骨架开始，逐步建立语感</p>
+          </div>
+          <LessonGrid
+            lessons={lessons}
+            onSelect={(index) => {
+              setActive(index)
+              setTab('lesson')
+            }}
+          />
+        </>
+      )}
+      {tab === 'lesson' && (
+        <>
+          <button className="back" onClick={() => setTab('home')}>
+            ← 返回
+          </button>
+          <div className="page-title">
+            <div className="tag">第 {selectedLesson.id} 课 · 核心句型</div>
+            <h1>{selectedLesson.title}</h1>
+            <p className="muted">{selectedLesson.goal}</p>
+          </div>
+          <div className="lesson-status">
+            <b>
+              已作答 {activeLessonDone} / {LESSON_QUESTION_LIMIT} · 正确 {activeLessonCorrect} 题（
+              {activeLessonAccuracy}%）
+            </b>
+            <small>{lessonUnlockMessage}</small>
+          </div>
+          <GrammarList grammar={selectedLesson.grammar} />
+          <button className="primary wide" onClick={() => startLessonPractice(active)}>
+            开始整课练习（{LESSON_QUESTION_LIMIT} 题） <span>→</span>
+          </button>
+          {active < displayedLessons.length - 1 && (
+            <div className="next-preview">
+              <b>下一课预告：第 {selectedLesson.id + 1} 课</b>
+              <p>{displayedLessons[active + 1].goal}</p>
+              <small>完成本课全部题目且正确率达到 90% 后解锁</small>
+            </div>
+          )}
+        </>
+      )}
+      {tab === 'practice' && (
+        <>
+          <div className="practice-top">
+            <button className="back" onClick={() => setTab('home')}>
+              × 退出
+            </button>
+            <span>
+              {practiceMode === 'mistakes' ? '错题练习' : `第 ${selectedLesson.id} 课 · 练习`}
+            </span>
+            <b>
+              {Math.min(progress + 1, sessionLimit)} / {sessionLimit}
+            </b>
+          </div>
+          <div className="quiz">
+            <div className="quiz-meta">
+              <span className="tag">{presentedQuestion.type}</span>
+              <span>句型骨架</span>
+            </div>
+            <h2>{practiceInstruction}</h2>
+            <div className="prompt">{presentedQuestion.prompt}</div>
+            {presentedQuestion.options ? (
+              <div className="choice-list">
+                {presentedQuestion.options.map((option) => (
+                  <button
+                    key={option}
+                    className={selectedChoice === option.slice(0, 1) ? 'choice selected' : ''}
+                    onClick={() => {
+                      if (!graded) {
+                        const value = option.slice(0, 1)
+                        setSelectedChoice(value)
+                        setInput(value)
+                      }
+                    }}
+                    disabled={graded}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="token-builder">
+                <div className="token-answer" aria-label="已选答案">
+                  {selectedTokens.length ? (
+                    selectedTokens.map((token) => (
+                      <button
+                        type="button"
+                        className="token-button token-selected"
+                        key={token.id}
+                        onClick={(event) => {
+                          event.currentTarget.blur()
+                          if (!graded) {
+                            setSelectedTokens((value) =>
+                              value.filter((item) => item.id !== token.id),
+                            )
+                            setAvailableTokens((value) => [...value, token])
+                          }
+                        }}
+                        disabled={graded}
+                      >
+                        {token.text}
+                      </button>
+                    ))
+                  ) : (
+                    <span className="token-placeholder">点击下方词块组成答案</span>
+                  )}
+                </div>
+                <div className="token-bank" aria-label="候选词块">
+                  {candidateTokens.map((token) =>
+                    selectedTokenIds.has(token.id) ? (
+                      <span aria-hidden="true" className="token-slot" key={token.id}>
+                        {token.text}
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="token-button"
+                        key={token.id}
+                        onClick={(event) => {
+                          event.currentTarget.blur()
+                          if (!graded) {
+                            setAvailableTokens((value) =>
+                              value.filter((item) => item.id !== token.id),
+                            )
+                            setSelectedTokens((value) => [...value, token])
+                          }
+                        }}
+                        disabled={graded}
+                      >
+                        {token.text}
+                      </button>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}{' '}
+            {graded && (
+              <div className={'feedback ' + (answerMatches ? 'ok' : 'warn')}>
+                <b>{answerMatches ? '✓ ' + verdictLabel : '△ ' + verdictLabel}</b>
+                <p>你的答案：{responseText || '未作答'}</p>
+                <p>参考答案：{expectedAnswerText}</p>
+                {gradeExplanation && (
+                  <small>
+                    {gradeSource === 'ai' ? 'AI 批改：' : '规则批改：'}
+                    {gradeExplanation}
+                  </small>
+                )}
+                {missingPunctuation && <small>答案判定正确；下次书写时不要忘记写标点符号。</small>}
+                {!answerMatches && (
+                  <>
+                    <small>
+                      提示：{presentedQuestion.hint}
+                      <br />
+                      书写时不要忘记写标点符号，标点不影响判分。
+                    </small>
+                  </>
+                )}
+                {!analysis && (
+                  <button
+                    className="analysis-button"
+                    onClick={analyzeAnswer}
+                    disabled={analysisLoading}
+                  >
+                    {analysisLoading ? '分析中…' : 'AI 分析记忆方法'}
+                  </button>
+                )}
+                {analysis && (
+                  <div className="analysis">
+                    <p>{analysis.analysis}</p>
+                    {analysis.words?.map((word) => (
+                      <div key={word.word}>
+                        <b>
+                          {word.word}（{word.kana}）
+                        </b>
+                        <span>
+                          {word.meaning} · {word.memory}
+                        </span>
+                      </div>
+                    ))}
+                    {analysis.pitfalls?.map((pitfall) => (
+                      <small key={pitfall}>易错点：{pitfall}</small>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            <button
+              className="primary wide"
+              onClick={() => (graded ? nextQuestion() : grade())}
+              disabled={
+                !graded &&
+                ((presentedQuestion.type === '选择' && !selectedChoice) ||
+                  ((presentedQuestion.type === '翻译' || presentedQuestion.type === '问答') &&
+                    !selectedTokens.length))
+              }
+            >
+              {graded ? (progress >= sessionLimit - 1 ? '完成训练' : '下一题') : '提交答案'}{' '}
+              <span>→</span>
+            </button>
+          </div>
+        </>
+      )}
+      {tab === 'mistakes' && (
+        <>
+          <div className="page-title">
+            <p className="eyebrow">复习重点</p>
+            <h1>错题本</h1>
+            <p className="muted">把容易忘的地方，再练一次。</p>
+          </div>
+          {mistakes.length > 0 && (
+            <button className="primary wide" onClick={startMistakePractice}>
+              开始错题练习（{mistakes.length} 题）
+            </button>
+          )}
+          {mistakes.map((item) => (
+            <div className="mistake-card" key={item.id}>
+              <div className="mistake-icon">文</div>
+              <div>
+                <b>{item.prompt}</b>
+                <p>
+                  第 {item.lessonId} 课 · {item.type}
+                </p>
+                <small>
+                  参考答案：
+                  {item.options
+                    ?.find((option) => option.startsWith(`${item.answer}：`))
+                    ?.slice(2)
+                    .trim() || item.answer}
+                </small>
+              </div>
+              <span>→</span>
+            </div>
+          ))}
+          {mistakes.length === 0 && (
+            <div className="empty-note">
+              目前没有错题
+              <br />
+              完成练习后，错题会自动收录。
+            </div>
+          )}
+        </>
+      )}
+      {tab === 'me' && (
+        <>
+          <div className="page-title">
+            <p className="eyebrow">个人中心</p>
+            <h1>我的</h1>
+            <p className="muted">学习记录会在登录后同步到云端。</p>
+          </div>
+          <ProfileOverview
+            email={userEmail}
+            registrationDate={registrationDate}
+            lessonId={currentLesson.id}
+            progress={overallProgress}
+            totalAnswered={totalAnswered}
+            completedCount={completedLessons.length}
+            syncLabel={
+              userEmail
+                ? syncState === 'failed'
+                  ? '需要重试'
+                  : syncState === 'syncing'
+                    ? '同步中'
+                    : syncState === 'synced'
+                      ? '已同步'
+                      : '仅本机'
+                : '登录后同步'
+            }
+            onLogin={() => (location.href = '/login')}
+          />
+          {userEmail && (
+            <div className={'sync-note ' + syncState}>
+              {syncState === 'syncing'
+                ? '正在同步学习记录…'
+                : syncState === 'failed'
+                  ? '同步失败，请检查网络后重试。'
+                  : syncState === 'synced'
+                    ? '学习记录已同步到云端。'
+                    : '仅保存在当前设备。'}
+              {syncState === 'failed' && (
+                <button onClick={() => setSyncRetry((value) => value + 1)}>重试</button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+      <BottomNav activeTab={tab} onNavigate={setTab} />
+    </main>
+  )
 }
