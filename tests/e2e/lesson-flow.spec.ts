@@ -182,7 +182,7 @@ test('已完成课程重练不会污染原有整课统计',async({page})=>{
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await page.getByRole('button',{name:/开始整课练习/}).click()
+  await page.getByRole('button',{name:/本课已完成，可再次复习|开始整课练习/}).click()
   await page.locator('.choice-list button').nth(1).click()
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/下一题/}).click()
@@ -198,8 +198,11 @@ test('已完成课程再次进入时只练本课错题',async({page})=>{
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await page.getByRole('button',{name:/开始整课练习/}).click()
-  await expect(page.getByText('1 / 1')).toBeVisible()
+  const practiceButton = page.getByRole('button',{name:/重练本课错题|本课已完成，可再次复习|开始整课练习/})
+  await expect(practiceButton).toBeVisible()
+  await practiceButton.click()
+  await expect(page.getByText(/第 1 课 · 练习/)).toBeVisible()
+  await expect(page.getByText(/1\s*\/\s*1/)).toBeVisible()
 })
 
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
