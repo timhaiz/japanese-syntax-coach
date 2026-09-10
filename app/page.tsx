@@ -207,6 +207,7 @@ export default function Home() {
   const [retryQuestions, setRetryQuestions] = useState<Question[]>([])
   const submittedQuestion = useRef<Question | null>(null)
   const lessonReplayRef = useRef<{ lesson: number; count: number } | null>(null)
+  const replayCorrectRef = useRef(0)
   const [fullLessonMode, setFullLessonMode] = useState(false)
   const [replayMode, setReplayMode] = useState(false)
   const [selectedChoice, setSelectedChoice] = useState('')
@@ -755,6 +756,7 @@ export default function Home() {
       existingAnswered >= LESSON_QUESTION_LIMIT
         ? { lesson: lessonIndex, count: existingAnswered }
         : null
+    replayCorrectRef.current = existingAnswered >= LESSON_QUESTION_LIMIT ? lessonCorrect[lessonIndex] ?? 0 : 0
     const lessonMistakes = mistakes.filter((item) => item.lessonId === lessonIndex + 1)
     setRetryQuestions(lessonMistakes)
     if (existingAnswered > 0 && existingAnswered !== (lessonDone[lessonIndex] ?? 0))
@@ -801,7 +803,9 @@ export default function Home() {
   }
   const nextQuestion = () => {
     const complete = progress >= sessionLimit - 1
-    const finalCorrect = (lessonCorrect[active] ?? 0) + (answerMatches ? 1 : 0)
+    const finalCorrect = replayMode
+      ? replayCorrectRef.current + (answerMatches ? 1 : 0)
+      : (lessonCorrect[active] ?? 0) + (answerMatches ? 1 : 0)
     if (practiceMode === 'lesson') {
       setFullLessonProgress((value) => value + 1)
       const replayCount =
@@ -820,6 +824,7 @@ export default function Home() {
             setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
         }
       } else if (replayCount !== null) {
+        replayCorrectRef.current = finalCorrect
         setLessonDone((value) => ({ ...value, [active]: replayCount }))
         setLessonCorrect((value) => ({ ...value, [active]: finalCorrect }))
         if (complete && finalCorrect >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9))
