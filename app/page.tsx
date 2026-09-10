@@ -465,6 +465,31 @@ export default function Home() {
         localStorage.removeItem('syntax-coach-lesson-progress')
       }
     }
+    const savedCorrect = localStorage.getItem('syntax-coach-lesson-correct')
+    if (savedCorrect) {
+      try {
+        const parsed = JSON.parse(savedCorrect)
+        if (parsed && typeof parsed === 'object') {
+          const normalizedCorrect = Object.fromEntries(
+            Object.entries(parsed)
+              .filter(
+                ([index, count]) =>
+                  Number.isInteger(Number(index)) &&
+                  Number(index) >= 0 &&
+                  Number(index) < courses.length &&
+                  typeof count === 'number',
+              )
+              .map(([index, count]) => [
+                Number(index),
+                Math.max(0, Math.min(LESSON_QUESTION_LIMIT, count as number)),
+              ]),
+          )
+          setLessonCorrect(normalizedCorrect)
+        }
+      } catch {
+        localStorage.removeItem('syntax-coach-lesson-correct')
+      }
+    }
     setLessonLoaded(true)
   }, [cloudLoaded])
   useEffect(() => {
@@ -505,6 +530,10 @@ export default function Home() {
       localStorage.setItem('syntax-coach-lesson-progress', JSON.stringify(lessonDone))
     }
   }, [lessonDone, lessonLoaded])
+  useEffect(() => {
+    if (lessonLoaded)
+      localStorage.setItem('syntax-coach-lesson-correct', JSON.stringify(lessonCorrect))
+  }, [lessonCorrect, lessonLoaded])
   useEffect(() => {
     if (completedLoaded)
       localStorage.setItem('syntax-coach-completed-lessons', JSON.stringify(completedLessons))
