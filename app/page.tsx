@@ -9,6 +9,7 @@ import {AppHeader} from '@/components/AppHeader'
 import {HomeHero} from '@/components/HomeHero'
 import {GrammarList} from '@/components/GrammarList'
 import {ProgressSummary} from '@/components/ProgressSummary'
+import {CurrentLessonCard} from '@/components/CurrentLessonCard'
 
 const courseLessons=courses.map((c)=>({...c,progress:0,locked:false}))
 const LESSON_QUESTION_LIMIT=20
@@ -140,7 +141,7 @@ const lessonUnlockMessage=effectiveCompletedLessons.includes(active)?'本课已�
    {effectiveCompletedLessons.some(index=>(index+1)%5===0)&&<button className="primary wide" onClick={startMixedPractice}>开始综合混练（已完成课程） <span>→</span></button>}
    <ProgressSummary lessonProgress={currentLesson.progress} lessonId={currentLesson.id} overallProgress={overallProgress} />
    <section className="section-head"><div><p className="eyebrow">本课路径</p><h2>{currentLesson.progress>0?'接着练这一课':'先学句型，再开始练习'}</h2></div><button className="link" onClick={()=>setTab('lessons')}>课程地图 →</button></section>
-<div className="lesson-card" onClick={()=>{setActive(nextLessonIndex);setTab('lesson')}}><div className="lesson-no">{String(currentLesson.id).padStart(2,'0')}</div><div className="lesson-info"><div className="tag">第 {currentLesson.id} 课 · 句型训练</div><h3>{currentLesson.title}</h3><p>{currentLesson.grammar.map(g=>g.pattern).join(' · ')}</p><div className="progress"><i style={{width:`${currentLesson.progress}%`}}/></div><small>{currentLesson.progress?`已完成 ${currentLesson.progress}% · 继续巩固句型`:'查看本课句型，然后完成 20 道练习'}</small></div><span className="arrow">→</span></div>
+<CurrentLessonCard lesson={currentLesson} onOpen={()=>{setActive(nextLessonIndex);setTab('lesson')}} />
   </>}
   {tab==='lessons'&&<><div className="page-title"><p className="eyebrow">课程地图</p><h1>标准日本语·上册</h1><p className="muted">24 课 · 从句型骨架开始，逐步建立语感</p></div><div className="lesson-grid">{lessons.map(l=><button key={l.id} className={'lesson-tile '+(l.locked?'locked':'')} onClick={()=>!l.locked&&(setActive(l.id-1),setTab('lesson'))}><span>{String(l.id).padStart(2,'0')}</span><div><b>第 {l.id} 课</b><small>{l.title}</small>{!l.locked&&<div className="mini-progress"><i style={{width:`${l.progress}%`}}/></div>}</div><em>{l.locked?'🔒':l.progress+'%'}</em></button>)}</div></>}
   {tab==='lesson'&&<><button className="back" onClick={()=>setTab('home')}>← 返回</button><div className="page-title"><div className="tag">第 {selectedLesson.id} 课 · 核心句型</div><h1>{selectedLesson.title}</h1><p className="muted">{selectedLesson.goal}</p></div><div className="lesson-status"><b>已作答 {activeLessonDone} / {LESSON_QUESTION_LIMIT} · 正确 {activeLessonCorrect} 题（{activeLessonAccuracy}%）</b><small>{lessonUnlockMessage}</small></div><GrammarList grammar={selectedLesson.grammar} /><button className="primary wide" onClick={()=>startLessonPractice(active)}>开始整课练习（{LESSON_QUESTION_LIMIT} 题） <span>→</span></button>{active<displayedLessons.length-1&&<div className="next-preview"><b>下一课预告：第 {selectedLesson.id+1} 课</b><p>{displayedLessons[active+1].goal}</p><small>完成本课全部题目且正确率达到 90% 后解锁</small></div>}</>}

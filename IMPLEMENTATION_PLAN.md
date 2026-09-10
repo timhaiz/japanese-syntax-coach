@@ -32,6 +32,7 @@
 ### P2：结构与视觉重构
 - [ ] 继续拆分 `app/page.tsx`：`ProgressSummary`、`CurrentLessonCard`、课程地图、练习视图、我的页面。
 - [x] 已抽离首页 `ProgressSummary`，进度计算仍由首页统一管理。
+- [x] 已抽离首页 `CurrentLessonCard`，课程点击和进度状态仍由首页统一管理。
 - [ ] 将课程页、练习页、错题本和我的页面的颜色、圆角、间距、按钮统一迁移到 `app/design-tokens.css`。
 - [ ] 补充可访问性：键盘焦点、按钮 aria-label、朗读控件状态和空状态提示。
 
