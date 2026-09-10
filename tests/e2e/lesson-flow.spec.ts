@@ -189,6 +189,19 @@ test('已完成课程重练不会污染原有整课统计',async({page})=>{
   await expect.poll(async()=>page.evaluate(()=>localStorage.getItem('syntax-coach-lesson-progress'))).toBe(JSON.stringify({0:20}))
 })
 
+test('已完成课程再次进入时只练本课错题',async({page})=>{
+  await page.evaluate(()=>{
+    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
+    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0]))
+    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([{id:'L01-Q001',lessonId:1,type:'选择',prompt:'测试题',answer:'A',hint:'提示',options:['A：正确','B：错误','C：其他']}]))
+  })
+  await page.reload()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await page.getByRole('button',{name:/开始整课练习/}).click()
+  await expect(page.getByText('1 / 1')).toBeVisible()
+})
+
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
   await page.goto('/login')
   await page.getByRole('button',{name:'注册'}).first().click()
