@@ -499,6 +499,8 @@ for(const questions of Object.values(questionBank)) for(const question of questi
   const alternatives=acceptedAnswers[question.id]
   if(alternatives) question.acceptedAnswers=alternatives
 }
+const lesson3ChoiceQuestion=Object.values(questionBank).flat().find(question=>question.id==='L03-Q017')
+if(lesson3ChoiceQuestion){ lesson3ChoiceQuestion.prompt='这里是银行还是邮局？'; lesson3ChoiceQuestion.answer='ここは銀行ですか、郵便局ですか。' }
 export const normalizeAnswer=(value:string)=>value.replace(/[\s。！？!?，,、．.]/g,'')
 export const isAnswerAccepted=(question:Question,value:string)=>{
   const normalized=normalizeAnswer(value)

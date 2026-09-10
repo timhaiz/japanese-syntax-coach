@@ -97,7 +97,7 @@ export default function Home(){
  const activeLessonCorrect=lessonCorrect[active]??0
 const activeLessonAccuracy=activeLessonDone?Math.min(100,Math.round(Math.min(activeLessonCorrect,LESSON_QUESTION_LIMIT)/Math.min(activeLessonDone,LESSON_QUESTION_LIMIT)*100)):0
 const effectiveCompletedLessons=completedFromLessonProgress(lessonDone,completedLessons,lessonCorrect)
-const lessonUnlockMessage=effectiveCompletedLessons.includes(active)?'本课已达标，下一课已解锁。':activeLessonDone>=LESSON_QUESTION_LIMIT&&activeLessonCorrect<Math.ceil(LESSON_QUESTION_LIMIT*0.9)?`题数已完成，但正确率为 ${activeLessonAccuracy}%；还需至少答对 18 题才能解锁下一课。`:`需完成 ${LESSON_QUESTION_LIMIT} 题且至少答对 18 题（90%）才能解锁下一课。`
+const lessonUnlockMessage=effectiveCompletedLessons.includes(active)?'本课已达标，下一课已解锁。':activeLessonDone>=LESSON_QUESTION_LIMIT&&activeLessonCorrect<Math.ceil(LESSON_QUESTION_LIMIT*0.9)?`20 题已全部完成，但正确率为 ${activeLessonAccuracy}%；请重练错题，累计至少答对 18 题后解锁下一课。`:`需完成 ${LESSON_QUESTION_LIMIT} 题且至少答对 18 题（90%）才能解锁下一课。`
  const displayedLessons=courseLessons.map((lesson,index)=>{const total=LESSON_QUESTION_LIMIT;return {...lesson,progress:Math.min(100,Math.round(((lessonDone[index]??0)/total)*100)),locked:index>0&&!effectiveCompletedLessons.includes(index-1)}})
  const lessons=displayedLessons
  const selectedLesson=displayedLessons[Math.min(active,displayedLessons.length-1)]
