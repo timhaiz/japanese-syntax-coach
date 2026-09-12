@@ -175,6 +175,7 @@ export default function Home() {
   const [syncState, setSyncState] = useState<'local' | 'syncing' | 'synced' | 'failed'>('local')
   const [syncRetry, setSyncRetry] = useState(0)
   const currentUserId = useRef('')
+  const loadedStudyUserId = useRef('')
   const cloudApplied = useRef(false)
   const [practiceMode, setPracticeMode] = useState<'lesson' | 'mistakes' | 'mixed'>('lesson')
   const [completedLessons, setCompletedLessons] = useState<number[]>([])
@@ -227,14 +228,9 @@ export default function Home() {
     ) => {
       if (!mounted) return
       cloudApplied.current = true
+      loadedStudyUserId.current = ''
+      setStudyStateLoaded(false)
       setSyncState('synced')
-      const accountChanged = Boolean(currentUserId.current && currentUserId.current !== user.id)
-      if (accountChanged) {
-        setLessonDone({})
-        setLessonCorrect({})
-        setCompletedLessons([])
-        setMistakes([])
-      }
       currentUserId.current = user.id
       setUserId(user.id)
       setUserEmail(user.email || '')
@@ -249,17 +245,21 @@ export default function Home() {
           progress.lessonCorrect && typeof progress.lessonCorrect === 'object'
             ? (progress.lessonCorrect as Record<number, number>)
             : {}
-        if (Object.keys(cloudLessonDone).length) setLessonDone(cloudLessonDone)
-        if (Object.keys(cloudLessonCorrect).length) setLessonCorrect(cloudLessonCorrect)
-        if (Object.keys(cloudLessonDone).length || Array.isArray(progress.completedLessons))
-          setCompletedLessons(
-            completedFromLessonProgress(
-              cloudLessonDone,
-              progress.completedLessons,
-              cloudLessonCorrect,
-            ),
-          )
-        if (Array.isArray(progress.mistakes)) setMistakes(progress.mistakes as Question[])
+        setLessonDone(cloudLessonDone)
+        setLessonCorrect(cloudLessonCorrect)
+        setCompletedLessons(
+          completedFromLessonProgress(
+            cloudLessonDone,
+            progress.completedLessons,
+            cloudLessonCorrect,
+          ),
+        )
+        setMistakes(Array.isArray(progress.mistakes) ? (progress.mistakes as Question[]) : [])
+      } else {
+        setLessonDone({})
+        setLessonCorrect({})
+        setCompletedLessons([])
+        setMistakes([])
       }
       setCloudLoaded(true)
     }
@@ -269,6 +269,8 @@ export default function Home() {
       else {
         cloudApplied.current = false
         currentUserId.current = ''
+        loadedStudyUserId.current = ''
+        setStudyStateLoaded(false)
         setUserId('')
         setUserEmail('')
         setRegisteredAt('')
@@ -281,6 +283,8 @@ export default function Home() {
       if (!user) {
         cloudApplied.current = false
         currentUserId.current = ''
+        loadedStudyUserId.current = ''
+        setStudyStateLoaded(false)
         setUserId('')
         setUserEmail('')
         setRegisteredAt('')
@@ -299,7 +303,7 @@ export default function Home() {
     }
   }, [])
   useEffect(() => {
-    if (!cloudLoaded || !studyStateLoaded || !userId) return
+    if (!cloudLoaded || !studyStateLoaded || !userId || loadedStudyUserId.current !== userId) return
     const s = getSupabaseBrowser()
     if (!s) return
     const syncedCompleted = completedFromLessonProgress(lessonDone, completedLessons, lessonCorrect)
@@ -379,7 +383,10 @@ export default function Home() {
       } catch {
         console.warn('Unable to load durable study state; using local fallback')
       } finally {
-        if (!cancelled) setStudyStateLoaded(true)
+        if (!cancelled) {
+          loadedStudyUserId.current = userId
+          setStudyStateLoaded(true)
+        }
       }
     })()
     return () => {
