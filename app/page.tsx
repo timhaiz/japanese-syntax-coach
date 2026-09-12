@@ -267,10 +267,17 @@ export default function Home() {
       if (!mounted) return
       if (data.user) applyUser(data.user)
       else {
+        const hadAuthenticatedUser = Boolean(currentUserId.current)
         cloudApplied.current = false
         currentUserId.current = ''
         loadedStudyUserId.current = ''
         setStudyStateLoaded(false)
+        if (hadAuthenticatedUser) {
+          setLessonDone({})
+          setLessonCorrect({})
+          setCompletedLessons([])
+          setMistakes([])
+        }
         setUserId('')
         setUserEmail('')
         setRegisteredAt('')
@@ -281,10 +288,17 @@ export default function Home() {
     const { data } = s.auth.onAuthStateChange((event, session) => {
       const user = session?.user
       if (!user) {
+        const hadAuthenticatedUser = Boolean(currentUserId.current)
         cloudApplied.current = false
         currentUserId.current = ''
         loadedStudyUserId.current = ''
         setStudyStateLoaded(false)
+        if (hadAuthenticatedUser) {
+          setLessonDone({})
+          setLessonCorrect({})
+          setCompletedLessons([])
+          setMistakes([])
+        }
         setUserId('')
         setUserEmail('')
         setRegisteredAt('')
@@ -426,6 +440,11 @@ export default function Home() {
       setCompletedLoaded(true)
       return
     }
+    if (getSupabaseBrowser() && !currentUserId.current) {
+      setCompletedLessons([])
+      setCompletedLoaded(true)
+      return
+    }
     const saved = localStorage.getItem('syntax-coach-completed-lessons')
     if (saved) {
       try {
@@ -443,6 +462,12 @@ export default function Home() {
   useEffect(() => {
     if (!cloudLoaded) return
     if (cloudApplied.current) {
+      setLessonLoaded(true)
+      return
+    }
+    if (getSupabaseBrowser() && !currentUserId.current) {
+      setLessonDone({})
+      setLessonCorrect({})
       setLessonLoaded(true)
       return
     }
@@ -502,6 +527,11 @@ export default function Home() {
   useEffect(() => {
     if (!cloudLoaded) return
     if (cloudApplied.current) {
+      setMistakesLoaded(true)
+      return
+    }
+    if (getSupabaseBrowser() && !currentUserId.current) {
+      setMistakes([])
       setMistakesLoaded(true)
       return
     }
