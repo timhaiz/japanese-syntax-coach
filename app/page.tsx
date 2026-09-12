@@ -739,7 +739,12 @@ export default function Home() {
               answer: submittedAnswer,
               correct: localAnswerMatches,
               errorTags: localAnswerMatches ? [] : errorTagsForAnswer(question, submittedAnswer),
-              mode: practiceMode === 'lesson' ? 'lesson' : 'review',
+              mode:
+                practiceMode === 'lesson'
+                  ? replayMode
+                    ? 'lesson_replay'
+                    : 'lesson'
+                  : 'review',
             }),
           })
           if (!response.ok) return

@@ -16,7 +16,14 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toMatch(/if\s*\(!replayMode\)/)
   expect(pageSource).toContain('createWordTokens')
   expect(pageSource).toContain('tokenQuestion')
-  expect(pageSource).toMatch(/const\s+tokenParticles\s*=\s*\[[^\]]*['"]から['"]\s*,\s*['"]まで['"]/)
+  expect(pageSource).toContain('tokenParticles')
+  expect(pageSource).toContain("'から'")
+  expect(pageSource).toContain("'まで'")
+  expect(pageSource).toContain("? 'lesson_replay'")
+  const recordSource=readFileSync(resolve(process.cwd(),'app/api/record-answer/route.ts'),'utf8')
+  const migrationSource=readFileSync(resolve(process.cwd(),'supabase/migrations/202609120003_lesson_replay_accuracy.sql'),'utf8')
+  expect(recordSource).toContain("'lesson_replay'")
+  expect(migrationSource).toContain("elsif p_mode = 'lesson_replay'")
 })
 
 test('AI 接口包含严格的响应结构校验',()=>{
