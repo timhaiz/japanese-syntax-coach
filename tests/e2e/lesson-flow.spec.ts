@@ -286,6 +286,38 @@ test('重练仍未达标时不会显示进入下一课入口',async({page})=>{
   await expect(page.getByRole('button',{name:/02 第 2 课已锁定/})).toBeDisabled()
 })
 
+test('重练中途退出后会保留已答对结果并继续累计',async({page})=>{
+  await page.addInitScript(()=>{
+    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
+    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
+    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
+    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
+      {id:'L01-Q901',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
+      {id:'L01-Q902',lessonId:1,type:'选择',prompt:'错题二',answer:'B',hint:'提示',options:['A：错误','B：正确']},
+      {id:'L01-Q903',lessonId:1,type:'选择',prompt:'错题三',answer:'C',hint:'提示',options:['A：错误','B：错误','C：正确']},
+    ]))
+  })
+  await page.reload()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await page.getByRole('button',{name:/重练本课错题（3 题）/}).click()
+  await page.getByRole('button',{name:'A：正确',exact:true}).click()
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:'× 退出'}).click()
+
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await expect(page.getByRole('button',{name:/重练本课错题（2 题）/})).toBeVisible()
+  await page.getByRole('button',{name:/重练本课错题（2 题）/}).click()
+  for (const answer of ['A：错误','A：错误']) {
+    await page.getByRole('button',{name:answer,exact:true}).click()
+    await page.getByRole('button',{name:/^提交答案/}).click()
+    await page.getByRole('button',{name:/下一题|完成训练/}).click()
+  }
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await expect(page.getByRole('button',{name:/02 第 2 课：/})).toBeEnabled()
+})
+
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
   await page.goto('/login')
   await page.getByRole('button',{name:'注册'}).first().click()

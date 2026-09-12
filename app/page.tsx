@@ -707,10 +707,16 @@ export default function Home() {
       }
     } else if (practiceMode === 'mistakes' || replayMode) {
       setMistakes((value) => value.filter((item) => item.id !== question.id))
-      if (replayMode)
+      if (replayMode) {
         replayMistakesRef.current = replayMistakesRef.current.filter(
           (item) => item.id !== question.id,
         )
+        replayCorrectRef.current = Math.min(LESSON_QUESTION_LIMIT, replayCorrectRef.current + 1)
+        setLessonCorrect((value) => ({
+          ...value,
+          [active]: Math.min(LESSON_QUESTION_LIMIT, (value[active] ?? 0) + 1),
+        }))
+      }
     }
     if (userId)
       void (async () => {
@@ -864,7 +870,7 @@ export default function Home() {
   const nextQuestion = () => {
     const complete = progress >= sessionLimit - 1
     const finalCorrect = replayMode
-      ? replayCorrectRef.current + (answerMatches ? 1 : 0)
+      ? replayCorrectRef.current
       : (lessonCorrect[active] ?? 0) + (answerMatches ? 1 : 0)
     if (practiceMode === 'lesson') {
       setFullLessonProgress((value) => value + 1)
