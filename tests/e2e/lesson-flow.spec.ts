@@ -188,7 +188,7 @@ test('已完成课程无错题时不允许重新开始整课',async({page})=>{
 })
 
 test('已完成课程再次进入只加载本课错题',async({page})=>{
-  await page.evaluate(()=>{
+  await page.addInitScript(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0]))
     localStorage.setItem('syntax-coach-mistakes',JSON.stringify([{id:'L01-Q001',lessonId:1,type:'选择',prompt:'测试题',answer:'A',hint:'提示',options:['A：正确','B：错误']}]))
