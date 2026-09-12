@@ -7,7 +7,19 @@ export function CurrentLessonCard({
   onOpen: () => void
 }) {
   return (
-    <div className="lesson-card" onClick={onOpen}>
+    <div
+      className="lesson-card"
+      role="button"
+      tabIndex={0}
+      onClick={onOpen}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          onOpen()
+        }
+      }}
+      aria-label={`打开第 ${lesson.id} 课：${lesson.title}`}
+    >
       <div className="lesson-no">{String(lesson.id).padStart(2, '0')}</div>
       <div className="lesson-info">
         <div className="tag">第 {lesson.id} 课 · 句型训练</div>

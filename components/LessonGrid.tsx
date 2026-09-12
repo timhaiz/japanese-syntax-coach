@@ -13,6 +13,12 @@ export function LessonGrid({
           key={l.id}
           className={'lesson-tile ' + (l.locked ? 'locked' : '')}
           onClick={() => !l.locked && onSelect(l.id - 1)}
+          disabled={l.locked}
+          aria-label={
+            l.locked
+              ? `${String(l.id).padStart(2, '0')} 第 ${l.id} 课已锁定`
+              : `${String(l.id).padStart(2, '0')} 第 ${l.id} 课：${l.title}`
+          }
         >
           <span>{String(l.id).padStart(2, '0')}</span>
           <div>
