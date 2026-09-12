@@ -237,6 +237,55 @@ test('重练本课多道错题后累计正确数并解锁下一课',async({page}
   await expect.poll(async()=>page.evaluate(()=>localStorage.getItem('syntax-coach-completed-lessons'))).toBe('[0]')
 })
 
+test('重练时答对的题会移出本课错题，下次只保留仍错的题',async({page})=>{
+  await page.addInitScript(()=>{
+    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
+    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
+    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
+    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
+      {id:'L01-Q901',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
+      {id:'L01-Q902',lessonId:1,type:'选择',prompt:'错题二',answer:'B',hint:'提示',options:['A：错误','B：正确']},
+    ]))
+  })
+  await page.reload()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await page.getByRole('button',{name:/重练本课错题（2 题）/}).click()
+
+  await page.getByRole('button',{name:'A：正确',exact:true}).click()
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:'下一题'}).click()
+  await page.getByRole('button',{name:'A：错误',exact:true}).click()
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:'完成训练'}).click()
+
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await expect(page.getByRole('button',{name:/重练本课错题（1 题）/})).toBeVisible()
+  await expect(page.getByRole('button',{name:/重练本课错题（2 题）/})).not.toBeVisible()
+})
+
+test('重练仍未达标时不会显示进入下一课入口',async({page})=>{
+  await page.addInitScript(()=>{
+    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
+    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
+    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
+    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
+      {id:'L01-Q901',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
+    ]))
+  })
+  await page.reload()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await page.getByRole('button',{name:/重练本课错题（1 题）/}).click()
+  await page.getByRole('button',{name:'B：错误',exact:true}).click()
+  await page.getByRole('button',{name:/^提交答案/}).click()
+  await page.getByRole('button',{name:'完成训练'}).click()
+  await expect(page.getByText('进入第 2 课')).not.toBeVisible()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await expect(page.getByRole('button',{name:/02 第 2 课已锁定/})).toBeDisabled()
+})
+
 test('注册表单要求邮箱和匹配的密码',async({page})=>{
   await page.goto('/login')
   await page.getByRole('button',{name:'注册'}).first().click()

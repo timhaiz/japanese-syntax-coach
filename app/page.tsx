@@ -208,6 +208,11 @@ export default function Home() {
   const [retryQuestions, setRetryQuestions] = useState<Question[]>([])
   const submittedQuestion = useRef<Question | null>(null)
   const lessonReplayRef = useRef<{ lesson: number; count: number } | null>(null)
+  // Keep the current lesson replay set in sync while React state updates are queued.
+  // The ref is used when building the completion summary so a corrected question is
+  // removed immediately, even if the final answer and the summary are handled in
+  // the same event loop turn.
+  const replayMistakesRef = useRef<Question[]>([])
   const replayCorrectRef = useRef(0)
   const [fullLessonMode, setFullLessonMode] = useState(false)
   const [replayMode, setReplayMode] = useState(false)
@@ -697,8 +702,15 @@ export default function Home() {
       setMistakes((value) =>
         value.some((item) => item.id === question.id) ? value : [...value, question],
       )
-    } else if (practiceMode === 'mistakes') {
+      if (replayMode && !replayMistakesRef.current.some((item) => item.id === question.id)) {
+        replayMistakesRef.current = [...replayMistakesRef.current, question]
+      }
+    } else if (practiceMode === 'mistakes' || replayMode) {
       setMistakes((value) => value.filter((item) => item.id !== question.id))
+      if (replayMode)
+        replayMistakesRef.current = replayMistakesRef.current.filter(
+          (item) => item.id !== question.id,
+        )
     }
     if (userId)
       void (async () => {
@@ -770,6 +782,7 @@ export default function Home() {
   }
   const startPractice = (_mode: 'new' | 'review' = 'new', lessonIndex = active) => {
     submittedQuestion.current = null
+    replayMistakesRef.current = []
     setSelectedChoice('')
     resetTokens()
     setFullLessonMode(true)
@@ -803,6 +816,7 @@ export default function Home() {
     replayCorrectRef.current = existingAnswered >= LESSON_QUESTION_LIMIT ? lessonCorrect[lessonIndex] ?? 0 : 0
     const lessonMistakes = mistakes.filter((item) => item.lessonId === lessonIndex + 1)
     setRetryQuestions(lessonMistakes)
+    replayMistakesRef.current = lessonMistakes
     if (existingAnswered > 0 && existingAnswered !== (lessonDone[lessonIndex] ?? 0))
       setLessonDone((value) => ({ ...value, [lessonIndex]: existingAnswered }))
     setReplayMode(existingAnswered >= LESSON_QUESTION_LIMIT && lessonMistakes.length > 0)
@@ -822,6 +836,7 @@ export default function Home() {
   const startMistakePractice = () => {
     if (mistakes.length) {
       submittedQuestion.current = null
+      replayMistakesRef.current = []
       setPracticeMode('mistakes')
       setFullLessonMode(false)
       setSessionProgress(0)
@@ -836,6 +851,7 @@ export default function Home() {
     if (questions.length) {
       setMixedQuestions(questions)
       submittedQuestion.current = null
+      replayMistakesRef.current = []
       setPracticeMode('mixed')
       setFullLessonMode(false)
       setSessionProgress(0)
@@ -881,21 +897,27 @@ export default function Home() {
     setSelectedChoice('')
     setInput('')
     setGraded(false)
-    if (complete) {
-      const remainingMistakes = mistakes
-        .filter((item) => item.lessonId === active + 1)
-        .filter((item) => !answerMatches || item.id !== currentQuestion?.id)
+    if (complete && practiceMode === 'lesson') {
+      const remainingMistakes = replayMode
+        ? replayMistakesRef.current
+        : mistakes
+            .filter((item) => item.lessonId === active + 1)
+            .filter((item) => !answerMatches || item.id !== currentQuestion?.id)
       const summaryMistakes =
-        !answerMatches && currentQuestion
-          ? [...remainingMistakes, currentQuestion]
-          : remainingMistakes
+        replayMode || !currentQuestion || answerMatches
+          ? remainingMistakes
+          : [...remainingMistakes, currentQuestion]
       const types = summaryMistakes.map((item) => item.type)
+      const lessonQualified = finalCorrect >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9)
       setLessonSummary({
         lessonId: active + 1,
         accuracy: Math.round((finalCorrect / LESSON_QUESTION_LIMIT) * 100),
         mistakeTypes: Array.from(new Set(types)),
-        nextLessonId: active < courses.length - 1 ? active + 2 : undefined,
+        nextLessonId:
+          lessonQualified && active < courses.length - 1 ? active + 2 : undefined,
       })
+      setTab('home')
+    } else if (complete) {
       setTab('home')
     }
   }
@@ -912,6 +934,10 @@ export default function Home() {
       }).format(new Date(registeredAt))
     : '—'
   const totalAnswered = Object.values(lessonDone).reduce((sum, count) => sum + count, 0)
+  const allLessonsCompleted = effectiveCompletedLessons.length === displayedLessons.length
+  const currentLessonMistakeCount = mistakes.filter(
+    (item) => item.lessonId === currentLesson.id,
+  ).length
   return (
     <main className="shell">
       <AppHeader
@@ -952,6 +978,12 @@ export default function Home() {
             lessonId={currentLesson.id}
             progress={currentLesson.progress}
             onStart={() => startLessonPractice(nextLessonIndex)}
+            actionLabel={
+              allLessonsCompleted && currentLessonMistakeCount === 0
+                ? '全部课程已完成'
+                : undefined
+            }
+            actionDisabled={allLessonsCompleted && currentLessonMistakeCount === 0}
           />
           {effectiveCompletedLessons.some((index) => (index + 1) % 5 === 0) && (
             <button className="primary wide" onClick={startMixedPractice}>

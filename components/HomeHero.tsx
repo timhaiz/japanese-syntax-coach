@@ -6,11 +6,15 @@ export function HomeHero({
   lessonId,
   progress,
   onStart,
+  actionLabel,
+  actionDisabled = false,
 }: {
   learnerName: string
   lessonId: number
   progress: number
   onStart: () => void
+  actionLabel?: string
+  actionDisabled?: boolean
 }) {
   const orbStyle = {
     background: `conic-gradient(var(--green) 0 ${progress}%,#dfe9e3 ${progress}%`,
@@ -23,8 +27,8 @@ export function HomeHero({
           一课一练，<em>把句型练成反射。</em>
         </h1>
         <p className="muted">每课 20 道主动输出题：先看句型骨架，再练到能快速组织日语。</p>
-        <button className="primary" onClick={onStart}>
-          开始第 {lessonId} 课 <span>→</span>
+        <button className="primary" onClick={onStart} disabled={actionDisabled}>
+          {actionLabel ?? `开始第 ${lessonId} 课`} <span>→</span>
         </button>
       </div>
       <div className="orb" style={orbStyle}>
