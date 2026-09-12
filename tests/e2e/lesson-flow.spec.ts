@@ -28,6 +28,19 @@ test('首页入口会进入当前课程整课练习',async({page})=>{
   await expect(page.getByText('4 / 20')).toBeVisible()
 })
 
+test('首页当前课程卡片支持键盘打开',async({page})=>{
+  const card=page.getByRole('button',{name:/打开第 1 课/})
+  await expect(card).toBeVisible()
+  await card.focus()
+  await card.press('Enter')
+  await expect(page.getByText('第 1 课 · 核心句型')).toBeVisible()
+})
+
+test('课程列表中的锁定课程不可操作',async({page})=>{
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await expect(page.getByRole('button',{name:/02 第 2 课已锁定/})).toBeDisabled()
+})
+
 test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)

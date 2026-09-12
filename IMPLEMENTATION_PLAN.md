@@ -11,7 +11,7 @@
 - [x] 候选词块排序、标点提醒、错误标签、错题本和错题独立练习。
 - [x] Supabase 持久化作答、课程进度、错题和间隔复习；第 5/10/15/20 课后生成混合复习。
 - [x] AI 分析按钮使用 OpenAI Responses API，不阻塞规则批改。
-- [x] Playwright 全套 72/72 通过；TypeScript、Build 和生产发布检查通过。
+- [x] Playwright 全套 76/76 通过；TypeScript、Build 和生产发布检查通过。
 - [x] 首页已拆分 `AppHeader`、`HomeHero`、`BottomNav`；课程语法列表已拆分为 `GrammarList`。
 
 ## 当前待完成
@@ -54,7 +54,7 @@
 - [x] 为顶部头像个人中心入口补充 `aria-label` 和标题提示。
 - [x] 为底部导航按钮补充 `aria-label` 和当前页面 `aria-current`。
 - [x] 为课程卡片和课程列表补充键盘 `:focus-visible` 焦点样式。
-- [x] 完整回归验收：Playwright 72/72、TypeScript、生产 Build、`git diff --check` 全部通过。
+- [x] 完整回归验收：Playwright 76/76、TypeScript、生产 Build、`git diff --check` 全部通过。
 - [x] 已抽离首页 `ProgressSummary`，进度计算仍由首页统一管理。
 - [x] 已抽离首页 `CurrentLessonCard`，课程点击和进度状态仍由首页统一管理。
 - [x] 将课程页、练习页、错题本和我的页面的颜色、圆角、间距、按钮统一迁移到 `app/design-tokens.css`（核心控件已完成，页面细节仍可继续优化）。
