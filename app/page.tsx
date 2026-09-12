@@ -408,33 +408,6 @@ export default function Home() {
     }
   }, [userId])
   useEffect(() => {
-    if (!userId) return
-    let cancelled = false
-    void fetch('/api/study-state')
-      .then((response) => (response.ok ? response.json() : null))
-      .then((state) => {
-        if (cancelled || !state) return
-        const persistedCorrect = Object.fromEntries(
-          (state.lessons || [])
-            .filter(
-              (lesson: { correct_count?: number }) => typeof lesson.correct_count === 'number',
-            )
-            .map((lesson: { lesson_id: number; correct_count: number }) => [
-              lesson.lesson_id - 1,
-              lesson.correct_count,
-            ]),
-        )
-        if (Object.keys(persistedCorrect).length) setLessonCorrect(persistedCorrect)
-      })
-      .catch(() => console.warn('Unable to load lesson accuracy'))
-      .finally(() => {
-        cancelled = true
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [userId])
-  useEffect(() => {
     if (!cloudLoaded) return
     if (cloudApplied.current) {
       setCompletedLoaded(true)
