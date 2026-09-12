@@ -187,6 +187,21 @@ test('陈旧的100%答题进度但没有正确率证明时仍从第一课开始'
   await expect(page.getByRole('button',{name:/开始第 24 课/})).not.toBeVisible()
 })
 
+test('全部课程完成且没有错题时首页入口显示完成并禁用',async({page})=>{
+  await page.addInitScript(()=>{
+    const progress=Object.fromEntries(Array.from({length:24},(_,index)=>[index,20]))
+    const correct=Object.fromEntries(Array.from({length:24},(_,index)=>[index,20]))
+    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify(progress))
+    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify(correct))
+    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify(Array.from({length:24},(_,index)=>index)))
+    localStorage.setItem('syntax-coach-mistakes','[]')
+  })
+  await page.reload()
+  const start=page.getByRole('button',{name:/全部课程已完成/})
+  await expect(start).toBeVisible()
+  await expect(start).toBeDisabled()
+})
+
 test('已完成课程无错题时不允许重新开始整课',async({page})=>{
   await page.evaluate(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
