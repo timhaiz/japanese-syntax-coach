@@ -103,7 +103,8 @@ test.describe('第 1～24 课题库回归检查',()=>{
   test('第 3 课核心 20 题覆盖也、选择疑问和价格问句',()=>{
     const core=questionsForLesson(3).slice(0,20)
     expect(core.find(item=>item.id==='L03-Q005')?.answer).toBe('あそこもJC企画のビルです。')
-    expect(core.find(item=>item.id==='L03-Q017')?.answer).toBe('ここは銀行ですか、郵便局ですか。')
+    expect(core.find(item=>item.answer==='ここは銀行ですか、郵便局ですか。')?.prompt).toBe('这里是银行还是邮局？')
+    expect(core.find(item=>item.answer==='ここは銀行ですか、郵便局ですか。')?.answer).toBe('ここは銀行ですか、郵便局ですか。')
     expect(core.find(item=>item.id==='L03-Q020')?.answer).toBe('その車はいくらですか。')
   })
 
