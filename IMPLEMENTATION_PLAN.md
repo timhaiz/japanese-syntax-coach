@@ -11,7 +11,7 @@
 - [x] 候选词块排序、标点提醒、错误标签、错题本和错题独立练习。
 - [x] Supabase 持久化作答、课程进度、错题和间隔复习；第 5/10/15/20 课后生成混合复习。
 - [x] AI 分析按钮使用 OpenAI Responses API，不阻塞规则批改。
-- [x] Playwright 全套 81/81 通过；TypeScript、Build 和生产发布检查通过。
+- [x] Playwright 全套 86/86 通过；TypeScript、Build 和生产发布检查通过。
 - [x] 首页已拆分 `AppHeader`、`HomeHero`、`BottomNav`；课程语法列表已拆分为 `GrammarList`。
 
 ## 当前待完成
