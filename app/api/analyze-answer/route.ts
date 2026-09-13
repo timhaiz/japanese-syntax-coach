@@ -16,7 +16,7 @@ export async function POST(req:Request){
   try{
     const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
     // Third-party compatible endpoints may need a few extra seconds on cold start.
-    const client=new OpenAI({apiKey:key,baseURL:baseUrl,timeout:15000})
+    const client=new OpenAI({apiKey:key,baseURL:baseUrl,timeout:15000,maxRetries:0})
     const response=await client.responses.create({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false})
     const outputText=response.output_text||''
     let parsed:unknown

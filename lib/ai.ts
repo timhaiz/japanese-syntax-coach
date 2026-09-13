@@ -12,7 +12,7 @@ export async function gradeWithAI(input:{answer:string;standardAnswer:string;con
  const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
  const prompt=`你是日语教练。仅根据已学范围批改。标准答案：${input.standardAnswer}\n用户答案：${input.answer}\n课程上下文：${input.context||''}\n返回严格JSON，字段 verdict(correct|mostly_correct|needs_fix|incorrect), correctedAnswer, errorTags(助词/活用/句型顺序/词汇/假名/语义/自然度), explanation, hint。标点省略视为正确。`
  try{
-  const client=new OpenAI({apiKey:key,baseURL:baseUrl,timeout:15000})
+  const client=new OpenAI({apiKey:key,baseURL:baseUrl,timeout:15000,maxRetries:0})
   const response=await client.responses.create({model,input:prompt,store:false})
   const parsed=JSON.parse(response.output_text||'{}')
   return isGradeResult(parsed)?parsed:null
