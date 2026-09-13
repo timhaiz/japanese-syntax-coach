@@ -12,11 +12,12 @@ export async function POST(req:Request){
   const body=await req.json().catch(()=>({})) as {prompt?:string;answer?:string;standardAnswer?:string;hint?:string}
   const key=process.env.OPENAI_API_KEY
   if(!key)return NextResponse.json({analysis:'AI 分析未配置：缺少 OPENAI_API_KEY。',source:'fallback',reason:'missing-api-key'})
+  const userAgent=req.headers.get('user-agent')||undefined
   const prompt=`你是中文用户的日语记忆教练。请分析这道题，帮助用户记忆，不要重新判分。题目：${body.prompt||''}\n用户答案：${body.answer||''}\n标准答案：${body.standardAnswer||''}\n原有提示：${body.hint||''}\n请严格返回 JSON：{"analysis":"用简体中文说明记忆方法，最多 120 字","words":[{"word":"日语词","kana":"假名","meaning":"中文义","memory":"简短记法"}],"pitfalls":["易错点"],"similarQuestions":[{"prompt":"同句型变式题干","answer":"标准答案"}]}。similarQuestions 最多 2 道，只分析题目中出现的词和句型，不引入超纲语法。`
   try{
     const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
     // Third-party compatible endpoints may need a few extra seconds on cold start.
-    const client=new OpenAI({apiKey:key,baseURL:baseUrl,timeout:15000,maxRetries:0})
+    const client=new OpenAI({apiKey:key,baseURL:baseUrl,timeout:15000,maxRetries:0,defaultHeaders:userAgent?{'User-Agent':userAgent}:undefined})
     const response=await client.responses.create({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false})
     const outputText=response.output_text||''
     let parsed:unknown
