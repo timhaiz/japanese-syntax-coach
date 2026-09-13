@@ -6,6 +6,7 @@ import {
   isAnswerAccepted,
   normalizeAnswer,
   questionsForLesson,
+  questionForId,
   type Question,
 } from '@/lib/question-bank'
 import { createMixedReviewSet, prioritizeReviewSet } from '@/lib/review-set'
@@ -917,6 +918,24 @@ export default function Home() {
       setTab('practice')
     }
   }
+  const startDueReview = () => {
+    const questions = prioritizeReviewSet(
+      dueQuestionIds.map((id) => questionForId(id)).filter((item): item is Question => Boolean(item)),
+      knowledgePointMastery,
+      dueQuestionIds,
+    ).slice(0, 20)
+    if (!questions.length) return
+    setMixedQuestions(questions)
+    submittedQuestion.current = null
+    replayMistakesRef.current = []
+    setPracticeMode('mixed')
+    setFullLessonMode(false)
+    setSessionProgress(0)
+    setInput('')
+    setAiVerdict(null)
+    setGraded(false)
+    setTab('practice')
+  }
   const nextQuestion = () => {
     const complete = progress >= sessionLimit - 1
     const finalCorrect = clampLessonCorrect(
@@ -1047,6 +1066,11 @@ export default function Home() {
           {effectiveCompletedLessons.some((index) => (index + 1) % 5 === 0) && (
             <button className="primary wide" onClick={startMixedPractice}>
               开始综合混练（已完成课程） <span>→</span>
+            </button>
+          )}
+          {dueQuestionIds.length > 0 && (
+            <button className="outline wide" onClick={startDueReview}>
+              开始今日到期复习（{Math.min(dueQuestionIds.length, 20)} 题） <span>→</span>
             </button>
           )}
           <ProgressSummary
