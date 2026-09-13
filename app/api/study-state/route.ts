@@ -11,5 +11,13 @@ export async function GET(){
   supabase.from('lesson_progress').select('lesson_id,answered_count,correct_count,completed_at').order('lesson_id',{ascending:true})
  ])
  if(due.error||completed.error)return NextResponse.json({error:'Unable to load study state'},{status:500})
- return NextResponse.json({dueQuestionIds:(due.data??[]).map(item=>item.question_id),lessons:completed.data??[]})
+ // Older clients could increment this counter past the 20-question lesson limit.
+ // Normalize it at the API boundary so every client renders a valid lesson state
+ // without mutating or deleting the user's historical rows.
+ const lessons=(completed.data??[]).map((lesson)=>({
+  ...lesson,
+  answered_count:Math.max(0,Math.min(20,Number(lesson.answered_count)||0)),
+  correct_count:Math.max(0,Math.min(20,Number(lesson.correct_count)||0)),
+ }))
+ return NextResponse.json({dueQuestionIds:(due.data??[]).map(item=>item.question_id),lessons})
 }

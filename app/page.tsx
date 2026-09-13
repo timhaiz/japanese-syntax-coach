@@ -20,6 +20,14 @@ import { ProfileOverview } from '@/components/ProfileOverview'
 
 const courseLessons = courses.map((c) => ({ ...c, progress: 0, locked: false }))
 const LESSON_QUESTION_LIMIT = 20
+const clampLessonAnswered = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(0, Math.min(LESSON_QUESTION_LIMIT, Math.trunc(value)))
+    : 0
+const clampLessonCorrect = (value: unknown) =>
+  typeof value === 'number' && Number.isFinite(value)
+    ? Math.max(0, Math.min(LESSON_QUESTION_LIMIT, Math.trunc(value)))
+    : 0
 const coreQuestionsForLesson = (lessonId: number) =>
   questionsForLesson(lessonId).slice(0, LESSON_QUESTION_LIMIT)
 const contiguousCompletedLessons = (values: number[]) => {
@@ -34,8 +42,8 @@ const completedFromLessonProgress = (
   correct: Record<number, number> = {},
 ) => {
   const qualifies = (index: number) => {
-    const answered = progress[index]
-    const right = correct[index]
+    const answered = clampLessonAnswered(progress[index])
+    const right = clampLessonCorrect(correct[index])
     const requiredCorrect = Math.ceil(LESSON_QUESTION_LIMIT * 0.9)
     return (
       typeof answered === 'number' &&
@@ -244,11 +252,21 @@ export default function Home() {
       if (progress) {
         const cloudLessonDone =
           progress.lessonDone && typeof progress.lessonDone === 'object'
-            ? (progress.lessonDone as Record<number, number>)
+            ? Object.fromEntries(
+                Object.entries(progress.lessonDone as Record<number, number>).map(([index, count]) => [
+                  index,
+                  clampLessonAnswered(count),
+                ]),
+              )
             : {}
         const cloudLessonCorrect =
           progress.lessonCorrect && typeof progress.lessonCorrect === 'object'
-            ? (progress.lessonCorrect as Record<number, number>)
+            ? Object.fromEntries(
+                Object.entries(progress.lessonCorrect as Record<number, number>).map(([index, count]) => [
+                  index,
+                  clampLessonCorrect(count),
+                ]),
+              )
             : {}
         setLessonDone(cloudLessonDone)
         setLessonCorrect(cloudLessonCorrect)
@@ -373,7 +391,7 @@ export default function Home() {
         const persistedLessons = Object.fromEntries(
           (state.lessons || []).map((lesson: { lesson_id: number; answered_count: number }) => [
             lesson.lesson_id - 1,
-            lesson.answered_count,
+            clampLessonAnswered(lesson.answered_count),
           ]),
         )
         const persistedCorrect = Object.fromEntries(
@@ -381,10 +399,10 @@ export default function Home() {
             .filter(
               (lesson: { correct_count?: number }) => typeof lesson.correct_count === 'number',
             )
-            .map((lesson: { lesson_id: number; correct_count: number }) => [
-              lesson.lesson_id - 1,
-              lesson.correct_count,
-            ]),
+                .map((lesson: { lesson_id: number; correct_count: number }) => [
+                  lesson.lesson_id - 1,
+                  clampLessonCorrect(lesson.correct_count),
+                ]),
         )
         if (Object.keys(persistedLessons).length) {
           setLessonDone(persistedLessons)
@@ -465,7 +483,7 @@ export default function Home() {
               )
               .map(([index, count]) => [
                 Number(index),
-                Math.max(0, Math.min(100, count as number)),
+                clampLessonAnswered(count),
               ]),
           )
           setLessonDone(normalized)
@@ -536,7 +554,7 @@ export default function Home() {
         ...Object.fromEntries(
           Object.entries(lessonDone).map(([index, count]) => [
             index,
-            Math.max(Number(saved?.[index]) || 0, Number(count) || 0),
+            clampLessonAnswered(Math.max(Number(saved?.[index]) || 0, Number(count) || 0)),
           ]),
         ),
       }
@@ -554,16 +572,16 @@ export default function Home() {
       localStorage.setItem('syntax-coach-completed-lessons', JSON.stringify(completedLessons))
   }, [completedLessons, completedLoaded])
   useEffect(() => {
-    const answered = lessonDone[active] ?? 0
-    const correct = lessonCorrect[active] ?? 0
+    const answered = clampLessonAnswered(lessonDone[active])
+    const correct = clampLessonCorrect(lessonCorrect[active])
     if (answered >= LESSON_QUESTION_LIMIT && correct >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9))
       setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
   }, [active, lessonDone, lessonCorrect])
   useEffect(() => {
     if (!graded) setAiVerdict(null)
   }, [graded])
-  const activeLessonDone = lessonDone[active] ?? 0
-  const activeLessonCorrect = lessonCorrect[active] ?? 0
+  const activeLessonDone = clampLessonAnswered(lessonDone[active])
+  const activeLessonCorrect = clampLessonCorrect(lessonCorrect[active])
   const activeLessonAccuracy = activeLessonDone
     ? Math.min(
         100,
@@ -589,7 +607,7 @@ export default function Home() {
     const total = LESSON_QUESTION_LIMIT
     return {
       ...lesson,
-      progress: Math.min(100, Math.round(((lessonDone[index] ?? 0) / total) * 100)),
+      progress: Math.min(100, Math.round((clampLessonAnswered(lessonDone[index]) / total) * 100)),
       locked: index > 0 && !effectiveCompletedLessons.includes(index - 1),
     }
   })
@@ -806,7 +824,7 @@ export default function Home() {
     submittedQuestion.current = null
     setSelectedChoice('')
     setFullLessonMode(true)
-    let existingAnswered = lessonDone[lessonIndex] ?? 0
+    let existingAnswered = clampLessonAnswered(lessonDone[lessonIndex])
     if (existingAnswered === 0 && typeof window !== 'undefined' && !cloudApplied.current) {
       try {
         const saved = JSON.parse(localStorage.getItem('syntax-coach-lesson-progress') || '{}')
@@ -819,7 +837,10 @@ export default function Home() {
       existingAnswered >= LESSON_QUESTION_LIMIT
         ? { lesson: lessonIndex, count: existingAnswered }
         : null
-    replayCorrectRef.current = existingAnswered >= LESSON_QUESTION_LIMIT ? lessonCorrect[lessonIndex] ?? 0 : 0
+    replayCorrectRef.current =
+      existingAnswered >= LESSON_QUESTION_LIMIT
+        ? clampLessonCorrect(lessonCorrect[lessonIndex])
+        : 0
     const lessonMistakes = mistakes.filter((item) => item.lessonId === lessonIndex + 1)
     setRetryQuestions(lessonMistakes)
     replayMistakesRef.current = lessonMistakes
@@ -869,15 +890,15 @@ export default function Home() {
   }
   const nextQuestion = () => {
     const complete = progress >= sessionLimit - 1
-    const finalCorrect = replayMode
-      ? replayCorrectRef.current
-      : (lessonCorrect[active] ?? 0) + (answerMatches ? 1 : 0)
+    const finalCorrect = clampLessonCorrect(
+      replayMode ? replayCorrectRef.current : clampLessonCorrect(lessonCorrect[active]) + (answerMatches ? 1 : 0),
+    )
     if (practiceMode === 'lesson') {
       setFullLessonProgress((value) => value + 1)
       const replayCount =
         lessonReplayRef.current?.lesson === active ? lessonReplayRef.current.count : null
       const alreadyCompleted =
-        (lessonDone[active] ?? 0) >= LESSON_QUESTION_LIMIT ||
+        clampLessonAnswered(lessonDone[active]) >= LESSON_QUESTION_LIMIT ||
         (replayCount !== null && replayCount >= LESSON_QUESTION_LIMIT)
       if (!replayMode) {
         if (!alreadyCompleted) {
@@ -939,7 +960,10 @@ export default function Home() {
         day: '2-digit',
       }).format(new Date(registeredAt))
     : '—'
-  const totalAnswered = Object.values(lessonDone).reduce((sum, count) => sum + count, 0)
+  const totalAnswered = Object.values(lessonDone).reduce(
+    (sum, count) => sum + clampLessonAnswered(count),
+    0,
+  )
   const allLessonsCompleted = effectiveCompletedLessons.length === displayedLessons.length
   const currentLessonMistakeCount = mistakes.filter(
     (item) => item.lessonId === currentLesson.id,

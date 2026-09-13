@@ -187,6 +187,20 @@ test('陈旧的100%答题进度但没有正确率证明时仍从第一课开始'
   await expect(page.getByRole('button',{name:/开始第 24 课/})).not.toBeVisible()
 })
 
+test('历史答题数超过20时显示边界值且仍按真实正确数计算',async({page})=>{
+  await page.addInitScript(()=>{
+    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:21}))
+    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:18}))
+    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0]))
+    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([{id:'L01-Q001',lessonId:1,type:'翻译',prompt:'历史错题',answer:'私は先生です。',hint:'提示'}]))
+  })
+  await page.reload()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await page.getByRole('button',{name:/01 第 1 课/}).click()
+  await expect(page.getByText(/已作答 20 \/ 20 · 正确 18 题（90%）/)).toBeVisible()
+  await expect(page.getByRole('button',{name:/重练本课错题/})).toBeVisible()
+})
+
 test('全部课程完成且没有错题时首页入口显示完成并禁用',async({page})=>{
   await page.addInitScript(()=>{
     const progress=Object.fromEntries(Array.from({length:24},(_,index)=>[index,20]))
