@@ -11,5 +11,6 @@ export async function POST(request:Request){
  if(!user)return NextResponse.json({error:'Unauthorized'},{status:401})
  const {data,error}=await supabase.rpc('record_learning_attempt',{p_question_id:body.questionId,p_lesson_id:body.lessonId,p_answer:body.answer,p_correct:body.correct,p_error_tags:body.errorTags??[],p_mode:body.mode})
  if(error)return NextResponse.json({error:'Unable to save answer record'},{status:500})
+ await supabase.rpc('record_knowledge_point_attempt',{p_question_correct:body.correct,p_error_tags:body.errorTags??[]})
  return NextResponse.json({record:data})
 }
