@@ -200,6 +200,7 @@ export default function Home() {
     analysis?: string
     words?: { word: string; kana: string; meaning: string; memory: string }[]
     pitfalls?: string[]
+    similarQuestions?: { prompt: string; answer: string }[]
     source?: string
   } | null>(null)
   const [analysisLoading, setAnalysisLoading] = useState(false)
@@ -1237,6 +1238,9 @@ export default function Home() {
                     ))}
                     {analysis.pitfalls?.map((pitfall) => (
                       <small key={pitfall}>易错点：{pitfall}</small>
+                    ))}
+                    {analysis.similarQuestions?.map((item) => (
+                      <small key={item.prompt}>变式：{item.prompt}（参考：{item.answer}）</small>
                     ))}
                   </div>
                 )}
