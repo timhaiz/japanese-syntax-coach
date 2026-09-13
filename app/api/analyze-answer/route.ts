@@ -15,7 +15,7 @@ export async function POST(req:Request){
   try{
     const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
     // Third-party compatible endpoints may need a few extra seconds on cold start.
-    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false}),signal:AbortSignal.timeout(8000)})
+    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false}),signal:AbortSignal.timeout(15000)})
     if(!response.ok){
       const message=response.status===401||response.status===403?'AI 鉴权失败，请检查 API Key。':response.status===429?'AI 当前额度不足或请求过于频繁，请稍后重试。':`AI 服务暂时不可用（${response.status}），请检查接口地址和模型设置。`
       return NextResponse.json({analysis:message,source:'fallback',reason:`upstream-${response.status}`})
