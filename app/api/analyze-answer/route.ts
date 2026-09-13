@@ -1,4 +1,5 @@
 import {NextResponse} from 'next/server'
+import OpenAI, {APIConnectionTimeoutError} from 'openai'
 
 const isAnalysisResult=(value:unknown):value is {analysis:string;words:{word:string;kana:string;meaning:string;memory:string}[];pitfalls:string[];similarQuestions:{prompt:string;answer:string}[]}=>{
   if(!value||typeof value!=='object')return false
@@ -15,18 +16,20 @@ export async function POST(req:Request){
   try{
     const baseUrl=(process.env.OPENAI_BASE_URL||'https://api.openai.com/v1').replace(/\/$/,'')
     // Third-party compatible endpoints may need a few extra seconds on cold start.
-    const response=await fetch(`${baseUrl}/responses`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${key}`},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false}),signal:AbortSignal.timeout(15000)})
-    if(!response.ok){
-      const message=response.status===401||response.status===403?'AI 鉴权失败，请检查 API Key。':response.status===429?'AI 当前额度不足或请求过于频繁，请稍后重试。':`AI 服务暂时不可用（${response.status}），请检查接口地址和模型设置。`
-      return NextResponse.json({analysis:message,source:'fallback',reason:`upstream-${response.status}`})
-    }
-    const data=await response.json();const outputText=data.output_text||data.output?.flatMap((item:{content?:{text?:string}[]})=>item.content||[]).map((item:{text?:string})=>item.text||'').join('')||''
+    const client=new OpenAI({apiKey:key,baseURL:baseUrl,timeout:15000})
+    const response=await client.responses.create({model:process.env.OPENAI_MODEL||'gpt-5.4-mini',input:prompt,store:false})
+    const outputText=response.output_text||''
     let parsed:unknown
     try{parsed=JSON.parse(outputText||'{}')}catch{return NextResponse.json({analysis:'AI 返回的内容不是合法 JSON，请稍后重试；你仍可使用规则批改结果。',source:'fallback',reason:'invalid-json'})}
     if(!isAnalysisResult(parsed))return NextResponse.json({analysis:'AI 返回格式不完整，请对照标准答案拆分短语、助词和假名记忆。',source:'fallback',reason:'invalid-response-shape'})
     return NextResponse.json({...parsed,source:'ai'})
   }catch(error){
-    const reason=error instanceof DOMException&&error.name==='TimeoutError'?'timeout':'network-error'
+    const reason=error instanceof APIConnectionTimeoutError?'timeout':'network-error'
+    if(!reason||reason==='network-error'){
+      const status=(error as {status?:number})?.status
+      if(status===401||status===403)return NextResponse.json({analysis:'AI 鉴权失败，请检查 API Key。',source:'fallback',reason:`upstream-${status}`})
+      if(status===429)return NextResponse.json({analysis:'AI 当前额度不足或请求过于频繁，请稍后重试。',source:'fallback',reason:'upstream-429'})
+    }
     return NextResponse.json({analysis:reason==='timeout'?'AI 分析响应超时，请稍后重试。':'无法连接 AI 服务，请检查 OPENAI_BASE_URL 是否为第三方接口的 /v1 地址。',source:'fallback',reason})
   }
 }
