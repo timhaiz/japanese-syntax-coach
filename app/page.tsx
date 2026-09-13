@@ -202,7 +202,7 @@ export default function Home() {
   const [mixedQuestions, setMixedQuestions] = useState<Question[]>([])
   const [dueQuestionIds, setDueQuestionIds] = useState<string[]>([])
   const [knowledgePointMastery, setKnowledgePointMastery] = useState<Record<string, number>>({})
-  const [learningMetrics, setLearningMetrics] = useState<{correctStreak:number;errorRate:number;forgettingProxyRate?:number;topErrorTags:{tag:string;count:number}[]}>({correctStreak:0,errorRate:0,topErrorTags:[]})
+  const [learningMetrics, setLearningMetrics] = useState<{correctStreak:number;errorRate:number;forgettingRate?:number;topErrorTags:{tag:string;count:number}[]}>({correctStreak:0,errorRate:0,topErrorTags:[]})
   const [aiVerdict, setAiVerdict] = useState<
     'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
   >(null)
