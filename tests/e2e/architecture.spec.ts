@@ -24,6 +24,7 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toContain("setDueQuestionIds((value) => value.filter((id) => id !== question.id))")
   expect(pageSource).toContain("setPracticeMode('lesson')")
   expect(pageSource).toContain('setMixedQuestions([])')
+  expect(pageSource).not.toContain('书写时不要忘记写标点符号，标点不影响判分。')
   const recordSource=readFileSync(resolve(process.cwd(),'app/api/record-answer/route.ts'),'utf8')
   const migrationSource=readFileSync(resolve(process.cwd(),'supabase/migrations/202609120003_lesson_replay_accuracy.sql'),'utf8')
   expect(recordSource).toContain("'lesson_replay'")

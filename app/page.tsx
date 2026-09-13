@@ -1266,8 +1266,6 @@ export default function Home() {
                   <>
                     <small>
                       提示：{presentedQuestion.hint}
-                      <br />
-                      书写时不要忘记写标点符号，标点不影响判分。
                     </small>
                   </>
                 )}
