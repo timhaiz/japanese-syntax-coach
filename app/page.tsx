@@ -754,6 +754,7 @@ export default function Home() {
               lessonId: question.lessonId,
               answer: submittedAnswer,
               correct: localAnswerMatches,
+              verdict: aiVerdict ?? (localAnswerMatches ? 'correct' : 'incorrect'),
               errorTags: localAnswerMatches ? [] : errorTagsForAnswer(question, submittedAnswer),
               mode:
                 practiceMode === 'lesson'
