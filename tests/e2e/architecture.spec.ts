@@ -25,6 +25,7 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(recordSource).toContain("'lesson_replay'")
   expect(recordSource).toContain('p_knowledge_tags')
   expect(recordSource).toContain('p_verdict')
+  expect(recordSource).toContain('legacy')
   const masteryMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/202609130005_knowledge_mastery_tags.sql'),'utf8')
   expect(masteryMigration).toContain('p_knowledge_tags')
   expect(migrationSource).toContain("elsif p_mode = 'lesson_replay'")
