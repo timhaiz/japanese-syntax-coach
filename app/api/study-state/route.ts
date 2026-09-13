@@ -32,8 +32,11 @@ export async function GET(){
  for(const row of [...rows].reverse()){
   const questionId=(row as {exercise_id?:string}).exercise_id
   if(!questionId) continue
+  if(seenCorrect.has(questionId)){
+    eligibleReviews++
+    if(row.verdict!=='correct') forgotten++
+  }
   if(row.verdict==='correct') seenCorrect.add(questionId)
-  else if(seenCorrect.has(questionId)){ eligibleReviews++; forgotten++ }
  }
  const forgettingRate=eligibleReviews?Math.round(forgotten/eligibleReviews*100):0
  return NextResponse.json({dueQuestionIds:(due.data??[]).map(item=>item.question_id),lessons,knowledgePoints:mastery.error?[]:(mastery.data??[]),metrics:{totalAttempts:total,incorrectAttempts:incorrect,errorRate:total?Math.round(incorrect/total*100):0,forgettingRate,correctStreak:streak,topErrorTags}})
