@@ -96,6 +96,14 @@ const errorTagsForAnswer = (question: Question, actual: string) => {
   if (actual.length !== expected.length) return ['词汇']
   return ['句型顺序']
 }
+const knowledgeTagsForQuestion = (question: Question) => {
+  const tags = new Set<string>()
+  if (question.type === '助词' || /助词/.test(question.hint)) tags.add('助词')
+  if (/活用|否定|过去|变化|ます形|て形/.test(question.hint)) tags.add('活用')
+  if (/假名|拼写|词汇/.test(question.hint)) tags.add('词汇')
+  if (!tags.size) tags.add('句型')
+  return [...tags]
+}
 type WordToken = { id: string; text: string }
 const tokenPatterns = [
   'なければなりません',
@@ -768,6 +776,7 @@ export default function Home() {
               correct: localAnswerMatches,
               verdict: aiVerdict ?? localVerdict,
               errorTags: localAnswerMatches ? [] : errorTagsForAnswer(question, submittedAnswer),
+              knowledgeTags: knowledgeTagsForQuestion(question),
               mode:
                 practiceMode === 'lesson'
                   ? replayMode

@@ -1,7 +1,7 @@
 import {NextResponse} from 'next/server'
 import {getSupabaseServer} from '@/lib/supabase-server'
 
-type Body={questionId?:string;lessonId?:number;answer?:string;correct?:boolean;verdict?:'correct'|'mostly_correct'|'needs_fix'|'incorrect';errorTags?:string[];mode?:'new'|'review'|'mistakes'|'lesson'|'lesson_replay'}
+type Body={questionId?:string;lessonId?:number;answer?:string;correct?:boolean;verdict?:'correct'|'mostly_correct'|'needs_fix'|'incorrect';errorTags?:string[];knowledgeTags?:string[];mode?:'new'|'review'|'mistakes'|'lesson'|'lesson_replay'}
 export async function POST(request:Request){
  const body=await request.json().catch(()=>({})) as Body
  if(!body.questionId||!Number.isInteger(body.lessonId)||typeof body.answer!=='string'||typeof body.correct!=='boolean'||!['new','review','mistakes','lesson','lesson_replay'].includes(body.mode??''))return NextResponse.json({error:'Invalid answer record'},{status:400})
@@ -11,6 +11,6 @@ export async function POST(request:Request){
  if(!user)return NextResponse.json({error:'Unauthorized'},{status:401})
  const {data,error}=await supabase.rpc('record_learning_attempt',{p_question_id:body.questionId,p_lesson_id:body.lessonId,p_answer:body.answer,p_correct:body.correct,p_error_tags:body.errorTags??[],p_mode:body.mode,p_verdict:body.verdict})
  if(error)return NextResponse.json({error:'Unable to save answer record'},{status:500})
- await supabase.rpc('record_knowledge_point_attempt',{p_question_correct:body.correct,p_error_tags:body.errorTags??[]})
+ await supabase.rpc('record_knowledge_point_attempt',{p_question_correct:body.correct,p_error_tags:body.errorTags??[],p_knowledge_tags:body.knowledgeTags??[]})
  return NextResponse.json({record:data})
 }
