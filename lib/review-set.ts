@@ -23,3 +23,14 @@ export function createMixedReviewSet(completedLessonIndexes:number[],limit=20):Q
   }
   return output
 }
+
+export function prioritizeReviewSet(questions:Question[], mastery:Record<string,number>={}, dueIds:string[]=[]):Question[]{
+ const due=new Set(dueIds)
+ return [...questions].sort((a,b)=>{
+  const dueScore=(due.has(b.id)?100:0)-(due.has(a.id)?100:0)
+  if(dueScore)return dueScore
+  const score=(q:Question)=>{const hits=Object.entries(mastery).filter(([tag])=>q.hint.includes(tag)||q.prompt.includes(tag));return hits.length?Math.min(...hits.map(([,value])=>value)):50}
+  const aScore=score(a); const bScore=score(b)
+  return aScore-bScore
+ })
+}

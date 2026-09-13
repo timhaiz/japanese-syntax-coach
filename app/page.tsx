@@ -8,7 +8,7 @@ import {
   questionsForLesson,
   type Question,
 } from '@/lib/question-bank'
-import { createMixedReviewSet } from '@/lib/review-set'
+import { createMixedReviewSet, prioritizeReviewSet } from '@/lib/review-set'
 import { BottomNav } from '@/components/BottomNav'
 import { AppHeader } from '@/components/AppHeader'
 import { HomeHero } from '@/components/HomeHero'
@@ -191,6 +191,8 @@ export default function Home() {
   const [lessonCorrect, setLessonCorrect] = useState<Record<number, number>>({})
   const [mistakes, setMistakes] = useState<Question[]>([])
   const [mixedQuestions, setMixedQuestions] = useState<Question[]>([])
+  const [dueQuestionIds, setDueQuestionIds] = useState<string[]>([])
+  const [knowledgePointMastery, setKnowledgePointMastery] = useState<Record<string, number>>({})
   const [aiVerdict, setAiVerdict] = useState<
     'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
   >(null)
@@ -389,6 +391,8 @@ export default function Home() {
         if (!response.ok) return
         const state = await response.json()
         if (cancelled) return
+        setDueQuestionIds(Array.isArray(state.dueQuestionIds) ? state.dueQuestionIds : [])
+        setKnowledgePointMastery(Object.fromEntries((state.knowledgePoints || []).map((item: { knowledge_point: string; mastery: number }) => [item.knowledge_point, Number(item.mastery) || 0])))
         const persistedLessons = Object.fromEntries(
           (state.lessons || []).map((lesson: { lesson_id: number; answered_count: number }) => [
             lesson.lesson_id - 1,
@@ -875,7 +879,7 @@ export default function Home() {
     }
   }
   const startMixedPractice = () => {
-    const questions = createMixedReviewSet(effectiveCompletedLessons, 20)
+    const questions = prioritizeReviewSet(createMixedReviewSet(effectiveCompletedLessons, 20), knowledgePointMastery, dueQuestionIds)
     if (questions.length) {
       setMixedQuestions(questions)
       submittedQuestion.current = null
