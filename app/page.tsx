@@ -701,6 +701,18 @@ export default function Home() {
     answerMatches &&
     /[。．.]$/.test(presentedQuestion.answer) &&
     !/[。．.]$/.test(responseText.trim())
+  const localVerdict = localAnswerMatches
+    ? missingPunctuation
+      ? 'mostly_correct'
+      : 'correct'
+    : (() => {
+        const expected = normalizeAnswer(expectedAnswerText)
+        const actual = normalizeAnswer(responseText)
+        const shared = expected.length && actual.length
+          ? [...expected].filter((char, index) => char === actual[index]).length / Math.max(expected.length, actual.length)
+          : 0
+        return shared >= 0.55 ? 'needs_fix' : 'incorrect'
+      })()
   const grade = () => {
     const question = ex
     const submittedAnswer =
@@ -754,7 +766,7 @@ export default function Home() {
               lessonId: question.lessonId,
               answer: submittedAnswer,
               correct: localAnswerMatches,
-              verdict: aiVerdict ?? (localAnswerMatches ? 'correct' : 'incorrect'),
+              verdict: aiVerdict ?? localVerdict,
               errorTags: localAnswerMatches ? [] : errorTagsForAnswer(question, submittedAnswer),
               mode:
                 practiceMode === 'lesson'
