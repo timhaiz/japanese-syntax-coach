@@ -119,7 +119,7 @@ test.describe('第 1～24 课题库回归检查',()=>{
   test('第 5 课核心 20 题覆盖ごろ和时间对比',()=>{
     const core=questionsForLesson(5).slice(0,20)
     expect(core.find(item=>item.id==='L05-Q010')?.answer).toBe('私は昨日12時半ごろ寝ました。')
-    expect(core.find(item=>item.id==='L05-Q018')?.answer).toContain('小野さんは今日は休みます。')
+    expect(core.find(item=>item.id==='L05-Q018')?.answer).toContain('小野さんは今日は休みです。')
   })
 
   test('第 7 课核心 20 题覆盖宾语、场所、选择和请求',()=>{
