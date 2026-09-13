@@ -29,6 +29,16 @@ const clampLessonCorrect = (value: unknown) =>
   typeof value === 'number' && Number.isFinite(value)
     ? Math.max(0, Math.min(LESSON_QUESTION_LIMIT, Math.trunc(value)))
     : 0
+const normalizeMistakes = (value: unknown): Question[] =>
+  Array.isArray(value)
+    ? value
+        .map((item) => {
+          if (!item || typeof item !== 'object') return null
+          const id = (item as { id?: unknown }).id
+          return typeof id === 'string' ? questionForId(id) ?? null : null
+        })
+        .filter((item): item is Question => Boolean(item))
+    : []
 const coreQuestionsForLesson = (lessonId: number) =>
   questionsForLesson(lessonId).slice(0, LESSON_QUESTION_LIMIT)
 const contiguousCompletedLessons = (values: number[]) => {
@@ -291,7 +301,7 @@ export default function Home() {
             cloudLessonCorrect,
           ),
         )
-        setMistakes(Array.isArray(progress.mistakes) ? (progress.mistakes as Question[]) : [])
+        setMistakes(normalizeMistakes(progress.mistakes))
       } else {
         setLessonDone({})
         setLessonCorrect({})
@@ -552,7 +562,7 @@ export default function Home() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed)) setMistakes(parsed)
+        setMistakes(normalizeMistakes(parsed))
       } catch {
         localStorage.removeItem('syntax-coach-mistakes')
       }
