@@ -744,6 +744,9 @@ export default function Home() {
           : explainAnswerDifference(expectedAnswer, submittedAnswer),
     )
     setGradeSource('rule')
+    if (practiceMode === 'mixed' && localAnswerMatches) {
+      setDueQuestionIds((value) => value.filter((id) => id !== question.id))
+    }
     if (!localAnswerMatches) {
       setMistakes((value) =>
         value.some((item) => item.id === question.id) ? value : [...value, question],

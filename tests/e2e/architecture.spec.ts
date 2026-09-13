@@ -20,6 +20,8 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toContain("'から'")
   expect(pageSource).toContain("'まで'")
   expect(pageSource).toContain("? 'lesson_replay'")
+  expect(pageSource).toContain("practiceMode === 'mixed' && localAnswerMatches")
+  expect(pageSource).toContain("setDueQuestionIds((value) => value.filter((id) => id !== question.id))")
   const recordSource=readFileSync(resolve(process.cwd(),'app/api/record-answer/route.ts'),'utf8')
   const migrationSource=readFileSync(resolve(process.cwd(),'supabase/migrations/202609120003_lesson_replay_accuracy.sql'),'utf8')
   expect(recordSource).toContain("'lesson_replay'")
