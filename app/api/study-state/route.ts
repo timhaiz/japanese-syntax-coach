@@ -10,7 +10,7 @@ export async function GET(){
   supabase.from('question_review_state').select('question_id').lte('next_review_at',new Date().toISOString()).order('next_review_at',{ascending:true}).limit(5),
   supabase.from('lesson_progress').select('lesson_id,answered_count,correct_count,completed_at').order('lesson_id',{ascending:true}),
   supabase.from('knowledge_point_mastery').select('knowledge_point,attempts,correct_attempts,mastery,last_answered_at').order('mastery',{ascending:true}),
-  supabase.from('answer_attempts').select('verdict,error_tags,created_at').order('created_at',{ascending:false}).limit(500)
+  supabase.from('answer_attempts').select('exercise_id,verdict,error_tags,created_at').order('created_at',{ascending:false}).limit(500)
  ])
  if(due.error||completed.error)return NextResponse.json({error:'Unable to load study state'},{status:500})
  // Older clients could increment this counter past the 20-question lesson limit.
@@ -28,6 +28,13 @@ export async function GET(){
  const tagCounts=new Map<string,number>()
  for(const row of rows) for(const tag of row.error_tags??[]) tagCounts.set(tag,(tagCounts.get(tag)??0)+1)
  const topErrorTags=[...tagCounts.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(([tag,count])=>({tag,count}))
- const repeated=rows.filter((row,index)=>index>0&&row.verdict!=='correct'&&rows[index-1]?.verdict==='correct').length
- return NextResponse.json({dueQuestionIds:(due.data??[]).map(item=>item.question_id),lessons,knowledgePoints:mastery.error?[]:(mastery.data??[]),metrics:{totalAttempts:total,incorrectAttempts:incorrect,errorRate:total?Math.round(incorrect/total*100):0,forgettingProxyRate:total?Math.round(repeated/total*100):0,correctStreak:streak,topErrorTags}})
+ const seenCorrect=new Set<string>(); let eligibleReviews=0; let forgotten=0
+ for(const row of [...rows].reverse()){
+  const questionId=(row as {exercise_id?:string}).exercise_id
+  if(!questionId) continue
+  if(row.verdict==='correct') seenCorrect.add(questionId)
+  else if(seenCorrect.has(questionId)){ eligibleReviews++; forgotten++ }
+ }
+ const forgettingRate=eligibleReviews?Math.round(forgotten/eligibleReviews*100):0
+ return NextResponse.json({dueQuestionIds:(due.data??[]).map(item=>item.question_id),lessons,knowledgePoints:mastery.error?[]:(mastery.data??[]),metrics:{totalAttempts:total,incorrectAttempts:incorrect,errorRate:total?Math.round(incorrect/total*100):0,forgettingRate,correctStreak:streak,topErrorTags}})
 }
