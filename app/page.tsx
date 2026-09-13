@@ -856,6 +856,8 @@ export default function Home() {
   const startLessonPractice = (lessonIndex = active) => {
     submittedQuestion.current = null
     setSelectedChoice('')
+    setPracticeMode('lesson')
+    setMixedQuestions([])
     setFullLessonMode(true)
     let existingAnswered = clampLessonAnswered(lessonDone[lessonIndex])
     if (existingAnswered === 0 && typeof window !== 'undefined' && !cloudApplied.current) {
