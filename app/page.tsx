@@ -39,6 +39,10 @@ const normalizeMistakes = (value: unknown): Question[] =>
         })
         .filter((item): item is Question => Boolean(item))
     : []
+const mistakesForLesson = (items: Question[], lessonId: number) => {
+  const prefix = `L${String(lessonId).padStart(2, '0')}-`
+  return items.filter((item) => item.id.startsWith(prefix))
+}
 const coreQuestionsForLesson = (lessonId: number) =>
   questionsForLesson(lessonId).slice(0, LESSON_QUESTION_LIMIT)
 const contiguousCompletedLessons = (values: number[]) => {
@@ -925,7 +929,7 @@ export default function Home() {
       existingAnswered >= LESSON_QUESTION_LIMIT
         ? clampLessonCorrect(lessonCorrect[lessonIndex])
         : 0
-    const lessonMistakes = mistakes.filter((item) => item.lessonId === lessonIndex + 1)
+    const lessonMistakes = mistakesForLesson(mistakes, lessonIndex + 1)
     setRetryQuestions(lessonMistakes)
     replayMistakesRef.current = lessonMistakes
     if (existingAnswered > 0 && existingAnswered !== (lessonDone[lessonIndex] ?? 0))
@@ -1030,7 +1034,7 @@ export default function Home() {
       const remainingMistakes = replayMode
         ? replayMistakesRef.current
         : mistakes
-            .filter((item) => item.lessonId === active + 1)
+            .filter((item) => item.id.startsWith(`L${String(active + 1).padStart(2, '0')}-`))
             .filter((item) => !answerMatches || item.id !== currentQuestion?.id)
       const summaryMistakes =
         replayMode || !currentQuestion || answerMatches
@@ -1067,9 +1071,7 @@ export default function Home() {
     0,
   )
   const allLessonsCompleted = effectiveCompletedLessons.length === displayedLessons.length
-  const currentLessonMistakeCount = mistakes.filter(
-    (item) => item.lessonId === currentLesson.id,
-  ).length
+  const currentLessonMistakeCount = mistakesForLesson(mistakes, currentLesson.id).length
   return (
     <main className="shell">
       <AppHeader
@@ -1187,10 +1189,10 @@ export default function Home() {
           <button
             className="primary wide"
             onClick={() => startLessonPractice(active)}
-            disabled={activeLessonDone >= LESSON_QUESTION_LIMIT && mistakes.filter((item) => item.lessonId === selectedLesson.id).length === 0}
+            disabled={activeLessonDone >= LESSON_QUESTION_LIMIT && mistakesForLesson(mistakes, selectedLesson.id).length === 0}
           >
-            {activeLessonDone >= LESSON_QUESTION_LIMIT && mistakes.filter((item) => item.lessonId === selectedLesson.id).length > 0
-              ? `重练本课错题（${mistakes.filter((item) => item.lessonId === selectedLesson.id).length} 题）`
+            {activeLessonDone >= LESSON_QUESTION_LIMIT && mistakesForLesson(mistakes, selectedLesson.id).length > 0
+              ? `重练本课错题（${mistakesForLesson(mistakes, selectedLesson.id).length} 题）`
               : activeLessonDone >= LESSON_QUESTION_LIMIT
                 ? '本课已完成，无错题需要重练'
                 : `开始整课练习（${LESSON_QUESTION_LIMIT} 题）`} <span>→</span>
