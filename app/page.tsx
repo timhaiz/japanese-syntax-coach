@@ -193,6 +193,7 @@ export default function Home() {
   const [mixedQuestions, setMixedQuestions] = useState<Question[]>([])
   const [dueQuestionIds, setDueQuestionIds] = useState<string[]>([])
   const [knowledgePointMastery, setKnowledgePointMastery] = useState<Record<string, number>>({})
+  const [learningMetrics, setLearningMetrics] = useState<{correctStreak:number;errorRate:number;topErrorTags:{tag:string;count:number}[]}>({correctStreak:0,errorRate:0,topErrorTags:[]})
   const [aiVerdict, setAiVerdict] = useState<
     'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
   >(null)
@@ -393,6 +394,7 @@ export default function Home() {
         if (cancelled) return
         setDueQuestionIds(Array.isArray(state.dueQuestionIds) ? state.dueQuestionIds : [])
         setKnowledgePointMastery(Object.fromEntries((state.knowledgePoints || []).map((item: { knowledge_point: string; mastery: number }) => [item.knowledge_point, Number(item.mastery) || 0])))
+        if (state.metrics) setLearningMetrics(state.metrics)
         const persistedLessons = Object.fromEntries(
           (state.lessons || []).map((lesson: { lesson_id: number; answered_count: number }) => [
             lesson.lesson_id - 1,
@@ -1320,6 +1322,7 @@ export default function Home() {
             progress={overallProgress}
             totalAnswered={totalAnswered}
             completedCount={completedLessons.length}
+            metrics={learningMetrics}
             syncLabel={
               userEmail
                 ? syncState === 'failed'

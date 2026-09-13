@@ -8,6 +8,7 @@ export function ProfileOverview({
   completedCount,
   syncLabel,
   onLogin,
+  metrics,
 }: {
   email: string
   registrationDate: string
@@ -17,6 +18,7 @@ export function ProfileOverview({
   completedCount: number
   syncLabel: string
   onLogin: () => void
+  metrics?: { correctStreak: number; errorRate: number; topErrorTags: { tag: string; count: number }[] }
 }) {
   return (
     <>
@@ -45,6 +47,9 @@ export function ProfileOverview({
         </div>
       </div>
       <div className="info-list">
+        {metrics && <div><span>连续答对</span><b>{metrics.correctStreak} 题</b></div>}
+        {metrics && <div><span>总体错误率</span><b>{metrics.errorRate}%</b></div>}
+        {metrics && <div><span>最常错知识点</span><b>{metrics.topErrorTags[0]?.tag || '暂无'}</b></div>}
         <div>
           <span>注册时间</span>
           <b>{registrationDate}</b>
