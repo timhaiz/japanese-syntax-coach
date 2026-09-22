@@ -15,9 +15,12 @@
 - 创建 types.ts：统一类型定义
 - 修复 token-utils.ts 类型导入问题
 - 构建验证通过
+- 提交第一阶段重构成果
+- 创建 useLocalProgressLoader.ts：本地进度加载 hook
+- 创建 useGrading.ts：答题判分 hook
 
 ### 当前正在做
-- 准备提交第一阶段重构成果
+- 继续创建更多工具 hooks 简化 app/page.tsx
 
 ### 下一步计划
 1. 提交重构工具函数和 hooks
