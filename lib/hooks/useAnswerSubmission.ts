@@ -236,8 +236,9 @@ export function useAnswerSubmission() {
     // 添加错题更新
     progressUpdates.mistakes = updatedMistakes
 
-    // 记录到服务端
-    await recordAnswer(context, gradeResult)
+    // 记录到服务端不阻塞本地判分和结果展示。
+    // 题目答案由规则层立即判定，云端持久化在后台完成。
+    void recordAnswer(context, gradeResult)
 
     return {
       gradeResult,
