@@ -1,5 +1,32 @@
 # TODO List
 
+## 最新任务：TypeSafe Jev 集成
+
+### 已完成 ✅
+- [x] 实现 TypeSafe Jev 判分引擎
+- [x] 集成到 API 路由
+- [x] 添加测试覆盖
+- [x] 完善文档
+- [x] 构建验证通过
+- [x] Git 提交
+
+### 待用户操作
+- [ ] 获取 TypeSafe API Key（访问 https://typesafe.ai）
+- [ ] 配置 `.env.local` 添加 `TYPESAFE_API_KEY`
+- [ ] 启动开发服务器测试
+- [ ] 验证判分效果
+- [ ] 监控性能和成本
+
+### 可选优化（低优先级）
+- [ ] 实施 A/B 测试对比 OpenAI vs Jev
+- [ ] 添加判分结果日志分析
+- [ ] 实现批量判分优化
+- [ ] 添加缓存层
+
+---
+
+# TODO List（原有任务）
+
 ## P0：生产验收（需人工验证）
 - [ ] 用真实账号验证登录、刷新、退出、账号切换
 - [ ] 验证 Chrome/Safari/手机端进度隔离
