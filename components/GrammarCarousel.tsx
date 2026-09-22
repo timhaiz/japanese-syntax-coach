@@ -3,6 +3,19 @@
 import { useRef, useState } from 'react'
 import type { GrammarPoint } from '@/lib/courses'
 
+function speakJapanese(text: string) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+  const synthesis = window.speechSynthesis
+  const utterance = new SpeechSynthesisUtterance(text)
+  utterance.lang = 'ja-JP'
+  const japaneseVoice = synthesis
+    .getVoices()
+    .find((voice) => voice.lang.toLowerCase().startsWith('ja'))
+  if (japaneseVoice) utterance.voice = japaneseVoice
+  synthesis.cancel()
+  synthesis.speak(utterance)
+}
+
 type GrammarCarouselProps = {
   lessonId: number
   grammar: GrammarPoint[]
@@ -88,11 +101,7 @@ export function GrammarCarousel({
                 className="grammar-speak"
                 type="button"
                 aria-label={`朗读句型 ${item.pattern}`}
-                onClick={() => {
-                  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-                  window.speechSynthesis.cancel()
-                  window.speechSynthesis.speak(new SpeechSynthesisUtterance(item.example))
-                }}
+                onClick={() => speakJapanese(item.example)}
               >
                 🔊 朗读例句
               </button>
