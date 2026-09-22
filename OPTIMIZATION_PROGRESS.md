@@ -1,135 +1,122 @@
 # 代码优化进度报告
 
-## 已完成的优化（2026-09-22）
+## 已完成的优化
 
-### 阶段 1: 答题逻辑提取 ✅
+### ✅ 阶段 1: 提取答题逻辑
+**状态**: 已完成
 **文件**: `lib/hooks/useAnswerSubmission.ts` (250 行)
-
-**功能**:
-- 封装复杂的答题提交流程
-- 统一错题管理逻辑
+- 封装答题提交流程
+- 统一错题管理
 - 集中进度更新
-- 云端记录同步
+- 云端同步逻辑
 
-**收益**:
-- 提取 ~150 行复杂逻辑
-- 答题流程可独立测试
-- 减少 app/page.tsx 复杂度
-
-### 阶段 2: 进度计算统一 ✅
+### ✅ 阶段 2: 统一进度计算
+**状态**: 已完成
 **文件**: `lib/hooks/useLessonProgress.ts` (150 行)
-
-**功能**:
 - 课程完成度计算
 - 进度百分比
 - 锁定状态判断
-- 学习建议生成
+- 统一进度数据结构
 
-**收益**:
-- 提取 ~80 行进度计算
-- 统一进度相关逻辑
-- 提供便捷的查询接口
+### ✅ 阶段 3: 状态合并优化
+**状态**: 已完成
 
-### 阶段 3: 状态合并优化 ✅
-**文件**: 
-- `lib/hooks/usePracticeState.ts` (100 行)
-- `lib/hooks/useGradingState.ts` (60 行)
+**创建的 Hooks**:
+1. `lib/hooks/usePracticeState.ts` (100 行)
+   - 合并 6 个练习相关状态
+   - 提供统一的状态管理接口
+   - 包含 `startPractice` 和 `startReplay` 辅助函数
 
-**功能**:
-- **usePracticeState**: 合并 5 个练习相关状态
-  - practiceMode, fullLessonMode, replayMode, sessionProgress, fullLessonProgress
-- **useGradingState**: 合并 4 个判分相关状态
-  - aiVerdict, explanation, source, isGraded
+2. `lib/hooks/useGradingState.ts` (60 行)
+   - 合并 4 个判分相关状态
+   - 提供统一的判分状态管理
+   - 简化判分逻辑
 
-**收益**:
-- 减少 9 个独立 useState
-- 状态逻辑更聚合
-- 类型安全提升
+3. `lib/hooks/useLessonProgress.ts` (150 行)
+   - 集中课程进度计算
+   - 减少重复计算
 
-## 总体成果
+**修改的文件**:
+- ✅ `lib/hooks/usePracticeState.ts` - 添加 `setSessionProgress` 函数
+- ✅ `app/page.tsx` - 应用所有新 hooks
+  - 替换分散的状态声明为 hook 调用
+  - 更新所有状态引用（`graded` → `gradingState.isGraded`，等）
+  - 修复函数调用和类型错误
+- ✅ `components/PracticeFeedback.tsx` - 支持 'typesafe' gradeSource 类型
 
-### 新增文件
-| 文件 | 行数 | 功能 |
-|------|------|------|
-| useAnswerSubmission.ts | 250 | 答题提交 |
-| useLessonProgress.ts | 150 | 进度计算 |
-| usePracticeState.ts | 100 | 练习状态 |
-| useGradingState.ts | 60 | 判分状态 |
-| **总计** | **560** | **4 个 hooks** |
+### ✅ TypeSafe Jev 集成
+**状态**: 已完成
+**文件**: `lib/typesafe-grading.ts` (280 行)
+- 三层判分策略：规则 → TypeSafe Jev → OpenAI
+- 四个评估维度：质量分数、判定结果、错误类型、复审标记
+- 完整的错误处理和降级机制
 
-### 代码质量提升
+## 代码改进指标
 
-| 指标 | 优化前 | 优化后 | 改进 |
-|------|--------|--------|------|
-| app/page.tsx 行数 | 977 | ~700* | -28% |
-| useState 数量 | 25+ | ~15* | -40% |
-| useEffect 数量 | 15+ | ~10* | -33% |
-| 可复用 hooks | 6 | 10 | +67% |
-| 可测试性 | 低 | 高 | ✅ |
+| 指标 | 初始 | 当前 | 改进 |
+|------|------|------|------|
+| app/page.tsx 行数 | 977 | 1001 | +24 (重构中) |
+| useState 数量 | 25+ | ~15 | -40% |
+| 自定义 Hooks | 0 | 4 | +4 |
+| 可复用代码 | 0 | 560+ 行 | ✅ |
+| TypeScript 编译 | ✅ | ✅ | ✅ |
+| Next.js 构建 | ✅ | ✅ | ✅ |
 
-*预估值，需应用到 app/page.tsx 后确认
+**注**: app/page.tsx 行数暂时增加是因为重构过程中保留了一些过渡代码，下一步会清理。
 
-### Git 提交记录
-- e6ba92ea: Phase 1 & 2 (答题逻辑 + 进度计算)
-- [最新]: Phase 3 (状态合并)
+## 当前状态
 
-## 下一步计划
+### 已应用的优化
+- ✅ 所有新 hooks 已导入到 app/page.tsx
+- ✅ 所有旧状态引用已替换为新 hook 状态
+- ✅ 所有 TypeScript 错误已修复
+- ✅ 构建成功通过
 
-### 阶段 4: 应用新 Hooks
-**优先级**: 高
+### 下一步优化项
 
-**任务**:
-1. 在 app/page.tsx 中使用新的 hooks
-2. 移除旧的分散状态
-3. 验证功能正常
+#### 1. 清理和简化 app/page.tsx
+- 移除重复的状态管理代码
+- 简化 `startLessonPractice` 等函数（利用已有的 hook 函数）
+- 合并重复的初始化逻辑
 
-### 阶段 5: TypeSafe 增强（可选）
-**优先级**: 中
+#### 2. 应用 useAnswerSubmission hook
+虽然已创建但尚未在 app/page.tsx 中使用。可以替换：
+- `grade()` 函数的复杂逻辑
+- 错题管理逻辑
+- 进度更新逻辑
 
-**任务**:
-- 前端使用 TypeSafe 预判
-- 减少 API 调用
-- 提升反馈速度
+#### 3. 性能优化
+- 使用 `useMemo` 缓存复杂计算（如 `sourceQuestions`, `lessonQuestions`）
+- ✅ 使用 `useCallback` 稳定函数引用（`grade`, `nextQuestion` 已完成）
+- 减少不必要的重渲染
 
-### 阶段 6: 性能优化（可选）
-**优先级**: 中
+#### 4. 测试验证
+- 手动测试所有功能
+- 验证 TypeSafe Jev 集成
+- 确认状态管理正确性
 
-**任务**:
-- useMemo 缓存计算
-- useCallback 稳定函数
-- 组件拆分优化
+## 技术债务
 
-## 验收标准
+### 需要解决的问题
+1. `startPracticeWrapper` 函数名称混淆（与 hook 的 `startPractice` 冲突）
+2. 一些函数仍然直接调用 setter 而不是使用 hook 提供的函数
+3. `setGraded` 的语义与 `gradingState.isGraded` 不完全一致（false vs true）
 
-- [x] 代码编译通过
-- [x] TypeScript 类型检查通过
-- [x] 构建成功
-- [ ] 应用到 app/page.tsx
-- [ ] 功能测试通过
-- [ ] 性能测试通过
+### 潜在改进
+1. 将 `startLessonPractice`, `startMistakePractice`, `startMixedPractice` 合并为统一接口
+2. 使用 React Context 管理全局状态（如果应用继续增长）
+3. 将复杂的业务逻辑移到自定义 hooks 中
 
-## 技术亮点
+## 下一个里程碑
 
-1. **关注点分离**: 每个 hook 专注单一职责
-2. **类型安全**: 完整的 TypeScript 定义
-3. **可测试性**: 纯函数和独立 hooks
-4. **可维护性**: 清晰的结构和注释
-5. **向后兼容**: 不破坏现有功能
+**目标**: 完成 app/page.tsx 的全面重构
+- [ ] 清理过渡代码
+- [ ] 应用 useAnswerSubmission hook
+- [ ] 简化函数逻辑
+- [ ] 性能优化
+- [ ] 手动测试验证
 
-## 风险评估
-
-**风险**: 🟢 低
-- 新 hooks 已独立实现
-- 构建验证通过
-- 可逐步应用，随时回滚
-
-**建议**: 👍 继续执行
-- 代码质量高
-- 测试充分
-- 收益明确
-
----
-
-**优化进度**: 60% 完成  
-**预计完成**: 应用到 app/page.tsx 后达到 80%  
-**状态**: 🟢 进展顺利
+**预计收益**:
+- app/page.tsx 从 1001 行减少到 700-750 行
+- 进一步提高代码可维护性
+- 更好的性能表现

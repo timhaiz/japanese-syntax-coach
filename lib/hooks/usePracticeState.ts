@@ -50,8 +50,18 @@ export function usePracticeState() {
     setState((prev) => ({ ...prev, sessionProgress: prev.sessionProgress + 1 }))
   }, [])
 
-  const setFullLessonProgress = useCallback((progress: number) => {
-    setState((prev) => ({ ...prev, fullLessonProgress: progress }))
+  const setSessionProgress = useCallback((progressOrUpdater: number | ((prev: number) => number)) => {
+    setState((prev) => ({
+      ...prev,
+      sessionProgress: typeof progressOrUpdater === 'function' ? progressOrUpdater(prev.sessionProgress) : progressOrUpdater
+    }))
+  }, [])
+
+  const setFullLessonProgress = useCallback((progressOrUpdater: number | ((prev: number) => number)) => {
+    setState((prev) => ({
+      ...prev,
+      fullLessonProgress: typeof progressOrUpdater === 'function' ? progressOrUpdater(prev.fullLessonProgress) : progressOrUpdater
+    }))
   }, [])
 
   const setActiveLesson = useCallback((lesson: number) => {
@@ -90,6 +100,7 @@ export function usePracticeState() {
     setFullLessonMode,
     setReplayMode,
     incrementSessionProgress,
+    setSessionProgress,
     setFullLessonProgress,
     setActiveLesson,
     startPractice,

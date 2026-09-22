@@ -15,7 +15,7 @@ type FeedbackData = {
   verdictLabel: string
   responseText: string
   expectedAnswerText: string
-  gradeSource: 'ai' | 'rule' | null
+  gradeSource: 'ai' | 'rule' | 'typesafe' | null
   gradeExplanation: string
   question: Question
 }
@@ -44,7 +44,7 @@ export function PracticeFeedback({
       <p>参考答案：{withKana(expectedAnswerText)}</p>
       {gradeExplanation && (
         <small>
-          {gradeSource === 'ai' ? 'AI 批改：' : '规则批改：'}
+          {gradeSource === 'typesafe' ? 'TypeSafe AI 批改：' : gradeSource === 'ai' ? 'AI 批改：' : '规则批改：'}
           {gradeExplanation}
         </small>
       )}

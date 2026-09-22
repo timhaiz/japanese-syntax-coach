@@ -58,9 +58,11 @@
 - [x] 代码重构优化 - 第二阶段（进行中）
   - [x] 创建 useLocalProgressLoader.ts 加载本地进度
   - [x] 创建 useGrading.ts 统一答题判分逻辑
-  - [ ] 应用新 hooks 到 app/page.tsx（待实施）
-  - [ ] 简化状态管理（减少 useState 数量）
-  - [ ] 测试重构后的功能
+  - [x] 应用新 hooks 到 app/page.tsx
+  - [x] 简化状态管理（减少 useState 数量）
+  - [x] 性能优化 - useCallback 稳定函数引用（grade, nextQuestion）
+  - [x] 构建验证通过
+  - [ ] 手动测试重构后的功能（需浏览器环境）
 
 ## 当前正在执行
 - 代码重构已完成两个阶段

@@ -1,11 +1,15 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { courses } from '@/lib/courses'
 import { getSupabaseBrowser } from '@/lib/supabase'
 import { useStreamingAnalysis } from '@/lib/hooks/useStreamingAnalysis'
 import { useAuthSync } from '@/lib/hooks/useAuthSync'
 import { useStudyState } from '@/lib/hooks/useStudyState'
 import { useLocalProgressLoader } from '@/lib/hooks/useLocalProgressLoader'
+import { usePracticeState } from '@/lib/hooks/usePracticeState'
+import { useGradingState } from '@/lib/hooks/useGradingState'
+import { useLessonProgress } from '@/lib/hooks/useLessonProgress'
+import { useAnswerSubmission } from '@/lib/hooks/useAnswerSubmission'
 import {
   isAnswerAccepted,
   normalizeAnswer,
@@ -42,7 +46,6 @@ const courseLessons = courses.map((c) => ({ ...c, progress: 0, locked: false }))
 export default function Home() {
   const [tab, setTab] = useState('home')
   const [active, setActive] = useState(0)
-  const [graded, setGraded] = useState(false)
 
   // 使用 useAuthSync 管理认证和同步
   const {
@@ -61,20 +64,53 @@ export default function Home() {
   const { userId, userEmail, registeredAt, cloudLoaded, syncState } = authState
   const loadedStudyUserId = useRef('')
 
-  const [practiceMode, setPracticeMode] = useState<'lesson' | 'mistakes' | 'mixed'>('lesson')
+  // 使用新的 hooks 管理状态
+  const {
+    practiceState,
+    setPracticeMode,
+    setFullLessonMode,
+    setReplayMode,
+    incrementSessionProgress,
+    setSessionProgress,
+    setFullLessonProgress,
+    setActiveLesson,
+    startPractice,
+    startReplay,
+    resetPractice,
+  } = usePracticeState()
+
+  const {
+    gradingState,
+    setGrading,
+    setAiVerdict,
+    setExplanation,
+    setSource,
+    setGraded,
+    resetGrading,
+  } = useGradingState()
+
+  const { submitAnswer } = useAnswerSubmission()
+
+  // 学习进度相关状态
   const [completedLessons, setCompletedLessons] = useState<number[]>([])
   const [lessonDone, setLessonDone] = useState<Record<number, number>>({})
   const [lessonCorrect, setLessonCorrect] = useState<Record<number, number>>({})
   const [mistakes, setMistakes] = useState<Question[]>([])
+
+  // 使用进度计算 hook
+  const progressData = useLessonProgress(
+    courses,
+    lessonDone,
+    lessonCorrect,
+    completedLessons,
+    mistakes
+  )
+
   const [mixedQuestions, setMixedQuestions] = useState<Question[]>([])
   const [dueQuestionIds, setDueQuestionIds] = useState<string[]>([])
   const [knowledgePointMastery, setKnowledgePointMastery] = useState<Record<string, number>>({})
   const [learningMetrics, setLearningMetrics] = useState<{correctStreak:number;errorRate:number;forgettingRate?:number;topErrorTags:{tag:string;count:number}[]}>({correctStreak:0,errorRate:0,topErrorTags:[]})
-  const [aiVerdict, setAiVerdict] = useState<
-    'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
-  >(null)
-  const [gradeExplanation, setGradeExplanation] = useState('')
-  const [gradeSource, setGradeSource] = useState<'ai' | 'rule' | null>(null)
+
   const { analysis, loading: analysisLoading, preview: analysisPreview, startAnalysis, resetAnalysis } = useStreamingAnalysis()
   const [studyStateLoaded, setStudyStateLoaded] = useState(false)
   const [studyStateError, setStudyStateError] = useState('')
@@ -88,19 +124,11 @@ export default function Home() {
   const [retryQuestions, setRetryQuestions] = useState<Question[]>([])
   const submittedQuestion = useRef<Question | null>(null)
   const lessonReplayRef = useRef<{ lesson: number; count: number } | null>(null)
-  // Keep the current lesson replay set in sync while React state updates are queued.
-  // The ref is used when building the completion summary so a corrected question is
-  // removed immediately, even if the final answer and the summary are handled in
-  // the same event loop turn.
   const replayMistakesRef = useRef<Question[]>([])
   const replayCorrectRef = useRef(0)
-  const [fullLessonMode, setFullLessonMode] = useState(false)
-  const [replayMode, setReplayMode] = useState(false)
   const [selectedChoice, setSelectedChoice] = useState('')
   const [availableTokens, setAvailableTokens] = useState<WordToken[]>([])
   const [selectedTokens, setSelectedTokens] = useState<WordToken[]>([])
-  const [fullLessonProgress, setFullLessonProgress] = useState(0)
-  const [sessionProgress, setSessionProgress] = useState(0)
 
   // 使用 useLocalProgressLoader 加载本地进度
   const {
@@ -268,8 +296,8 @@ export default function Home() {
       setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
   }, [active, lessonDone, lessonCorrect])
   useEffect(() => {
-    if (!graded) setAiVerdict(null)
-  }, [graded])
+    if (!gradingState.isGraded) setAiVerdict(null)
+  }, [gradingState.isGraded])
   const activeLessonDone = clampLessonAnswered(lessonDone[active])
   const activeLessonCorrect = clampLessonCorrect(lessonCorrect[active])
   const activeLessonAccuracy = activeLessonDone
@@ -308,24 +336,30 @@ export default function Home() {
   )
   const nextLessonIndex =
     firstIncompleteLesson >= 0 ? firstIncompleteLesson : displayedLessons.length - 1
-  const progress = fullLessonMode ? fullLessonProgress : sessionProgress
-  const sessionLimit =
-    practiceMode === 'mistakes'
+  const progress = practiceState.isFullLesson ? practiceState.fullLessonProgress : practiceState.sessionProgress
+
+  const sessionLimit = useMemo(() =>
+    practiceState.mode === 'mistakes'
       ? mistakes.length
-      : practiceMode === 'mixed'
+      : practiceState.mode === 'mixed'
         ? mixedQuestions.length
-        : replayMode
+        : practiceState.isReplay
           ? retryQuestions.length
           : LESSON_QUESTION_LIMIT
-  const lessonQuestions = coreQuestionsForLesson(selectedLesson.id)
-  const sourceQuestions =
-    practiceMode === 'mistakes'
+  , [practiceState.mode, practiceState.isReplay, mistakes.length, mixedQuestions.length, retryQuestions.length])
+
+  const lessonQuestions = useMemo(() => coreQuestionsForLesson(selectedLesson.id), [selectedLesson.id])
+
+  const sourceQuestions = useMemo(() =>
+    practiceState.mode === 'mistakes'
       ? mistakes
-      : practiceMode === 'mixed'
+      : practiceState.mode === 'mixed'
         ? mixedQuestions
-        : replayMode
+        : practiceState.isReplay
           ? retryQuestions
           : lessonQuestions
+  , [practiceState.mode, practiceState.isReplay, mistakes, mixedQuestions, retryQuestions, lessonQuestions])
+
   const bankQuestion = sourceQuestions.length
     ? sourceQuestions[progress % sourceQuestions.length]
     : undefined
@@ -337,7 +371,7 @@ export default function Home() {
     answer: '',
     hint: '请返回课程页后重试。',
   }
-  const presentedQuestion = graded && submittedQuestion.current ? submittedQuestion.current : ex
+  const presentedQuestion = gradingState.isGraded && submittedQuestion.current ? submittedQuestion.current : ex
   const tokenQuestion = presentedQuestion.type === '翻译' || presentedQuestion.type === '问答'
   const tokenAnswer = selectedTokens.map((token) => token.text).join('')
   const selectedTokenIds = new Set(selectedTokens.map((token) => token.id))
@@ -345,7 +379,7 @@ export default function Home() {
     (a, b) => tokenOrder(a.id) - tokenOrder(b.id),
   )
   useEffect(() => {
-    if (!bankQuestion || graded) return
+    if (!bankQuestion || gradingState.isGraded) return
     if (bankQuestion.type === '翻译' || bankQuestion.type === '问答') {
       setAvailableTokens(createWordTokens(bankQuestion))
       setSelectedTokens([])
@@ -353,18 +387,23 @@ export default function Home() {
       setAvailableTokens([])
       setSelectedTokens([])
     }
-  }, [bankQuestion?.id, practiceMode, graded, tab])
-  const selectedChoiceText =
+  }, [bankQuestion?.id, practiceState.mode, gradingState.isGraded, tab])
+
+  const selectedChoiceText = useMemo(() =>
     presentedQuestion.options
       ?.find((option) => option.startsWith(`${selectedChoice}：`))
       ?.slice(2)
       .trim() || ''
-  const expectedAnswerText =
+  , [presentedQuestion.options, selectedChoice])
+
+  const expectedAnswerText = useMemo(() =>
     presentedQuestion.options
       ?.find((option) => option.startsWith(`${presentedQuestion.answer}：`))
       ?.slice(2)
       .trim() || presentedQuestion.answer
-  const practiceInstruction =
+  , [presentedQuestion.options, presentedQuestion.answer])
+
+  const practiceInstruction = useMemo(() =>
     presentedQuestion.type === '翻译'
       ? '把下面的中文说成日语'
       : presentedQuestion.type === '选择'
@@ -372,15 +411,22 @@ export default function Home() {
         : presentedQuestion.type === '助词'
           ? '选择正确的助词'
           : '根据提示回答问题'
+  , [presentedQuestion.type])
+
   const responseText = tokenQuestion ? tokenAnswer : selectedChoiceText
-  const localAnswerMatches = presentedQuestion.options
-    ? isAnswerAccepted(presentedQuestion, selectedChoiceText) ||
-      isAnswerAccepted(presentedQuestion, selectedChoice)
-    : isAnswerAccepted(presentedQuestion, responseText)
-  const answerMatches = aiVerdict
-    ? aiVerdict === 'correct' || aiVerdict === 'mostly_correct'
+
+  const localAnswerMatches = useMemo(() =>
+    presentedQuestion.options
+      ? isAnswerAccepted(presentedQuestion, selectedChoiceText) ||
+        isAnswerAccepted(presentedQuestion, selectedChoice)
+      : isAnswerAccepted(presentedQuestion, responseText)
+  , [presentedQuestion, selectedChoiceText, selectedChoice, responseText])
+
+  const answerMatches = gradingState.aiVerdict
+    ? gradingState.aiVerdict === 'correct' || gradingState.aiVerdict === 'mostly_correct'
     : localAnswerMatches
-  const localVerdict = localAnswerMatches
+
+  const localVerdict = useMemo(() => localAnswerMatches
     ? 'correct'
     : (() => {
         const expected = normalizeAnswer(expectedAnswerText)
@@ -390,119 +436,99 @@ export default function Home() {
           : 0
         return shared >= 0.55 ? 'needs_fix' : 'incorrect'
       })()
-  const grade = () => {
+  , [localAnswerMatches, expectedAnswerText, responseText])
+  const grade = useCallback(async () => {
     const question = ex
     const submittedAnswer =
       question.type === '翻译' || question.type === '问答'
         ? tokenAnswer
         : selectedChoiceText
-    const expectedAnswer =
-      question.options
-        ?.find((option) => option.startsWith(`${question.answer}：`))
-        ?.slice(2)
-        .trim() || question.answer
+
     submittedQuestion.current = question
-    setAiVerdict(null)
     resetAnalysis()
-    setGradeExplanation(
-      localAnswerMatches
-        ? '句型结构正确，继续保持主动输出。'
-        : question.options && !localAnswerMatches
-          ? `你选择了「${submittedAnswer}」，正确选项是「${expectedAnswer}」。`
-          : explainAnswerDifference(expectedAnswer, submittedAnswer),
-    )
-    setGradeSource('rule')
-    if (practiceMode === 'mixed' && localAnswerMatches) {
-      setDueQuestionIds((value) => value.filter((id) => id !== question.id))
+
+    const context = {
+      question,
+      answer: submittedAnswer,
+      practiceMode: practiceState.mode,
+      replayMode: practiceState.isReplay,
+      currentLesson: active,
+      userId,
     }
-    if (!localAnswerMatches) {
-      setMistakes((value) =>
-        value.some((item) => item.id === question.id) ? value : [...value, question],
-      )
-      if (replayMode && !replayMistakesRef.current.some((item) => item.id === question.id)) {
-        replayMistakesRef.current = [...replayMistakesRef.current, question]
-      }
-    } else if (practiceMode === 'mistakes' || replayMode) {
-      setMistakes((value) => value.filter((item) => item.id !== question.id))
-      if (replayMode) {
+
+    const currentProgress = {
+      lessonDone,
+      lessonCorrect,
+      completedLessons,
+      mistakes,
+      dueQuestionIds,
+    }
+
+    const { gradeResult, progressUpdates } = await submitAnswer(context, currentProgress)
+
+    setExplanation(gradeResult.explanation)
+    setSource(gradeResult.source)
+    setAiVerdict(gradeResult.aiVerdict ?? null)
+    setGraded(true)
+
+    if (progressUpdates.lessonDone) setLessonDone(progressUpdates.lessonDone)
+    if (progressUpdates.lessonCorrect) setLessonCorrect(progressUpdates.lessonCorrect)
+    if (progressUpdates.completedLessons) setCompletedLessons(progressUpdates.completedLessons)
+    if (progressUpdates.mistakes) setMistakes(progressUpdates.mistakes)
+    if (progressUpdates.dueQuestionIds) setDueQuestionIds(progressUpdates.dueQuestionIds)
+
+    if (practiceState.isReplay) {
+      if (gradeResult.correct) {
         replayMistakesRef.current = replayMistakesRef.current.filter(
           (item) => item.id !== question.id,
         )
         replayCorrectRef.current = Math.min(LESSON_QUESTION_LIMIT, replayCorrectRef.current + 1)
-        setLessonCorrect((value) => ({
-          ...value,
-          [active]: Math.min(LESSON_QUESTION_LIMIT, (value[active] ?? 0) + 1),
-        }))
+      } else if (!replayMistakesRef.current.some((item) => item.id === question.id)) {
+        replayMistakesRef.current = [...replayMistakesRef.current, question]
       }
     }
-    if (userId)
-      void (async () => {
-        try {
-          const response = await fetch('/api/record-answer', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              questionId: question.id,
-              lessonId: question.lessonId,
-              answer: submittedAnswer,
-              correct: localAnswerMatches,
-              verdict: aiVerdict ?? localVerdict,
-              errorTags: localAnswerMatches ? [] : errorTagsForAnswer(question, submittedAnswer),
-              knowledgeTags: knowledgeTagsForQuestion(question),
-              mode:
-                practiceMode === 'lesson'
-                  ? replayMode
-                    ? 'lesson_replay'
-                    : 'lesson'
-                  : 'review',
-            }),
-          })
-          if (!response.ok) return
-          await response.json()
-        } catch {
-          console.warn('Unable to persist answer; using local fallback')
-        }
-      })()
-    setGraded(true)
-  }
-  const displayCorrect = aiVerdict
-    ? aiVerdict === 'correct' || aiVerdict === 'mostly_correct'
+  }, [ex, tokenAnswer, selectedChoiceText, submittedQuestion, resetAnalysis, practiceState.mode, practiceState.isReplay, active, userId, lessonDone, lessonCorrect, completedLessons, mistakes, dueQuestionIds, submitAnswer, setExplanation, setSource, setAiVerdict, setGraded, setLessonDone, setLessonCorrect, setCompletedLessons, setMistakes, setDueQuestionIds, replayMistakesRef, replayCorrectRef])
+  const displayCorrect = gradingState.aiVerdict
+    ? gradingState.aiVerdict === 'correct' || gradingState.aiVerdict === 'mostly_correct'
     : answerMatches
   const verdictLabel =
-    aiVerdict === 'mostly_correct'
+    gradingState.aiVerdict === 'mostly_correct'
       ? '基本正确'
-      : aiVerdict === 'needs_fix'
+      : gradingState.aiVerdict === 'needs_fix'
         ? '需要修改'
-        : aiVerdict === 'incorrect'
+        : gradingState.aiVerdict === 'incorrect'
           ? '句型或词语还需要调整'
           : displayCorrect
             ? '很好，句型正确'
             : '句型或词语还需要调整'
-  const resetTokens = () => {
+  const resetTokens = useCallback(() => {
     setAvailableTokens([])
     setSelectedTokens([])
-  }
-  const startPractice = (_mode: 'new' | 'review' = 'new', lessonIndex = active) => {
+  }, [])
+
+  // 统一的练习初始化逻辑
+  const initializePractice = useCallback((options: {
+    mode: 'lesson' | 'mistakes' | 'mixed'
+    isFullLesson: boolean
+    questions?: Question[]
+  }) => {
     submittedQuestion.current = null
     replayMistakesRef.current = []
     setSelectedChoice('')
-    resetTokens()
-    setFullLessonMode(true)
-    setReplayMode(false)
-    setFullLessonProgress(0)
+    if (options.questions) {
+      setMixedQuestions(options.questions)
+    }
+    setPracticeMode(options.mode)
+    setFullLessonMode(options.isFullLesson)
     setSessionProgress(0)
-    setPracticeMode('lesson')
-    setActive(lessonIndex)
     setAiVerdict(null)
     setGraded(false)
     setTab('practice')
-  }
-  const startLessonPractice = (lessonIndex = active) => {
-    submittedQuestion.current = null
+  }, [setPracticeMode, setFullLessonMode, setSessionProgress])
+
+  const startLessonPractice = useCallback((lessonIndex = active) => {
     setSelectedChoice('')
-    setPracticeMode('lesson')
     setMixedQuestions([])
-    setFullLessonMode(true)
     let existingAnswered = clampLessonAnswered(lessonDone[lessonIndex])
     if (existingAnswered === 0 && typeof window !== 'undefined' && !cloudApplied.current) {
       try {
@@ -531,69 +557,49 @@ export default function Home() {
         ? 0
         : Math.min(existingAnswered, LESSON_QUESTION_LIMIT - 1),
     )
-    setSessionProgress(0)
     if (existingAnswered === 0) setLessonCorrect((value) => ({ ...value, [lessonIndex]: 0 }))
     setActive(lessonIndex)
-    setAiVerdict(null)
-    setGraded(false)
-    setTab('practice')
-  }
-  const startMistakePractice = () => {
+
+    // 使用统一初始化
+    initializePractice({ mode: 'lesson', isFullLesson: true })
+  }, [active, lessonDone, lessonCorrect, mistakes, setReplayMode, setFullLessonProgress, initializePractice])
+
+  const startMistakePractice = useCallback(() => {
     if (mistakes.length) {
-      submittedQuestion.current = null
-      replayMistakesRef.current = []
-      setPracticeMode('mistakes')
-      setFullLessonMode(false)
-      setSessionProgress(0)
-      setAiVerdict(null)
-      setGraded(false)
-      setTab('practice')
+      initializePractice({ mode: 'mistakes', isFullLesson: false })
     }
-  }
-  const startMixedPractice = () => {
+  }, [mistakes.length, initializePractice])
+
+  const startMixedPractice = useCallback(() => {
     const questions = prioritizeReviewSet(createMixedReviewSet(effectiveCompletedLessons, 20), knowledgePointMastery, dueQuestionIds)
     if (questions.length) {
-      setMixedQuestions(questions)
-      submittedQuestion.current = null
-      replayMistakesRef.current = []
-      setPracticeMode('mixed')
-      setFullLessonMode(false)
-      setSessionProgress(0)
-      setAiVerdict(null)
-      setGraded(false)
-      setTab('practice')
+      initializePractice({ mode: 'mixed', isFullLesson: false, questions })
     }
-  }
-  const startDueReview = () => {
+  }, [effectiveCompletedLessons, knowledgePointMastery, dueQuestionIds, initializePractice])
+
+  const startDueReview = useCallback(() => {
     const questions = prioritizeReviewSet(
       dueQuestionIds.map((id) => questionForId(id)).filter((item): item is Question => Boolean(item)),
       knowledgePointMastery,
       dueQuestionIds,
     ).slice(0, 20)
     if (!questions.length) return
-    setMixedQuestions(questions)
-    submittedQuestion.current = null
-    replayMistakesRef.current = []
-    setPracticeMode('mixed')
-    setFullLessonMode(false)
-    setSessionProgress(0)
-    setAiVerdict(null)
-    setGraded(false)
-    setTab('practice')
-  }
-  const nextQuestion = () => {
+    initializePractice({ mode: 'mixed', isFullLesson: false, questions })
+  }, [dueQuestionIds, knowledgePointMastery, initializePractice])
+
+  const nextQuestion = useCallback(() => {
     const complete = progress >= sessionLimit - 1
     const finalCorrect = clampLessonCorrect(
-      replayMode ? replayCorrectRef.current : clampLessonCorrect(lessonCorrect[active]) + (answerMatches ? 1 : 0),
+      practiceState.isReplay ? replayCorrectRef.current : clampLessonCorrect(lessonCorrect[active]) + (answerMatches ? 1 : 0),
     )
-    if (practiceMode === 'lesson') {
+    if (practiceState.mode === 'lesson') {
       setFullLessonProgress((value) => value + 1)
       const replayCount =
         lessonReplayRef.current?.lesson === active ? lessonReplayRef.current.count : null
       const alreadyCompleted =
         clampLessonAnswered(lessonDone[active]) >= LESSON_QUESTION_LIMIT ||
         (replayCount !== null && replayCount >= LESSON_QUESTION_LIMIT)
-      if (!replayMode) {
+      if (!practiceState.isReplay) {
         if (!alreadyCompleted) {
           setLessonDone((value) => ({
             ...value,
@@ -615,15 +621,15 @@ export default function Home() {
     const currentQuestion = submittedQuestion.current
     submittedQuestion.current = null
     setSelectedChoice('')
-    setGraded(false)
-    if (complete && practiceMode === 'lesson') {
-      const remainingMistakes = replayMode
+    setGraded(true)
+    if (complete && practiceState.mode === 'lesson') {
+      const remainingMistakes = practiceState.isReplay
         ? replayMistakesRef.current
         : mistakes
             .filter((item) => item.id.startsWith(`L${String(active + 1).padStart(2, '0')}-`))
             .filter((item) => !answerMatches || item.id !== currentQuestion?.id)
       const summaryMistakes =
-        replayMode || !currentQuestion || answerMatches
+        practiceState.isReplay || !currentQuestion || answerMatches
           ? remainingMistakes
           : [...remainingMistakes, currentQuestion]
       const types = summaryMistakes.map((item) => item.type)
@@ -639,7 +645,7 @@ export default function Home() {
     } else if (complete) {
       setTab('home')
     }
-  }
+  }, [progress, sessionLimit, practiceState.isReplay, practiceState.mode, replayCorrectRef, lessonCorrect, active, answerMatches, lessonDone, lessonReplayRef, submittedQuestion, mistakes, courses, setFullLessonProgress, setLessonDone, setLessonCorrect, setCompletedLessons, setSessionProgress, setSelectedChoice, setGraded, replayMistakesRef, setLessonSummary, setTab])
   const currentLesson = displayedLessons[nextLessonIndex] ?? displayedLessons[0]
   const overallProgress = Math.round(
     displayedLessons.reduce((sum, lesson) => sum + lesson.progress, 0) / displayedLessons.length,
@@ -818,7 +824,7 @@ export default function Home() {
               × 退出
             </button>
             <span>
-              {practiceMode === 'mistakes' ? '错题练习' : `第 ${selectedLesson.id} 课 · 练习`}
+              {practiceState.mode === 'mistakes' ? '错题练习' : `第 ${selectedLesson.id} 课 · 练习`}
             </span>
             <b>
               {Math.min(progress + 1, sessionLimit)} / {sessionLimit}
@@ -833,7 +839,7 @@ export default function Home() {
             <div className="prompt">{withKana(presentedQuestion.prompt)}</div>
             <AnswerOptions
               question={presentedQuestion}
-              graded={graded}
+              graded={gradingState.isGraded}
               selectedChoice={selectedChoice}
               selectedTokens={selectedTokens}
               candidateTokens={candidateTokens}
@@ -847,15 +853,15 @@ export default function Home() {
                 setSelectedTokens((value) => [...value, token])
               }}
             />{' '}
-            {graded && (
+            {gradingState.isGraded && (
               <PracticeFeedback
                 feedbackData={{
                   answerMatches,
                   verdictLabel,
                   responseText,
                   expectedAnswerText,
-                  gradeSource,
-                  gradeExplanation,
+                  gradeSource: gradingState.source,
+                  gradeExplanation: gradingState.explanation,
                   question: presentedQuestion,
                 }}
                 analysisState={{
@@ -874,13 +880,13 @@ export default function Home() {
             )}
             <button
               className="primary wide"
-              onClick={() => (graded ? nextQuestion() : grade())}
+              onClick={() => (gradingState.isGraded ? nextQuestion() : grade())}
               disabled={
-                !graded &&
+                !gradingState.isGraded &&
                 (presentedQuestion.options ? !selectedChoice : !selectedTokens.length)
               }
             >
-              {graded ? (progress >= sessionLimit - 1 ? '完成训练' : '下一题') : '提交答案'}{' '}
+              {gradingState.isGraded ? (progress >= sessionLimit - 1 ? '完成训练' : '下一题') : '提交答案'}{' '}
               <span>→</span>
             </button>
           </div>
