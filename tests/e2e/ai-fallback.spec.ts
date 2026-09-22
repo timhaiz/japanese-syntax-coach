@@ -13,6 +13,16 @@ const request = () =>
     }),
   })
 
+const streamResponse = (text: string, status = 200) =>
+  new Response(
+    [
+      `data: ${JSON.stringify({type: 'response.output_text.delta', delta: text})}`,
+      `data: ${JSON.stringify({type: 'response.completed'})}`,
+      '',
+    ].join('\n\n'),
+    {status, headers: {'content-type': 'text/event-stream'}},
+  )
+
 test.describe.configure({mode: 'serial'})
 
 test.describe('AI 分析接口降级', () => {
@@ -52,20 +62,16 @@ test.describe('AI 分析接口降级', () => {
     })
   }
 
-  test('非法 JSON 和非法结构不会冒泡为 500', async () => {
+  test('流式响应中的非法 JSON 和非法结构会返回可识别错误', async () => {
     process.env.OPENAI_API_KEY = 'test-key'
     process.env.OPENAI_BASE_URL = 'https://mock.test/v1'
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({output_text: '{not-json'}), {status: 200})
-    const invalidJson = await (await POST(request())).json()
-    expect(invalidJson).toMatchObject({source: 'fallback', reason: 'invalid-json'})
+    globalThis.fetch = async () => streamResponse('{not-json')
+    const invalidJson = await (await POST(request())).text()
+    expect(invalidJson).toContain('"message":"invalid-json"')
 
-    globalThis.fetch = async () =>
-      new Response(JSON.stringify({output_text: JSON.stringify({analysis: '不完整'})}), {
-        status: 200,
-      })
-    const invalidShape = await (await POST(request())).json()
-    expect(invalidShape).toMatchObject({source: 'fallback', reason: 'invalid-response-shape'})
+    globalThis.fetch = async () => streamResponse(JSON.stringify({analysis: '不完整'}))
+    const invalidShape = await (await POST(request())).text()
+    expect(invalidShape).toContain('"message":"invalid-response-shape"')
   })
 
   test('超时返回降级提示', async () => {

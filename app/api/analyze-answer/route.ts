@@ -1,11 +1,39 @@
 import {NextResponse} from 'next/server'
 import OpenAI, {APIConnectionTimeoutError} from 'openai'
 
-const isAnalysisResult=(value:unknown):value is {analysis:string;words:{word:string;kana:string;meaning:string;memory:string}[];pitfalls:string[]}=>{
-  if(!value||typeof value!=='object')return false
-  const result=value as {analysis?:unknown;words?:unknown;pitfalls?:unknown}
-  if(typeof result.analysis!=='string'||!Array.isArray(result.words)||!Array.isArray(result.pitfalls))return false
-  return result.words.every(item=>{if(!item||typeof item!=='object')return false;const word=item as Record<string,unknown>;return ['word','kana','meaning','memory'].every(key=>typeof word[key]==='string')})&&result.pitfalls.every(item=>typeof item==='string')
+type AnalysisWord = {
+  word: string
+  kana: string
+  meaning: string
+  memory: string
+}
+
+type AnalysisResult = {
+  analysis: string
+  words: AnalysisWord[]
+  pitfalls: string[]
+}
+
+function isAnalysisWord(value: unknown): value is AnalysisWord {
+  if (!value || typeof value !== 'object') return false
+  const word = value as Record<string, unknown>
+  return (
+    typeof word.word === 'string' &&
+    typeof word.kana === 'string' &&
+    typeof word.meaning === 'string' &&
+    typeof word.memory === 'string'
+  )
+}
+
+function isAnalysisResult(value: unknown): value is AnalysisResult {
+  if (!value || typeof value !== 'object') return false
+  const result = value as {analysis?: unknown; words?: unknown; pitfalls?: unknown}
+
+  if (typeof result.analysis !== 'string') return false
+  if (!Array.isArray(result.words) || !result.words.every(isAnalysisWord)) return false
+  if (!Array.isArray(result.pitfalls) || !result.pitfalls.every(item => typeof item === 'string')) return false
+
+  return true
 }
 
 export async function POST(req:Request){
@@ -22,9 +50,25 @@ export async function POST(req:Request){
     const encoder=new TextEncoder()
     const readable=new ReadableStream({
       async start(controller){
+        let output=''
         try{
           for await(const event of stream){
-            if(event.type==='response.output_text.delta')controller.enqueue(encoder.encode(`data: ${JSON.stringify({type:'delta',text:event.delta})}\n\n`))
+            if(event.type==='response.output_text.delta'){
+              output+=event.delta
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({type:'delta',text:event.delta})}\n\n`))
+            }
+          }
+          const normalized=output.trim().replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'')
+          let parsed:unknown
+          try{
+            parsed=JSON.parse(normalized||'{}')
+          }catch{
+            controller.enqueue(encoder.encode('data: {"type":"error","message":"invalid-json"}\n\n'))
+            return
+          }
+          if (!isAnalysisResult(parsed)) {
+            controller.enqueue(encoder.encode('data: {"type":"error","message":"invalid-response-shape"}\n\n'))
+            return
           }
           controller.enqueue(encoder.encode('data: {"type":"done"}\n\n'))
         }catch(error){

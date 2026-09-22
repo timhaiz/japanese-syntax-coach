@@ -33,7 +33,7 @@ import {
   completedFromLessonProgress,
 } from '@/lib/utils/lesson-utils'
 import { explainAnswerDifference, errorTagsForAnswer, knowledgeTagsForQuestion } from '@/lib/utils/answer-utils'
-import { createWordTokens, tokenOrder } from '@/lib/utils/token-utils'
+import { createWordTokens } from '@/lib/utils/token-utils'
 
 const courseLessons = courses.map((c) => ({ ...c, progress: 0, locked: false }))
 export default function Home() {

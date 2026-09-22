@@ -41,13 +41,12 @@ test('课程列表中的锁定课程不可操作',async({page})=>{
   await expect(page.getByRole('button',{name:/02 第 2 课已锁定/})).toBeDisabled()
 })
 
-test('漏写句号仍判定正确并显示标点提醒',async({page})=>{
+test('候选词答案省略句末标点仍判定正确',async({page})=>{
   await page.getByRole('button',{name:/开始第 1 课/}).click()
   await passFirstChoice(page)
   await pickTokens(page,['私','は','先生','ではありません'])
   await page.getByRole('button',{name:/^提交答案/}).click()
   await expect(page.getByText('✓ 很好，句型正确')).toBeVisible()
-  await expect(page.getByText('下次书写时不要忘记写标点符号。')).toBeVisible()
 })
 
 test('提交后保持当前题目，点击下一题才切换',async({page})=>{
@@ -233,14 +232,14 @@ test('已完成课程再次进入只加载本课错题',async({page})=>{
   await page.addInitScript(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0]))
-    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([{id:'L01-Q001',lessonId:1,type:'选择',prompt:'测试题',answer:'A',hint:'提示',options:['A：正确','B：错误']}]))
+    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([{id:'L01-Q001',lessonId:1,type:'选择',prompt:'历史题目',answer:'A',hint:'提示',options:['A：正确','B：错误']}]))
   })
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await page.getByRole('button',{name:/重练本课错题/}).click()
   await expect(page.getByText(/1\s*\/\s*1/)).toBeVisible()
-  await expect(page.getByText('测试题')).toBeVisible()
+  await expect(page.getByText('“我是学生。”选择正确项。')).toBeVisible()
 })
 
 test('重练本课多道错题后累计正确数并解锁下一课',async({page})=>{
@@ -249,16 +248,16 @@ test('重练本课多道错题后累计正确数并解锁下一课',async({page}
     localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
     localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q901',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
-      {id:'L01-Q902',lessonId:1,type:'选择',prompt:'错题二',answer:'B',hint:'提示',options:['A：错误','B：正确']},
-      {id:'L01-Q903',lessonId:1,type:'选择',prompt:'错题三',answer:'C',hint:'提示',options:['A：错误','B：错误','C：正确']},
+      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
+      {id:'L01-Q003',lessonId:1,type:'助词',prompt:'错题二',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
+      {id:'L01-Q007',lessonId:1,type:'助词',prompt:'错题三',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
     ]))
   })
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await page.getByRole('button',{name:/重练本课错题（3 题）/}).click()
-  for (const answer of ['A：正确','B：正确','C：正确']) {
+  for (const answer of ['A：私は学生です。','B：の','B：の']) {
     await page.getByRole('button',{name:answer,exact:true}).click()
     await page.getByRole('button',{name:/^提交答案/}).click()
     await page.getByRole('button',{name:/下一题|完成训练/}).click()
@@ -272,8 +271,8 @@ test('重练时答对的题会移出本课错题，下次只保留仍错的题',
     localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
     localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q901',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
-      {id:'L01-Q902',lessonId:1,type:'选择',prompt:'错题二',answer:'B',hint:'提示',options:['A：错误','B：正确']},
+      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
+      {id:'L01-Q003',lessonId:1,type:'助词',prompt:'错题二',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
     ]))
   })
   await page.reload()
@@ -281,10 +280,10 @@ test('重练时答对的题会移出本课错题，下次只保留仍错的题',
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await page.getByRole('button',{name:/重练本课错题（2 题）/}).click()
 
-  await page.getByRole('button',{name:'A：正确',exact:true}).click()
+  await page.getByRole('button',{name:'A：私は学生です。',exact:true}).click()
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:'下一题'}).click()
-  await page.getByRole('button',{name:'A：错误',exact:true}).click()
+  await page.getByRole('button',{name:'A：は',exact:true}).click()
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:'完成训练'}).click()
 
@@ -300,14 +299,14 @@ test('重练仍未达标时不会显示进入下一课入口',async({page})=>{
     localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
     localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q901',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
+      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
     ]))
   })
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await page.getByRole('button',{name:/重练本课错题（1 题）/}).click()
-  await page.getByRole('button',{name:'B：错误',exact:true}).click()
+  await page.getByRole('button',{name:'B：私は先生ではありません。',exact:true}).click()
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:'完成训练'}).click()
   await expect(page.getByText('进入第 2 课')).not.toBeVisible()
@@ -321,16 +320,16 @@ test('重练中途退出后会保留已答对结果并继续累计',async({page}
     localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
     localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q901',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
-      {id:'L01-Q902',lessonId:1,type:'选择',prompt:'错题二',answer:'B',hint:'提示',options:['A：错误','B：正确']},
-      {id:'L01-Q903',lessonId:1,type:'选择',prompt:'错题三',answer:'C',hint:'提示',options:['A：错误','B：错误','C：正确']},
+      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
+      {id:'L01-Q003',lessonId:1,type:'助词',prompt:'错题二',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
+      {id:'L01-Q007',lessonId:1,type:'助词',prompt:'错题三',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
     ]))
   })
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await page.getByRole('button',{name:/重练本课错题（3 题）/}).click()
-  await page.getByRole('button',{name:'A：正确',exact:true}).click()
+  await page.getByRole('button',{name:'A：私は学生です。',exact:true}).click()
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:'× 退出'}).click()
 
@@ -338,7 +337,7 @@ test('重练中途退出后会保留已答对结果并继续累计',async({page}
   await page.getByRole('button',{name:/01 第 1 课/}).click()
   await expect(page.getByRole('button',{name:/重练本课错题（2 题）/})).toBeVisible()
   await page.getByRole('button',{name:/重练本课错题（2 题）/}).click()
-  for (const answer of ['A：错误','A：错误']) {
+  for (const answer of ['A：は','A：は']) {
     await page.getByRole('button',{name:answer,exact:true}).click()
     await page.getByRole('button',{name:/^提交答案/}).click()
     await page.getByRole('button',{name:/下一题|完成训练/}).click()

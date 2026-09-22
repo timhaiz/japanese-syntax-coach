@@ -1,5 +1,10 @@
 .vercel
 .env*
+.next
+tmp
+*.tsbuildinfo
+.DS_Store
 test-results
 playwright-report
 blob-report
+node_modules

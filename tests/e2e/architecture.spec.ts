@@ -43,6 +43,7 @@ test('AI 接口包含严格的响应结构校验',()=>{
   const analyzeSource=readFileSync(resolve(process.cwd(),'app/api/analyze-answer/route.ts'),'utf8')
   const aiSource=readFileSync(resolve(process.cwd(),'lib/ai.ts'),'utf8')
   expect(analyzeSource).toContain('isAnalysisResult')
+  expect(analyzeSource).toContain('invalid-json')
   expect(analyzeSource).toContain('invalid-response-shape')
   expect(aiSource).toContain('isGradeResult')
 })
