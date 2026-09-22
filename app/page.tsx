@@ -621,7 +621,7 @@ export default function Home() {
     const currentQuestion = submittedQuestion.current
     submittedQuestion.current = null
     setSelectedChoice('')
-    setGraded(true)
+    setGraded(false)
     if (complete && practiceState.mode === 'lesson') {
       const remainingMistakes = practiceState.isReplay
         ? replayMistakesRef.current
