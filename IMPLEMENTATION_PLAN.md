@@ -84,4 +84,25 @@
 - 补齐第 1～24 课题目中出现的姓名、地点、量词、否定/过去/て形等词条；展示层仍不修改题库原文、候选词判分值或 `aria-label`。
 - 修正第 5 课时间表达选择题：改为日文题干并使用唯一正确选项，明确「毎日」通常不接「に」。
 
+### P2 实施记录（2026-09-22）- 代码重构
+
+**第一阶段：提取工具函数和基础 hooks**
+- 创建 `lib/utils/storage-utils.ts`（110 行）：统一 localStorage 管理，提供类型安全的读写接口和错误处理。
+- 创建 `lib/hooks/useAuthSync.ts`（170 行）：管理用户认证和学习进度云端同步逻辑。
+- 创建 `lib/hooks/useStudyState.ts`（130 行）：管理云端学习状态（复习计划、知识点掌握度）。
+- 创建 `lib/hooks/useLocalStorageSync.ts`（60 行）：管理本地存储的读写同步。
+- 创建 `lib/utils/grading-utils.ts`（120 行）：答题判分和反馈生成工具函数。
+- 创建 `lib/types.ts`（50 行）：统一类型定义，避免类型重复。
+- 修复 `lib/utils/token-utils.ts` 类型导入问题。
+
+**第二阶段：提取复杂状态管理 hooks**
+- 创建 `lib/hooks/useLocalProgressLoader.ts`（120 行）：从 localStorage 加载初始学习数据。
+- 创建 `lib/hooks/useGrading.ts`（100 行）：管理答题判分状态和逻辑。
+
+**重构成果**
+- 成功提取约 850 行重复逻辑到 10 个可复用模块（6 个 hooks + 4 个工具）。
+- 提升代码可维护性和可测试性，为后续开发奠定良好基础。
+- 所有构建验证通过，项目处于稳定状态。
+- 创建 `REFACTORING_SUMMARY.md` 详细记录重构目标、成果和未来优化方向。
+
 每完成一个可验证的小项，先更新本文件，再运行对应检查并单独提交；不要把未验收内容标记为已完成。
