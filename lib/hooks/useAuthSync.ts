@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getSupabaseBrowser } from '@/lib/supabase'
 import type { Question } from '@/lib/question-bank'
 import {
@@ -48,6 +48,12 @@ export function useAuthSync(
 
   const currentUserId = useRef('')
   const cloudApplied = useRef(false)
+  const onProgressLoadedRef = useRef(onProgressLoaded)
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    onProgressLoadedRef.current = onProgressLoaded
+  }, [onProgressLoaded])
 
   // 初始化认证状态并监听变化
   useEffect(() => {
@@ -90,7 +96,7 @@ export function useAuthSync(
               )
             : {}
 
-        onProgressLoaded({
+        onProgressLoadedRef.current({
           lessonDone: cloudLessonDone,
           lessonCorrect: cloudLessonCorrect,
           completedLessons: completedFromLessonProgress(
@@ -101,7 +107,7 @@ export function useAuthSync(
           mistakes: normalizeMistakes(progress.mistakes),
         })
       } else {
-        onProgressLoaded({
+        onProgressLoadedRef.current({
           lessonDone: {},
           lessonCorrect: {},
           completedLessons: [],
@@ -115,7 +121,7 @@ export function useAuthSync(
       cloudApplied.current = false
       currentUserId.current = ''
       if (hadAuthenticatedUser) {
-        onProgressLoaded({
+        onProgressLoadedRef.current({
           lessonDone: {},
           lessonCorrect: {},
           completedLessons: [],
@@ -154,14 +160,16 @@ export function useAuthSync(
       mounted = false
       data.subscription.unsubscribe()
     }
-  }, [onProgressLoaded])
+  }, [])
 
   // 同步学习进度到云端
-  const syncProgress = (progress: LearningProgress) => {
+  const syncProgress = useCallback((progress: LearningProgress) => {
     if (!cloudLoaded || !userId) return
 
     const s = getSupabaseBrowser()
     if (!s) return
+
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
 
     const syncedCompleted = completedFromLessonProgress(
       progress.lessonDone,
@@ -169,7 +177,7 @@ export function useAuthSync(
       progress.lessonCorrect,
     )
 
-    const timer = window.setTimeout(() => {
+    syncTimerRef.current = setTimeout(() => {
       void (async () => {
         setSyncState('syncing')
         const { error } = await s.auth.updateUser({
@@ -192,9 +200,11 @@ export function useAuthSync(
         setSyncState('synced')
       })()
     }, 500)
+  }, [cloudLoaded, userId])
 
-    return () => window.clearTimeout(timer)
-  }
+  useEffect(() => () => {
+    if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
+  }, [])
 
   const retrySyncNow = () => {
     setSyncRetry((v) => v + 1)
