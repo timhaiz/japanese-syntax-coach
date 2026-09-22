@@ -21,7 +21,7 @@ import { createMixedReviewSet, prioritizeReviewSet } from '@/lib/review-set'
 import { BottomNav } from '@/components/BottomNav'
 import { AppHeader } from '@/components/AppHeader'
 import { HomeHero } from '@/components/HomeHero'
-import { GrammarList } from '@/components/GrammarList'
+import { GrammarCarousel } from '@/components/GrammarCarousel'
 import { ProgressSummary } from '@/components/ProgressSummary'
 import { CurrentLessonCard } from '@/components/CurrentLessonCard'
 import { LessonGrid } from '@/components/LessonGrid'
@@ -722,7 +722,10 @@ export default function Home() {
             learnerName={learnerName}
             lessonId={currentLesson.id}
             progress={currentLesson.progress}
-            onStart={() => startLessonPractice(nextLessonIndex)}
+            onStart={() => {
+              setActive(nextLessonIndex)
+              setTab('lesson')
+            }}
             actionLabel={
               allLessonsCompleted && currentLessonMistakeCount === 0
                 ? '全部课程已完成'
@@ -796,18 +799,24 @@ export default function Home() {
             </b>
             <small>{lessonUnlockMessage}</small>
           </div>
-          <GrammarList grammar={selectedLesson.grammar} />
-          <button
-            className="primary wide"
-            onClick={() => startLessonPractice(active)}
-            disabled={activeLessonDone >= LESSON_QUESTION_LIMIT && mistakesForLesson(mistakes, selectedLesson.id).length === 0}
-          >
-            {activeLessonDone >= LESSON_QUESTION_LIMIT && mistakesForLesson(mistakes, selectedLesson.id).length > 0
-              ? `重练本课错题（${mistakesForLesson(mistakes, selectedLesson.id).length} 题）`
-              : activeLessonDone >= LESSON_QUESTION_LIMIT
-                ? '本课已完成，无错题需要重练'
-                : `开始整课练习（${LESSON_QUESTION_LIMIT} 题）`} <span>→</span>
-          </button>
+          <GrammarCarousel
+            key={selectedLesson.id}
+            lessonId={selectedLesson.id}
+            grammar={selectedLesson.grammar}
+            onStartPractice={() => startLessonPractice(active)}
+            practiceDisabled={
+              activeLessonDone >= LESSON_QUESTION_LIMIT &&
+              mistakesForLesson(mistakes, selectedLesson.id).length === 0
+            }
+            practiceLabel={
+              activeLessonDone >= LESSON_QUESTION_LIMIT &&
+              mistakesForLesson(mistakes, selectedLesson.id).length > 0
+                ? `重练本课错题（${mistakesForLesson(mistakes, selectedLesson.id).length} 题）`
+                : activeLessonDone >= LESSON_QUESTION_LIMIT
+                  ? '本课已完成，无错题需要重练'
+                  : `开始整课练习（${LESSON_QUESTION_LIMIT} 题）`
+            }
+          />
           {active < displayedLessons.length - 1 && (
             <div className="next-preview">
               <b>下一课预告：第 {selectedLesson.id + 1} 课</b>

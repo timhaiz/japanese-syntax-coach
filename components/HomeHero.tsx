@@ -42,7 +42,7 @@ export function HomeHero({
         </h1>
         <p className="muted">每课 20 道主动输出题：先看句型骨架，再练到能快速组织日语。</p>
         <button className="primary" onClick={onStart} disabled={actionDisabled}>
-          {actionLabel ?? `开始第 ${lessonId} 课`} <span>→</span>
+          {actionLabel ?? `学习第 ${lessonId} 课句型`} <span>→</span>
         </button>
       </div>
       <div className="orb" style={orbStyle}>
