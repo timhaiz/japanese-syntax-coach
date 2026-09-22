@@ -3,9 +3,6 @@ import { useEffect, useRef, useState } from 'react'
 import { courses } from '@/lib/courses'
 import { getSupabaseBrowser } from '@/lib/supabase'
 import { useStreamingAnalysis } from '@/lib/hooks/useStreamingAnalysis'
-import { useAuthSync } from '@/lib/hooks/useAuthSync'
-import { useStudyState } from '@/lib/hooks/useStudyState'
-import { useLocalProgressLoader } from '@/lib/hooks/useLocalProgressLoader'
 import {
   isAnswerAccepted,
   normalizeAnswer,
@@ -43,24 +40,15 @@ export default function Home() {
   const [tab, setTab] = useState('home')
   const [active, setActive] = useState(0)
   const [graded, setGraded] = useState(false)
-
-  // 使用 useAuthSync 管理认证和同步
-  const {
-    authState,
-    currentUserId,
-    cloudApplied,
-    syncProgress,
-    retrySyncNow,
-  } = useAuthSync((progress) => {
-    setLessonDone(progress.lessonDone)
-    setLessonCorrect(progress.lessonCorrect)
-    setCompletedLessons(progress.completedLessons)
-    setMistakes(progress.mistakes)
-  })
-
-  const { userId, userEmail, registeredAt, cloudLoaded, syncState } = authState
+  const [userEmail, setUserEmail] = useState('')
+  const [registeredAt, setRegisteredAt] = useState('')
+  const [userId, setUserId] = useState('')
+  const [cloudLoaded, setCloudLoaded] = useState(false)
+  const [syncState, setSyncState] = useState<'local' | 'syncing' | 'synced' | 'failed'>('local')
+  const [syncRetry, setSyncRetry] = useState(0)
+  const currentUserId = useRef('')
   const loadedStudyUserId = useRef('')
-
+  const cloudApplied = useRef(false)
   const [practiceMode, setPracticeMode] = useState<'lesson' | 'mistakes' | 'mixed'>('lesson')
   const [completedLessons, setCompletedLessons] = useState<number[]>([])
   const [lessonDone, setLessonDone] = useState<Record<number, number>>({})
@@ -76,6 +64,9 @@ export default function Home() {
   const [gradeExplanation, setGradeExplanation] = useState('')
   const [gradeSource, setGradeSource] = useState<'ai' | 'rule' | null>(null)
   const { analysis, loading: analysisLoading, preview: analysisPreview, startAnalysis, resetAnalysis } = useStreamingAnalysis()
+  const [completedLoaded, setCompletedLoaded] = useState(false)
+  const [lessonLoaded, setLessonLoaded] = useState(false)
+  const [mistakesLoaded, setMistakesLoaded] = useState(false)
   const [studyStateLoaded, setStudyStateLoaded] = useState(false)
   const [studyStateError, setStudyStateError] = useState('')
   const [studyStateRetry, setStudyStateRetry] = useState(0)
@@ -101,49 +92,155 @@ export default function Home() {
   const [selectedTokens, setSelectedTokens] = useState<WordToken[]>([])
   const [fullLessonProgress, setFullLessonProgress] = useState(0)
   const [sessionProgress, setSessionProgress] = useState(0)
-
-  // 使用 useLocalProgressLoader 加载本地进度
-  const {
-    lessonDone: localLessonDone,
-    lessonCorrect: localLessonCorrect,
-    completedLessons: localCompletedLessons,
-    mistakes: localMistakes,
-    completedLoaded,
-    lessonLoaded,
-    mistakesLoaded,
-  } = useLocalProgressLoader(cloudLoaded, cloudApplied.current, Boolean(currentUserId.current))
-
-  // 同步本地加载的数据到状态
   useEffect(() => {
-    if (!cloudApplied.current && completedLoaded) {
-      setCompletedLessons(localCompletedLessons)
+    const s = getSupabaseBrowser()
+    if (!s) {
+      setCloudLoaded(true)
+      return
     }
-  }, [completedLoaded, localCompletedLessons])
-
-  useEffect(() => {
-    if (!cloudApplied.current && lessonLoaded) {
-      setLessonDone(localLessonDone)
-      setLessonCorrect(localLessonCorrect)
+    let mounted = true
+    const applyUser = (
+      user: NonNullable<Awaited<ReturnType<typeof s.auth.getUser>>['data']['user']>,
+    ) => {
+      if (!mounted) return
+      cloudApplied.current = true
+      loadedStudyUserId.current = ''
+      setStudyStateLoaded(false)
+      setSyncState('synced')
+      currentUserId.current = user.id
+      setUserId(user.id)
+      setUserEmail(user.email || '')
+      setRegisteredAt(user.created_at || '')
+      const progress = user.user_metadata?.learning_progress
+      if (progress) {
+        const cloudLessonDone =
+          progress.lessonDone && typeof progress.lessonDone === 'object'
+            ? Object.fromEntries(
+                Object.entries(progress.lessonDone as Record<number, number>).map(([index, count]) => [
+                  index,
+                  clampLessonAnswered(count),
+                ]),
+              )
+            : {}
+        const cloudLessonCorrect =
+          progress.lessonCorrect && typeof progress.lessonCorrect === 'object'
+            ? Object.fromEntries(
+                Object.entries(progress.lessonCorrect as Record<number, number>).map(([index, count]) => [
+                  index,
+                  clampLessonCorrect(count),
+                ]),
+              )
+            : {}
+        setLessonDone(cloudLessonDone)
+        setLessonCorrect(cloudLessonCorrect)
+        setCompletedLessons(
+          completedFromLessonProgress(
+            cloudLessonDone,
+            progress.completedLessons,
+            cloudLessonCorrect,
+          ),
+        )
+        setMistakes(normalizeMistakes(progress.mistakes))
+      } else {
+        setLessonDone({})
+        setLessonCorrect({})
+        setCompletedLessons([])
+        setMistakes([])
+      }
+      setCloudLoaded(true)
     }
-  }, [lessonLoaded, localLessonDone, localLessonCorrect])
-
-  useEffect(() => {
-    if (!cloudApplied.current && mistakesLoaded) {
-      setMistakes(localMistakes)
-    }
-  }, [mistakesLoaded, localMistakes])
-
-  // 云端进度同步
-  useEffect(() => {
-    if (!cloudLoaded || !studyStateLoaded || !userId) return
-    syncProgress({
-      lessonDone,
-      lessonCorrect,
-      completedLessons,
-      mistakes,
+    s.auth.getUser().then(({ data }) => {
+      if (!mounted) return
+      if (data.user) applyUser(data.user)
+      else {
+        const hadAuthenticatedUser = Boolean(currentUserId.current)
+        cloudApplied.current = false
+        currentUserId.current = ''
+        loadedStudyUserId.current = ''
+        setStudyStateLoaded(false)
+        if (hadAuthenticatedUser) {
+          setLessonDone({})
+          setLessonCorrect({})
+          setCompletedLessons([])
+          setMistakes([])
+        }
+        setUserId('')
+        setUserEmail('')
+        setRegisteredAt('')
+        setSyncState('local')
+        setCloudLoaded(true)
+      }
     })
-  }, [cloudLoaded, studyStateLoaded, userId, lessonDone, lessonCorrect, completedLessons, mistakes, syncProgress])
-
+    const { data } = s.auth.onAuthStateChange((event, session) => {
+      const user = session?.user
+      if (!user) {
+        const hadAuthenticatedUser = Boolean(currentUserId.current)
+        cloudApplied.current = false
+        currentUserId.current = ''
+        loadedStudyUserId.current = ''
+        setStudyStateLoaded(false)
+        if (hadAuthenticatedUser) {
+          setLessonDone({})
+          setLessonCorrect({})
+          setCompletedLessons([])
+          setMistakes([])
+        }
+        setUserId('')
+        setUserEmail('')
+        setRegisteredAt('')
+        setSyncState('local')
+        setCloudLoaded(true)
+        return
+      }
+      if (event === 'SIGNED_IN' && user.id !== currentUserId.current) {
+        setCloudLoaded(false)
+        applyUser(user)
+      }
+    })
+    return () => {
+      mounted = false
+      data.subscription.unsubscribe()
+    }
+  }, [])
+  useEffect(() => {
+    if (!cloudLoaded || !studyStateLoaded || !userId || loadedStudyUserId.current !== userId) return
+    const s = getSupabaseBrowser()
+    if (!s) return
+    const syncedCompleted = completedFromLessonProgress(lessonDone, completedLessons, lessonCorrect)
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        setSyncState('syncing')
+        const { error } = await s.auth.updateUser({
+          data: {
+            learning_progress: {
+              version: 2,
+              lessonDone,
+              lessonCorrect,
+              completedLessons: syncedCompleted,
+              mistakes,
+              updatedAt: new Date().toISOString(),
+            },
+          },
+        })
+        if (error) {
+          console.error('Failed to sync learning progress', error)
+          setSyncState('failed')
+          return
+        }
+        setSyncState('synced')
+      })()
+    }, 500)
+    return () => window.clearTimeout(timer)
+  }, [
+    cloudLoaded,
+    studyStateLoaded,
+    userId,
+    lessonDone,
+    lessonCorrect,
+    completedLessons,
+    mistakes,
+    syncRetry,
+  ])
   useEffect(() => {
       if (!userId) return
     let cancelled = false
@@ -204,34 +301,118 @@ export default function Home() {
       cancelled = true
     }
   }, [userId, studyStateRetry])
-
-  // 当 localLessonDone 加载完成后，同步到主状态
   useEffect(() => {
-    if (lessonLoaded && localLessonDone) {
-      setLessonDone(localLessonDone)
+    if (!cloudLoaded) return
+    if (cloudApplied.current) {
+      setCompletedLoaded(true)
+      return
     }
-  }, [lessonLoaded, localLessonDone])
-
-  // 当 localLessonCorrect 加载完成后，同步到主状态
+    if (getSupabaseBrowser() && !currentUserId.current) {
+      setCompletedLessons([])
+      setCompletedLoaded(true)
+      return
+    }
+    const saved = localStorage.getItem('syntax-coach-completed-lessons')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed))
+          setCompletedLessons(
+            parsed.filter((n): n is number => Number.isInteger(n) && n >= 0 && n < courses.length),
+          )
+      } catch {
+        localStorage.removeItem('syntax-coach-completed-lessons')
+      }
+    }
+    setCompletedLoaded(true)
+  }, [cloudLoaded])
   useEffect(() => {
-    if (lessonLoaded && localLessonCorrect) {
-      setLessonCorrect(localLessonCorrect)
+    if (!cloudLoaded) return
+    if (cloudApplied.current) {
+      setLessonLoaded(true)
+      return
     }
-  }, [lessonLoaded, localLessonCorrect])
-
-  // 当 localCompletedLessons 加载完成后，同步到主状态
+    if (getSupabaseBrowser() && !currentUserId.current) {
+      setLessonDone({})
+      setLessonCorrect({})
+      setLessonLoaded(true)
+      return
+    }
+    const saved = localStorage.getItem('syntax-coach-lesson-progress')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (parsed && typeof parsed === 'object') {
+          const normalized = Object.fromEntries(
+            Object.entries(parsed)
+              .filter(
+                ([index, count]) =>
+                  Number.isInteger(Number(index)) &&
+                  Number(index) >= 0 &&
+                  Number(index) < courses.length &&
+                  typeof count === 'number',
+              )
+              .map(([index, count]) => [
+                Number(index),
+                clampLessonAnswered(count),
+              ]),
+          )
+          setLessonDone(normalized)
+          setCompletedLessons((value) => completedFromLessonProgress(normalized, value))
+        }
+      } catch {
+        localStorage.removeItem('syntax-coach-lesson-progress')
+      }
+    }
+    const savedCorrect = localStorage.getItem('syntax-coach-lesson-correct')
+    if (savedCorrect) {
+      try {
+        const parsed = JSON.parse(savedCorrect)
+        if (parsed && typeof parsed === 'object') {
+          const normalizedCorrect = Object.fromEntries(
+            Object.entries(parsed)
+              .filter(
+                ([index, count]) =>
+                  Number.isInteger(Number(index)) &&
+                  Number(index) >= 0 &&
+                  Number(index) < courses.length &&
+                  typeof count === 'number',
+              )
+              .map(([index, count]) => [
+                Number(index),
+                Math.max(0, Math.min(LESSON_QUESTION_LIMIT, count as number)),
+              ]),
+          )
+          setLessonCorrect(normalizedCorrect)
+        }
+      } catch {
+        localStorage.removeItem('syntax-coach-lesson-correct')
+      }
+    }
+    setLessonLoaded(true)
+  }, [cloudLoaded])
   useEffect(() => {
-    if (completedLoaded && localCompletedLessons) {
-      setCompletedLessons(localCompletedLessons)
+    if (!cloudLoaded) return
+    if (cloudApplied.current) {
+      setMistakesLoaded(true)
+      return
     }
-  }, [completedLoaded, localCompletedLessons])
-
-  // 当 localMistakes 加载完成后，同步到主状态
-  useEffect(() => {
-    if (mistakesLoaded && localMistakes) {
-      setMistakes(localMistakes)
+    if (getSupabaseBrowser() && !currentUserId.current) {
+      setMistakes([])
+      setMistakesLoaded(true)
+      return
     }
-  }, [mistakesLoaded, localMistakes])
+    const saved = localStorage.getItem('syntax-coach-mistakes')
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        setMistakes(normalizeMistakes(parsed))
+      } catch {
+        localStorage.removeItem('syntax-coach-mistakes')
+      }
+    }
+    setMistakesLoaded(true)
+  }, [cloudLoaded])
   useEffect(() => {
     if (mistakesLoaded) localStorage.setItem('syntax-coach-mistakes', JSON.stringify(mistakes))
   }, [mistakes, mistakesLoaded])
@@ -965,7 +1146,7 @@ export default function Home() {
                     ? '学习记录已同步到云端。'
                     : '仅保存在当前设备。'}
               {syncState === 'failed' && (
-                <button onClick={() => retrySyncNow()}>重试</button>
+                <button onClick={() => setSyncRetry((value) => value + 1)}>重试</button>
               )}
             </div>
           )}
