@@ -40,15 +40,23 @@ export function PracticeFeedback({
   return (
     <div className={'feedback ' + (answerMatches ? 'ok' : 'warn')}>
       <b>{answerMatches ? '✓ ' + verdictLabel : '△ ' + verdictLabel}</b>
-      <p>你的答案：{responseText ? withKana(responseText) : '未作答'}</p>
-      <p>参考答案：{withKana(expectedAnswerText)}</p>
-      {gradeExplanation && (
-        <small>
-          {gradeSource === 'typesafe' ? 'TypeSafe AI 批改：' : gradeSource === 'ai' ? 'AI 批改：' : '规则批改：'}
-          {gradeExplanation}
-        </small>
+      {!answerMatches && (
+        <>
+          <p>你的答案：{responseText ? withKana(responseText) : '未作答'}</p>
+          <p>参考答案：{withKana(expectedAnswerText)}</p>
+          {gradeExplanation && (
+            <small>
+              {gradeSource === 'typesafe'
+                ? 'TypeSafe AI 批改：'
+                : gradeSource === 'ai'
+                  ? 'AI 批改：'
+                  : '规则批改：'}
+              {gradeExplanation}
+            </small>
+          )}
+          <small>提示：{question.hint}</small>
+        </>
       )}
-      {!answerMatches && <small>提示：{question.hint}</small>}
       {!analysis && (
         <button className="analysis-button" onClick={onAnalyze} disabled={analysisLoading}>
           {analysisLoading ? '分析中…' : 'AI 分析记忆方法'}
