@@ -1,5 +1,7 @@
 'use client'
 
+import { speakJapanese } from '@/lib/speech'
+
 type Grammar = {
   pattern: string
   meaning: string
@@ -37,7 +39,7 @@ export function GrammarList({ grammar }: { grammar: Grammar[] }) {
             type="button"
             aria-label={`朗读句型 ${g.pattern}`}
             title="朗读例句"
-            onClick={() => speechSynthesis?.speak(new SpeechSynthesisUtterance(g.example))}
+            onClick={() => speakJapanese(g.example)}
           >
             🔊
           </button>

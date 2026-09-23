@@ -2,19 +2,7 @@
 
 import { useRef, useState } from 'react'
 import type { GrammarPoint } from '@/lib/courses'
-
-function speakJapanese(text: string) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
-  const synthesis = window.speechSynthesis
-  const utterance = new SpeechSynthesisUtterance(text)
-  utterance.lang = 'ja-JP'
-  const japaneseVoice = synthesis
-    .getVoices()
-    .find((voice) => voice.lang.toLowerCase().startsWith('ja'))
-  if (japaneseVoice) utterance.voice = japaneseVoice
-  synthesis.cancel()
-  synthesis.speak(utterance)
-}
+import { speakJapanese } from '@/lib/speech'
 
 type GrammarCarouselProps = {
   lessonId: number
