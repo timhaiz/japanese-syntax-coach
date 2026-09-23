@@ -114,6 +114,7 @@ export default function Home() {
   )
 
   const [mixedQuestions, setMixedQuestions] = useState<Question[]>([])
+  const [mixedPracticeKind, setMixedPracticeKind] = useState<'due' | 'comprehensive'>('due')
   const [dueQuestionIds, setDueQuestionIds] = useState<string[]>([])
   const [knowledgePointMastery, setKnowledgePointMastery] = useState<Record<string, number>>({})
   const [learningMetrics, setLearningMetrics] = useState<{correctStreak:number;errorRate:number;forgettingRate?:number;topErrorTags:{tag:string;count:number}[]}>({correctStreak:0,errorRate:0,topErrorTags:[]})
@@ -645,6 +646,7 @@ export default function Home() {
   const startMixedPractice = useCallback(() => {
     const questions = prioritizeReviewSet(createMixedReviewSet(effectiveCompletedLessons, 20), knowledgePointMastery, dueQuestionIds)
     if (questions.length) {
+      setMixedPracticeKind('comprehensive')
       initializePractice({ mode: 'mixed', isFullLesson: false, questions })
     }
   }, [effectiveCompletedLessons, knowledgePointMastery, dueQuestionIds, initializePractice])
@@ -656,6 +658,7 @@ export default function Home() {
       dueQuestions.map((question) => question.id),
     ).slice(0, 20)
     if (!questions.length) return
+    setMixedPracticeKind('due')
     initializePractice({ mode: 'mixed', isFullLesson: false, questions })
   }, [dueQuestions, knowledgePointMastery, initializePractice])
 
@@ -908,7 +911,7 @@ export default function Home() {
               {practiceState.mode === 'mistakes'
                 ? '错题练习'
                 : practiceState.mode === 'mixed'
-                  ? '到期复习'
+                  ? mixedPracticeKind === 'comprehensive' ? '综合混练' : '到期复习'
                   : `第 ${selectedLesson.id} 课 · 练习`}
             </span>
             <b>
