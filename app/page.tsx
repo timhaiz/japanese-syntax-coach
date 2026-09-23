@@ -905,7 +905,11 @@ export default function Home() {
               × 退出
             </button>
             <span>
-              {practiceState.mode === 'mistakes' ? '错题练习' : `第 ${selectedLesson.id} 课 · 练习`}
+              {practiceState.mode === 'mistakes'
+                ? '错题练习'
+                : practiceState.mode === 'mixed'
+                  ? '到期复习'
+                  : `第 ${selectedLesson.id} 课 · 练习`}
             </span>
             <b>
               {Math.min(progress + 1, sessionLimit)} / {sessionLimit}
