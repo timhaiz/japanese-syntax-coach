@@ -475,7 +475,14 @@ export default function Home() {
     if (progressUpdates.lessonCorrect) setLessonCorrect(progressUpdates.lessonCorrect)
     if (progressUpdates.completedLessons) setCompletedLessons(progressUpdates.completedLessons)
     if (progressUpdates.mistakes) setMistakes(progressUpdates.mistakes)
-    if (progressUpdates.dueQuestionIds) setDueQuestionIds(progressUpdates.dueQuestionIds)
+    if (progressUpdates.dueQuestionIds && practiceState.mode !== 'mixed') {
+      setDueQuestionIds(progressUpdates.dueQuestionIds)
+    }
+    // 使用函数式更新兜底，避免答题回调捕获旧的到期题队列，导致
+    // 完成复习后首页仍保留刚刚答过的最后一题。
+    if (practiceState.mode === 'mixed') {
+      setDueQuestionIds((value) => value.filter((id) => id !== question.id))
+    }
 
     if (practiceState.isReplay) {
       if (gradeResult.correct) {

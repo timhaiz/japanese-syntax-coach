@@ -226,8 +226,9 @@ export function useAnswerSubmission() {
       context.replayMode
     )
 
-    // 更新复习队列（混合模式）
-    if (context.practiceMode === 'mixed' && localMatches && currentProgress.dueQuestionIds) {
+    // 更新复习队列（混合模式）。本轮已经作答的题目不应在用户
+    // 返回首页后立刻再次出现；服务端仍会根据答题结果保存下一次复习时间。
+    if (context.practiceMode === 'mixed' && currentProgress.dueQuestionIds) {
       progressUpdates.dueQuestionIds = currentProgress.dueQuestionIds.filter(
         (id) => id !== question.id
       )
