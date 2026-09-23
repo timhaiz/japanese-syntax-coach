@@ -48,6 +48,7 @@ const STUDY_STATE_CACHE_TTL_MS = 30_000
 export default function Home() {
   const [tab, setTab] = useState('home')
   const [active, setActive] = useState(0)
+  const hasStartedPracticeRef = useRef(false)
 
   // 使用 useAuthSync 管理认证和同步
   const {
@@ -65,6 +66,10 @@ export default function Home() {
 
   const { userId, userEmail, registeredAt, cloudLoaded, syncState } = authState
   const loadedStudyUserId = useRef('')
+
+  useEffect(() => {
+    hasStartedPracticeRef.current = false
+  }, [userId])
 
   // 使用新的 hooks 管理状态
   const {
@@ -246,6 +251,9 @@ export default function Home() {
         }
         const state = (await response.json()) as Parameters<typeof applyStudyState>[0]
         if (cancelled) return
+        // 请求可能在用户开始答题后才返回；旧的云端快照不能覆盖
+        // 当前练习过程中已经更新的本地队列和进度。
+        if (hasStartedPracticeRef.current) return
         applyStudyState(state)
         try {
           sessionStorage.setItem(
@@ -556,6 +564,7 @@ export default function Home() {
     isFullLesson: boolean
     questions?: Question[]
   }) => {
+    hasStartedPracticeRef.current = true
     submittedQuestion.current = null
     replayMistakesRef.current = []
     setSelectedChoice('')
