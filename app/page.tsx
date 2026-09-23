@@ -43,6 +43,8 @@ import { explainAnswerDifference, errorTagsForAnswer, knowledgeTagsForQuestion }
 import { createWordTokens, tokenOrder } from '@/lib/utils/token-utils'
 
 const courseLessons = courses.map((c) => ({ ...c, progress: 0, locked: false }))
+const STUDY_STATE_CACHE_TTL_MS = 30_000
+
 export default function Home() {
   const [tab, setTab] = useState('home')
   const [active, setActive] = useState(0)
@@ -177,6 +179,64 @@ export default function Home() {
     let cancelled = false
     setStudyStateLoaded(false)
     setStudyStateError('')
+
+    const applyStudyState = (state: {
+      dueQuestionIds?: unknown
+      knowledgePoints?: Array<{ knowledge_point: string; mastery: number }>
+      metrics?: { correctStreak: number; errorRate: number; forgettingRate?: number; topErrorTags: { tag: string; count: number }[] }
+      lessons?: Array<{ lesson_id: number; answered_count: number; correct_count?: number; completed_at: string | null }>
+    }) => {
+      setDueQuestionIds(Array.isArray(state.dueQuestionIds) ? state.dueQuestionIds.filter((id): id is string => typeof id === 'string') : [])
+      setKnowledgePointMastery(
+        Object.fromEntries(
+          (state.knowledgePoints || []).map((item) => [item.knowledge_point, Number(item.mastery) || 0]),
+        ),
+      )
+      if (state.metrics) setLearningMetrics(state.metrics)
+      const persistedLessons = Object.fromEntries(
+        (state.lessons || []).map((lesson) => [
+          lesson.lesson_id - 1,
+          clampLessonAnswered(lesson.answered_count),
+        ]),
+      )
+      const persistedCorrect = Object.fromEntries(
+        (state.lessons || [])
+          .filter((lesson) => typeof lesson.correct_count === 'number')
+          .map((lesson) => [lesson.lesson_id - 1, clampLessonCorrect(lesson.correct_count as number)]),
+      )
+      if (Object.keys(persistedLessons).length) {
+        setLessonDone(persistedLessons)
+        if (Object.keys(persistedCorrect).length) setLessonCorrect(persistedCorrect)
+        setCompletedLessons(
+          completedFromLessonProgress(
+            persistedLessons,
+            (state.lessons || [])
+              .filter((lesson) => lesson.completed_at)
+              .map((lesson) => lesson.lesson_id - 1),
+            persistedCorrect,
+          ),
+        )
+      }
+    }
+
+    // 同一标签页短时间刷新时直接使用缓存，避免重复请求和整页等待。
+    if (studyStateRetry === 0 && typeof window !== 'undefined') {
+      try {
+        const cached = JSON.parse(
+          sessionStorage.getItem(`syntax-coach-study-state:${userId}`) || 'null',
+        ) as { fetchedAt?: number; state?: Parameters<typeof applyStudyState>[0] } | null
+        if (cached?.state && typeof cached.fetchedAt === 'number' && Date.now() - cached.fetchedAt < STUDY_STATE_CACHE_TTL_MS) {
+          applyStudyState(cached.state)
+          setStudyStateLoaded(true)
+          return () => {
+            cancelled = true
+          }
+        }
+      } catch {
+        // 缓存损坏时忽略，继续读取云端状态。
+      }
+    }
+
     void (async () => {
       try {
         const response = await fetch('/api/study-state')
@@ -184,39 +244,16 @@ export default function Home() {
           if (!cancelled) setStudyStateError('云端学习记录暂时无法读取，将继续使用当前设备数据。')
           return
         }
-        const state = await response.json()
+        const state = (await response.json()) as Parameters<typeof applyStudyState>[0]
         if (cancelled) return
-        setDueQuestionIds(Array.isArray(state.dueQuestionIds) ? state.dueQuestionIds : [])
-        setKnowledgePointMastery(Object.fromEntries((state.knowledgePoints || []).map((item: { knowledge_point: string; mastery: number }) => [item.knowledge_point, Number(item.mastery) || 0])))
-        if (state.metrics) setLearningMetrics(state.metrics)
-        const persistedLessons = Object.fromEntries(
-          (state.lessons || []).map((lesson: { lesson_id: number; answered_count: number }) => [
-            lesson.lesson_id - 1,
-            clampLessonAnswered(lesson.answered_count),
-          ]),
-        )
-        const persistedCorrect = Object.fromEntries(
-          (state.lessons || [])
-            .filter(
-              (lesson: { correct_count?: number }) => typeof lesson.correct_count === 'number',
-            )
-                .map((lesson: { lesson_id: number; correct_count: number }) => [
-                  lesson.lesson_id - 1,
-                  clampLessonCorrect(lesson.correct_count),
-                ]),
-        )
-        if (Object.keys(persistedLessons).length) {
-          setLessonDone(persistedLessons)
-          if (Object.keys(persistedCorrect).length) setLessonCorrect(persistedCorrect)
-          setCompletedLessons(
-            completedFromLessonProgress(
-              persistedLessons,
-              (state.lessons || [])
-                .filter((lesson: { completed_at: string | null }) => lesson.completed_at)
-                .map((lesson: { lesson_id: number }) => lesson.lesson_id - 1),
-              persistedCorrect,
-            ),
+        applyStudyState(state)
+        try {
+          sessionStorage.setItem(
+            `syntax-coach-study-state:${userId}`,
+            JSON.stringify({ fetchedAt: Date.now(), state }),
           )
+        } catch {
+          // Storage may be disabled or full; the in-memory state remains valid.
         }
       } catch {
         if (!cancelled) setStudyStateError('云端学习记录暂时无法读取，将继续使用当前设备数据。')
@@ -671,7 +708,7 @@ export default function Home() {
   )
   const allLessonsCompleted = effectiveCompletedLessons.length === displayedLessons.length
   const currentLessonMistakeCount = mistakesForLesson(mistakes, currentLesson.id).length
-  if (!cloudLoaded || (userId && !studyStateLoaded)) {
+  if (!cloudLoaded) {
     return (
       <main className="shell loading-shell" aria-busy="true" aria-live="polite">
         <div className="loading-card">
