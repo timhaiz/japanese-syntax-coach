@@ -137,6 +137,25 @@ export default function Home() {
   const [availableTokens, setAvailableTokens] = useState<WordToken[]>([])
   const [selectedTokens, setSelectedTokens] = useState<WordToken[]>([])
 
+  const dueQuestions = useMemo(() => {
+    const seen = new Set<string>()
+    return dueQuestionIds
+      .map((id) => questionForId(id))
+      .filter((question): question is Question => {
+        if (!question || seen.has(question.id)) return false
+        seen.add(question.id)
+        return true
+      })
+  }, [dueQuestionIds])
+
+  // 历史数据中可能存在已经从本地题库移除的题目 ID，不能让它们
+  // 继续占用首页的复习数量，否则会出现“1 题”但按钮无法点击。
+  useEffect(() => {
+    const validIds = dueQuestions.map((question) => question.id)
+    if (validIds.length === dueQuestionIds.length && validIds.every((id, index) => id === dueQuestionIds[index])) return
+    setDueQuestionIds(validIds)
+  }, [dueQuestions, dueQuestionIds])
+
   // 使用 useLocalProgressLoader 加载本地进度
   const {
     lessonDone: localLessonDone,
@@ -632,13 +651,13 @@ export default function Home() {
 
   const startDueReview = useCallback(() => {
     const questions = prioritizeReviewSet(
-      dueQuestionIds.map((id) => questionForId(id)).filter((item): item is Question => Boolean(item)),
+      dueQuestions,
       knowledgePointMastery,
-      dueQuestionIds,
+      dueQuestions.map((question) => question.id),
     ).slice(0, 20)
     if (!questions.length) return
     initializePractice({ mode: 'mixed', isFullLesson: false, questions })
-  }, [dueQuestionIds, knowledgePointMastery, initializePractice])
+  }, [dueQuestions, knowledgePointMastery, initializePractice])
 
   const nextQuestion = useCallback(() => {
     const complete = progress >= sessionLimit - 1
@@ -791,9 +810,9 @@ export default function Home() {
               开始综合混练（已完成课程） <span>→</span>
             </button>
           )}
-          {dueQuestionIds.length > 0 && (
+          {dueQuestions.length > 0 && (
             <button className="outline wide" onClick={startDueReview}>
-              开始今日到期复习（{Math.min(dueQuestionIds.length, 20)} 题） <span>→</span>
+              开始今日到期复习（{Math.min(dueQuestions.length, 20)} 题） <span>→</span>
             </button>
           )}
           <ProgressSummary
