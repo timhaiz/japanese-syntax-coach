@@ -1,6 +1,5 @@
 'use client'
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { courses } from '@/lib/courses'
 import { getSupabaseBrowser } from '@/lib/supabase'
 import { useStreamingAnalysis } from '@/lib/hooks/useStreamingAnalysis'
 import { useAuthSync } from '@/lib/hooks/useAuthSync'
@@ -13,8 +12,6 @@ import { useAnswerSubmission } from '@/lib/hooks/useAnswerSubmission'
 import {
   isAnswerAccepted,
   normalizeAnswer,
-  questionsForLesson,
-  questionForId,
   type Question,
 } from '@/lib/question-bank'
 import { createMixedReviewSet, prioritizeReviewSet } from '@/lib/review-set'
@@ -28,6 +25,13 @@ import { LessonGrid } from '@/components/LessonGrid'
 import { ProfileOverview } from '@/components/ProfileOverview'
 import { AnswerOptions, type WordToken } from '@/components/AnswerOptions'
 import { PracticeFeedback, type AnswerAnalysis } from '@/components/PracticeFeedback'
+import { TextbookSwitcher, type TextbookOption } from '@/components/TextbookSwitcher'
+import {
+  textbookQuestionsForLesson,
+  textbookToCourseLessons,
+  type TextbookPackage,
+} from '@/lib/textbooks'
+import { useTextbookCatalog } from '@/lib/hooks/useTextbookCatalog'
 import { withKana } from '@/lib/kana'
 import {
   LESSON_QUESTION_LIMIT,
@@ -35,17 +39,103 @@ import {
   clampLessonCorrect,
   normalizeMistakes,
   mistakesForLesson,
-  coreQuestionsForLesson,
   contiguousCompletedLessons,
   completedFromLessonProgress,
 } from '@/lib/utils/lesson-utils'
 import { explainAnswerDifference, errorTagsForAnswer, knowledgeTagsForQuestion } from '@/lib/utils/answer-utils'
 import { createWordTokens, tokenOrder } from '@/lib/utils/token-utils'
+import {
+  completedLessonsStorage,
+  lessonCorrectStorage,
+  lessonProgressStorage,
+  mistakesStorage,
+} from '@/lib/utils/storage-utils'
 
-const courseLessons = courses.map((c) => ({ ...c, progress: 0, locked: false }))
 const STUDY_STATE_CACHE_TTL_MS = 30_000
-
 export default function Home() {
+  const {
+    selectedTextbook,
+    selectedId,
+    textbookOptions,
+    uploadError,
+    selectTextbook,
+    importTextbook,
+    refreshProgress,
+  } = useTextbookCatalog()
+
+  return (
+    <TextbookHome
+      key={selectedTextbook.textbook.id}
+      textbook={selectedTextbook}
+      textbookOptions={textbookOptions}
+      selectedTextbookId={selectedTextbook.textbook.id}
+      uploadError={uploadError}
+      onSelectTextbook={selectTextbook}
+      onUploadTextbook={importTextbook}
+      onProgressChange={refreshProgress}
+    />
+  )
+}
+
+function TextbookHome({
+  textbook,
+  textbookOptions,
+  selectedTextbookId,
+  uploadError,
+  onSelectTextbook,
+  onUploadTextbook,
+  onProgressChange,
+}: {
+  textbook: TextbookPackage
+  textbookOptions: TextbookOption[]
+  selectedTextbookId: string
+  uploadError: string
+  onSelectTextbook: (id: string) => void
+  onUploadTextbook: (file: File) => void
+  onProgressChange: (id: string, questionCounts: number[]) => void
+}) {
+  const textbookData = textbook.textbook
+  const sourceLessons = useMemo(() => textbookToCourseLessons(textbook), [textbook])
+  const courses = useMemo(
+    () => sourceLessons.map((lesson, index) => ({ ...lesson, id: index + 1 })),
+    [sourceLessons],
+  )
+  const courseLessons = useMemo(
+    () => courses.map((course) => ({ ...course, progress: 0, locked: false })),
+    [courses],
+  )
+  const questions = useMemo(
+    () =>
+      textbookData.questions.map((question) => {
+        const index = sourceLessons.findIndex((lesson) => lesson.id === question.lessonId)
+        return { ...question, lessonId: index + 1 }
+      }),
+    [textbookData.questions, sourceLessons],
+  )
+  const questionsById = useMemo(
+    () => new Map(questions.map((question) => [question.id, question])),
+    [questions],
+  )
+  const textbookQuestionsForCanonicalLesson = useCallback(
+    (lessonId: number) => textbookQuestionsForLesson(textbook, sourceLessons[lessonId - 1]?.id ?? -1)
+      .map((question) => ({ ...question, lessonId })),
+    [textbook, sourceLessons],
+  )
+  const lessonQuestionsList = useMemo(
+    () =>
+      courses.map((lesson) => {
+        const items = textbookQuestionsForCanonicalLesson(lesson.id)
+        return selectedTextbookId === 'builtin-japanese-syntax'
+          ? items.slice(0, LESSON_QUESTION_LIMIT)
+          : items
+      }),
+    [courses, textbookQuestionsForCanonicalLesson, selectedTextbookId],
+  )
+  const questionCounts = useMemo(() => lessonQuestionsList.map((items) => items.length), [lessonQuestionsList])
+  useEffect(() => {
+    onProgressChange(selectedTextbookId, questionCounts)
+  }, [onProgressChange, questionCounts, selectedTextbookId])
+  const reviewCheckpointInterval = Math.min(5, courses.length)
   const [tab, setTab] = useState('home')
   const [active, setActive] = useState(0)
   const hasStartedPracticeRef = useRef(false)
@@ -62,7 +152,7 @@ export default function Home() {
     setLessonCorrect(progress.lessonCorrect)
     setCompletedLessons(progress.completedLessons)
     setMistakes(progress.mistakes)
-  })
+  }, selectedTextbookId, questionCounts, questions)
 
   const { userId, userEmail, registeredAt, cloudLoaded, syncState } = authState
   const loadedStudyUserId = useRef('')
@@ -110,7 +200,8 @@ export default function Home() {
     lessonDone,
     lessonCorrect,
     completedLessons,
-    mistakes
+    mistakes,
+    questionCounts,
   )
 
   const [mixedQuestions, setMixedQuestions] = useState<Question[]>([])
@@ -141,7 +232,7 @@ export default function Home() {
   const dueQuestions = useMemo(() => {
     const seen = new Set<string>()
     return dueQuestionIds
-      .map((id) => questionForId(id))
+      .map((id) => questionsById.get(id))
       .filter((question): question is Question => {
         if (!question || seen.has(question.id)) return false
         seen.add(question.id)
@@ -166,7 +257,13 @@ export default function Home() {
     completedLoaded,
     lessonLoaded,
     mistakesLoaded,
-  } = useLocalProgressLoader(cloudLoaded, cloudApplied.current, Boolean(currentUserId.current))
+  } = useLocalProgressLoader(
+    cloudLoaded,
+    cloudApplied.current,
+    selectedTextbookId,
+    questionCounts,
+    questions,
+  )
 
   // 同步本地加载的数据到状态
   useEffect(() => {
@@ -221,13 +318,16 @@ export default function Home() {
       const persistedLessons = Object.fromEntries(
         (state.lessons || []).map((lesson) => [
           lesson.lesson_id - 1,
-          clampLessonAnswered(lesson.answered_count),
+          clampLessonAnswered(lesson.answered_count, questionCounts[lesson.lesson_id - 1]),
         ]),
       )
       const persistedCorrect = Object.fromEntries(
         (state.lessons || [])
           .filter((lesson) => typeof lesson.correct_count === 'number')
-          .map((lesson) => [lesson.lesson_id - 1, clampLessonCorrect(lesson.correct_count as number)]),
+          .map((lesson) => [
+            lesson.lesson_id - 1,
+            clampLessonCorrect(lesson.correct_count as number, questionCounts[lesson.lesson_id - 1]),
+          ]),
       )
       if (Object.keys(persistedLessons).length) {
         setLessonDone(persistedLessons)
@@ -239,6 +339,8 @@ export default function Home() {
               .filter((lesson) => lesson.completed_at)
               .map((lesson) => lesson.lesson_id - 1),
             persistedCorrect,
+            courses.length,
+            questionCounts,
           ),
         )
       }
@@ -248,7 +350,7 @@ export default function Home() {
     if (studyStateRetry === 0 && typeof window !== 'undefined') {
       try {
         const cached = JSON.parse(
-          sessionStorage.getItem(`syntax-coach-study-state:${userId}`) || 'null',
+          sessionStorage.getItem(`syntax-coach-study-state:${userId}:${selectedTextbookId}`) || 'null',
         ) as { fetchedAt?: number; state?: Parameters<typeof applyStudyState>[0] } | null
         if (cached?.state && typeof cached.fetchedAt === 'number' && Date.now() - cached.fetchedAt < STUDY_STATE_CACHE_TTL_MS) {
           applyStudyState(cached.state)
@@ -264,9 +366,18 @@ export default function Home() {
 
     void (async () => {
       try {
-        const response = await fetch('/api/study-state')
+        const response = await fetch(
+          `/api/study-state?textbookId=${encodeURIComponent(selectedTextbookId)}`,
+        )
         if (!response.ok) {
-          if (!cancelled) setStudyStateError('云端学习记录暂时无法读取，将继续使用当前设备数据。')
+          const errorState = (await response.json().catch(() => ({}))) as { error?: unknown }
+          if (!cancelled) {
+            setStudyStateError(
+              typeof errorState.error === 'string'
+                ? `${errorState.error} 当前设备数据仍可继续使用。`
+                : '云端学习记录暂时无法读取，将继续使用当前设备数据。',
+            )
+          }
           return
         }
         const state = (await response.json()) as Parameters<typeof applyStudyState>[0]
@@ -277,7 +388,7 @@ export default function Home() {
         applyStudyState(state)
         try {
           sessionStorage.setItem(
-            `syntax-coach-study-state:${userId}`,
+            `syntax-coach-study-state:${userId}:${selectedTextbookId}`,
             JSON.stringify({ fetchedAt: Date.now(), state }),
           )
         } catch {
@@ -296,7 +407,7 @@ export default function Home() {
     return () => {
       cancelled = true
     }
-  }, [userId, studyStateRetry])
+  }, [userId, studyStateRetry, selectedTextbookId, questionCounts, courses.length])
 
   // 当 localLessonDone 加载完成后，同步到主状态
   useEffect(() => {
@@ -326,51 +437,39 @@ export default function Home() {
     }
   }, [mistakesLoaded, localMistakes])
   useEffect(() => {
-    if (mistakesLoaded) localStorage.setItem('syntax-coach-mistakes', JSON.stringify(mistakes))
-  }, [mistakes, mistakesLoaded])
+    if (mistakesLoaded) mistakesStorage.set(mistakes, selectedTextbookId)
+  }, [mistakes, mistakesLoaded, selectedTextbookId])
   useEffect(() => {
     if (!lessonLoaded) return
-    try {
-      const saved = JSON.parse(localStorage.getItem('syntax-coach-lesson-progress') || '{}')
-      const merged = {
-        ...saved,
-        ...Object.fromEntries(
-          Object.entries(lessonDone).map(([index, count]) => [
-            index,
-            clampLessonAnswered(Math.max(Number(saved?.[index]) || 0, Number(count) || 0)),
-          ]),
-        ),
-      }
-      localStorage.setItem('syntax-coach-lesson-progress', JSON.stringify(merged))
-    } catch {
-      localStorage.setItem('syntax-coach-lesson-progress', JSON.stringify(lessonDone))
-    }
-  }, [lessonDone, lessonLoaded])
+    lessonProgressStorage.merge(lessonDone, selectedTextbookId, questionCounts)
+  }, [lessonDone, lessonLoaded, selectedTextbookId, questionCounts])
   useEffect(() => {
     if (lessonLoaded)
-      localStorage.setItem('syntax-coach-lesson-correct', JSON.stringify(lessonCorrect))
-  }, [lessonCorrect, lessonLoaded])
+      lessonCorrectStorage.set(lessonCorrect, selectedTextbookId)
+  }, [lessonCorrect, lessonLoaded, selectedTextbookId])
   useEffect(() => {
     if (completedLoaded)
-      localStorage.setItem('syntax-coach-completed-lessons', JSON.stringify(completedLessons))
-  }, [completedLessons, completedLoaded])
+      completedLessonsStorage.set(completedLessons, selectedTextbookId)
+  }, [completedLessons, completedLoaded, selectedTextbookId])
   useEffect(() => {
-    const answered = clampLessonAnswered(lessonDone[active])
-    const correct = clampLessonCorrect(lessonCorrect[active])
-    if (answered >= LESSON_QUESTION_LIMIT && correct >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9))
+    const lessonLimit = questionCounts[active] ?? 0
+    const answered = clampLessonAnswered(lessonDone[active], lessonLimit)
+    const correct = clampLessonCorrect(lessonCorrect[active], lessonLimit)
+    if (lessonLimit > 0 && answered >= lessonLimit && correct >= Math.ceil(lessonLimit * 0.9))
       setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
-  }, [active, lessonDone, lessonCorrect])
+  }, [active, lessonDone, lessonCorrect, questionCounts])
   useEffect(() => {
     if (!gradingState.isGraded) setAiVerdict(null)
   }, [gradingState.isGraded])
-  const activeLessonDone = clampLessonAnswered(lessonDone[active])
-  const activeLessonCorrect = clampLessonCorrect(lessonCorrect[active])
+  const activeLessonLimit = questionCounts[active] ?? 0
+  const activeLessonDone = clampLessonAnswered(lessonDone[active], activeLessonLimit)
+  const activeLessonCorrect = clampLessonCorrect(lessonCorrect[active], activeLessonLimit)
   const activeLessonAccuracy = activeLessonDone
     ? Math.min(
         100,
         Math.round(
-          (Math.min(activeLessonCorrect, LESSON_QUESTION_LIMIT) /
-            Math.min(activeLessonDone, LESSON_QUESTION_LIMIT)) *
+          (Math.min(activeLessonCorrect, activeLessonLimit) /
+            Math.min(activeLessonDone, activeLessonLimit)) *
             100,
         ),
       )
@@ -379,18 +478,20 @@ export default function Home() {
     lessonDone,
     completedLessons,
     lessonCorrect,
+    courses.length,
+    questionCounts,
   )
   const lessonUnlockMessage = effectiveCompletedLessons.includes(active)
     ? '本课已达标，下一课已解锁。'
-    : activeLessonDone >= LESSON_QUESTION_LIMIT &&
-        activeLessonCorrect < Math.ceil(LESSON_QUESTION_LIMIT * 0.9)
-      ? `20 题已全部完成，但正确率为 ${activeLessonAccuracy}%；请重练错题，累计至少答对 18 题后解锁下一课。`
-      : `需完成 ${LESSON_QUESTION_LIMIT} 题且至少答对 18 题（90%）才能解锁下一课。`
+    : activeLessonDone >= activeLessonLimit &&
+        activeLessonCorrect < Math.ceil(activeLessonLimit * 0.9)
+      ? `${activeLessonLimit} 题已全部完成，但正确率为 ${activeLessonAccuracy}%；请重练错题，至少答对 ${Math.ceil(activeLessonLimit * 0.9)} 题后解锁下一课。`
+      : `需完成 ${activeLessonLimit} 题且至少答对 ${Math.ceil(activeLessonLimit * 0.9)} 题（90%）才能解锁下一课。`
   const displayedLessons = courseLessons.map((lesson, index) => {
-    const total = LESSON_QUESTION_LIMIT
+    const total = questionCounts[index] ?? 0
     return {
       ...lesson,
-      progress: Math.min(100, Math.round((clampLessonAnswered(lessonDone[index]) / total) * 100)),
+      progress: total > 0 ? Math.min(100, Math.round((clampLessonAnswered(lessonDone[index], total) / total) * 100)) : 0,
       locked: index > 0 && !effectiveCompletedLessons.includes(index - 1),
     }
   })
@@ -402,6 +503,7 @@ export default function Home() {
   const nextLessonIndex =
     firstIncompleteLesson >= 0 ? firstIncompleteLesson : displayedLessons.length - 1
   const progress = practiceState.isFullLesson ? practiceState.fullLessonProgress : practiceState.sessionProgress
+  const lessonQuestions = lessonQuestionsList[active] ?? []
 
   const sessionLimit = useMemo(() =>
     practiceState.mode === 'mistakes'
@@ -410,10 +512,8 @@ export default function Home() {
         ? mixedQuestions.length
         : practiceState.isReplay
           ? retryQuestions.length
-          : LESSON_QUESTION_LIMIT
-  , [practiceState.mode, practiceState.isReplay, mistakes.length, mixedQuestions.length, retryQuestions.length])
-
-  const lessonQuestions = useMemo(() => coreQuestionsForLesson(selectedLesson.id), [selectedLesson.id])
+          : lessonQuestions.length
+  , [practiceState.mode, practiceState.isReplay, mistakes.length, mixedQuestions.length, retryQuestions.length, lessonQuestions.length])
 
   const sourceQuestions = useMemo(() =>
     practiceState.mode === 'mistakes'
@@ -519,6 +619,8 @@ export default function Home() {
       replayMode: practiceState.isReplay,
       currentLesson: active,
       userId,
+      textbookId: selectedTextbookId,
+      questionLimit: questionCounts[question.lessonId - 1] ?? LESSON_QUESTION_LIMIT,
     }
 
     const currentProgress = {
@@ -554,12 +656,15 @@ export default function Home() {
         replayMistakesRef.current = replayMistakesRef.current.filter(
           (item) => item.id !== question.id,
         )
-        replayCorrectRef.current = Math.min(LESSON_QUESTION_LIMIT, replayCorrectRef.current + 1)
+        replayCorrectRef.current = Math.min(
+          questionCounts[active] ?? LESSON_QUESTION_LIMIT,
+          replayCorrectRef.current + 1,
+        )
       } else if (!replayMistakesRef.current.some((item) => item.id === question.id)) {
         replayMistakesRef.current = [...replayMistakesRef.current, question]
       }
     }
-  }, [ex, tokenAnswer, selectedChoiceText, submittedQuestion, resetAnalysis, practiceState.mode, practiceState.isReplay, active, userId, lessonDone, lessonCorrect, completedLessons, mistakes, dueQuestionIds, submitAnswer, setExplanation, setSource, setAiVerdict, setGraded, setLessonDone, setLessonCorrect, setCompletedLessons, setMistakes, setDueQuestionIds, replayMistakesRef, replayCorrectRef])
+  }, [ex, tokenAnswer, selectedChoiceText, submittedQuestion, resetAnalysis, practiceState.mode, practiceState.isReplay, active, userId, selectedTextbookId, questionCounts, lessonDone, lessonCorrect, completedLessons, mistakes, dueQuestionIds, submitAnswer, setExplanation, setSource, setAiVerdict, setGraded, setLessonDone, setLessonCorrect, setCompletedLessons, setMistakes, setDueQuestionIds, replayMistakesRef, replayCorrectRef])
   const displayCorrect = gradingState.aiVerdict
     ? gradingState.aiVerdict === 'correct' || gradingState.aiVerdict === 'mostly_correct'
     : answerMatches
@@ -602,40 +707,41 @@ export default function Home() {
   const startLessonPractice = useCallback((lessonIndex = active) => {
     setSelectedChoice('')
     setMixedQuestions([])
-    let existingAnswered = clampLessonAnswered(lessonDone[lessonIndex])
+    const lessonLimit = questionCounts[lessonIndex] ?? 0
+    let existingAnswered = clampLessonAnswered(lessonDone[lessonIndex], lessonLimit)
     if (existingAnswered === 0 && typeof window !== 'undefined' && !cloudApplied.current) {
       try {
-        const saved = JSON.parse(localStorage.getItem('syntax-coach-lesson-progress') || '{}')
+        const saved = lessonProgressStorage.get(selectedTextbookId)
         const cached = Number(saved?.[lessonIndex])
         if (Number.isFinite(cached))
-          existingAnswered = Math.max(0, Math.min(LESSON_QUESTION_LIMIT, cached))
+          existingAnswered = Math.max(0, Math.min(lessonLimit, cached))
       } catch {}
     }
     lessonReplayRef.current =
-      existingAnswered >= LESSON_QUESTION_LIMIT
+      existingAnswered >= lessonLimit && lessonLimit > 0
         ? { lesson: lessonIndex, count: existingAnswered }
         : null
     replayCorrectRef.current =
-      existingAnswered >= LESSON_QUESTION_LIMIT
-        ? clampLessonCorrect(lessonCorrect[lessonIndex])
+      existingAnswered >= lessonLimit && lessonLimit > 0
+        ? clampLessonCorrect(lessonCorrect[lessonIndex], lessonLimit)
         : 0
     const lessonMistakes = mistakesForLesson(mistakes, lessonIndex + 1)
     setRetryQuestions(lessonMistakes)
     replayMistakesRef.current = lessonMistakes
     if (existingAnswered > 0 && existingAnswered !== (lessonDone[lessonIndex] ?? 0))
       setLessonDone((value) => ({ ...value, [lessonIndex]: existingAnswered }))
-    setReplayMode(existingAnswered >= LESSON_QUESTION_LIMIT && lessonMistakes.length > 0)
+    setReplayMode(existingAnswered >= lessonLimit && lessonLimit > 0 && lessonMistakes.length > 0)
     setFullLessonProgress(
-      existingAnswered >= LESSON_QUESTION_LIMIT
+      existingAnswered >= lessonLimit && lessonLimit > 0
         ? 0
-        : Math.min(existingAnswered, LESSON_QUESTION_LIMIT - 1),
+        : Math.min(existingAnswered, Math.max(0, lessonLimit - 1)),
     )
     if (existingAnswered === 0) setLessonCorrect((value) => ({ ...value, [lessonIndex]: 0 }))
     setActive(lessonIndex)
 
     // 使用统一初始化
     initializePractice({ mode: 'lesson', isFullLesson: true })
-  }, [active, lessonDone, lessonCorrect, mistakes, setReplayMode, setFullLessonProgress, initializePractice])
+  }, [active, lessonDone, lessonCorrect, mistakes, questionCounts, selectedTextbookId, setReplayMode, setFullLessonProgress, initializePractice])
 
   const startMistakePractice = useCallback(() => {
     if (mistakes.length) {
@@ -644,12 +750,22 @@ export default function Home() {
   }, [mistakes.length, initializePractice])
 
   const startMixedPractice = useCallback(() => {
-    const questions = prioritizeReviewSet(createMixedReviewSet(effectiveCompletedLessons, 20), knowledgePointMastery, dueQuestionIds)
+    const questions = prioritizeReviewSet(
+      createMixedReviewSet(
+        effectiveCompletedLessons,
+        20,
+        textbookQuestionsForCanonicalLesson,
+        courses.length,
+        reviewCheckpointInterval,
+      ),
+      knowledgePointMastery,
+      dueQuestionIds,
+    )
     if (questions.length) {
       setMixedPracticeKind('comprehensive')
       initializePractice({ mode: 'mixed', isFullLesson: false, questions })
     }
-  }, [effectiveCompletedLessons, knowledgePointMastery, dueQuestionIds, initializePractice])
+  }, [effectiveCompletedLessons, textbookQuestionsForCanonicalLesson, courses.length, reviewCheckpointInterval, knowledgePointMastery, dueQuestionIds, initializePractice])
 
   const startDueReview = useCallback(() => {
     const questions = prioritizeReviewSet(
@@ -663,22 +779,26 @@ export default function Home() {
   }, [dueQuestions, knowledgePointMastery, initializePractice])
 
   const nextQuestion = useCallback(() => {
-    const complete = progress >= sessionLimit - 1
+    const complete = sessionLimit > 0 && progress >= sessionLimit - 1
+    const lessonLimit = questionCounts[active] ?? 0
     const finalCorrect = clampLessonCorrect(
-      practiceState.isReplay ? replayCorrectRef.current : clampLessonCorrect(lessonCorrect[active]) + (answerMatches ? 1 : 0),
+      practiceState.isReplay
+        ? replayCorrectRef.current
+        : clampLessonCorrect(lessonCorrect[active], lessonLimit) + (answerMatches ? 1 : 0),
+      lessonLimit,
     )
     if (practiceState.mode === 'lesson') {
       setFullLessonProgress((value) => value + 1)
       const replayCount =
         lessonReplayRef.current?.lesson === active ? lessonReplayRef.current.count : null
       const alreadyCompleted =
-        clampLessonAnswered(lessonDone[active]) >= LESSON_QUESTION_LIMIT ||
-        (replayCount !== null && replayCount >= LESSON_QUESTION_LIMIT)
+        clampLessonAnswered(lessonDone[active], lessonLimit) >= lessonLimit ||
+        (replayCount !== null && replayCount >= lessonLimit)
       if (!practiceState.isReplay) {
         if (!alreadyCompleted) {
           setLessonDone((value) => ({
             ...value,
-            [active]: Math.min(LESSON_QUESTION_LIMIT, (value[active] ?? 0) + 1),
+            [active]: Math.min(lessonLimit, (value[active] ?? 0) + 1),
           }))
           setLessonCorrect((value) => ({ ...value, [active]: finalCorrect }))
           if (complete && finalCorrect / sessionLimit >= 0.9)
@@ -688,7 +808,7 @@ export default function Home() {
         replayCorrectRef.current = finalCorrect
         setLessonDone((value) => ({ ...value, [active]: replayCount }))
         setLessonCorrect((value) => ({ ...value, [active]: finalCorrect }))
-        if (complete && finalCorrect >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9))
+        if (complete && finalCorrect >= Math.ceil(lessonLimit * 0.9))
           setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
       }
     }
@@ -701,17 +821,17 @@ export default function Home() {
       const remainingMistakes = practiceState.isReplay
         ? replayMistakesRef.current
         : mistakes
-            .filter((item) => item.id.startsWith(`L${String(active + 1).padStart(2, '0')}-`))
+            .filter((item) => item.lessonId === active + 1)
             .filter((item) => !answerMatches || item.id !== currentQuestion?.id)
       const summaryMistakes =
         practiceState.isReplay || !currentQuestion || answerMatches
           ? remainingMistakes
           : [...remainingMistakes, currentQuestion]
       const types = summaryMistakes.map((item) => item.type)
-      const lessonQualified = finalCorrect >= Math.ceil(LESSON_QUESTION_LIMIT * 0.9)
+      const lessonQualified = lessonLimit > 0 && finalCorrect >= Math.ceil(lessonLimit * 0.9)
       setLessonSummary({
         lessonId: active + 1,
-        accuracy: Math.round((finalCorrect / LESSON_QUESTION_LIMIT) * 100),
+        accuracy: lessonLimit > 0 ? Math.round((finalCorrect / lessonLimit) * 100) : 0,
         mistakeTypes: Array.from(new Set(types)),
         nextLessonId:
           lessonQualified && active < courses.length - 1 ? active + 2 : undefined,
@@ -720,7 +840,7 @@ export default function Home() {
     } else if (complete) {
       setTab('home')
     }
-  }, [progress, sessionLimit, practiceState.isReplay, practiceState.mode, replayCorrectRef, lessonCorrect, active, answerMatches, lessonDone, lessonReplayRef, submittedQuestion, mistakes, courses, setFullLessonProgress, setLessonDone, setLessonCorrect, setCompletedLessons, setSessionProgress, setSelectedChoice, setGraded, replayMistakesRef, setLessonSummary, setTab])
+  }, [progress, sessionLimit, practiceState.isReplay, practiceState.mode, replayCorrectRef, lessonCorrect, questionCounts, active, answerMatches, lessonDone, lessonReplayRef, submittedQuestion, mistakes, courses, setFullLessonProgress, setLessonDone, setLessonCorrect, setCompletedLessons, setSessionProgress, setSelectedChoice, setGraded, replayMistakesRef, setLessonSummary, setTab])
   const currentLesson = displayedLessons[nextLessonIndex] ?? displayedLessons[0]
   const overallProgress = Math.round(
     displayedLessons.reduce((sum, lesson) => sum + lesson.progress, 0) / displayedLessons.length,
@@ -733,8 +853,8 @@ export default function Home() {
         day: '2-digit',
       }).format(new Date(registeredAt))
     : '—'
-  const totalAnswered = Object.values(lessonDone).reduce(
-    (sum, count) => sum + clampLessonAnswered(count),
+  const totalAnswered = Object.entries(lessonDone).reduce(
+    (sum, [index, count]) => sum + clampLessonAnswered(count, questionCounts[Number(index)]),
     0,
   )
   const allLessonsCompleted = effectiveCompletedLessons.length === displayedLessons.length
@@ -754,8 +874,19 @@ export default function Home() {
     <main className="shell">
       <AppHeader
         lessonId={currentLesson.id}
+        textbookTitle={textbookData.title}
         learnerName={learnerName}
         onProfile={() => setTab('me')}
+      />
+      <TextbookSwitcher
+        textbooks={textbookOptions.map((option) => ({
+          ...option,
+          progress: option.id === selectedTextbookId ? overallProgress : option.progress,
+        }))}
+        selectedId={selectedTextbookId}
+        onSelect={onSelectTextbook}
+        onUpload={onUploadTextbook}
+        uploadError={uploadError}
       />
       {studyStateError && userId && (
         <div className="state-note warning" role="alert">
@@ -797,6 +928,7 @@ export default function Home() {
             learnerName={learnerName}
             lessonId={currentLesson.id}
             progress={currentLesson.progress}
+            questionCount={questionCounts[nextLessonIndex] ?? 0}
             onStart={() => {
               setActive(nextLessonIndex)
               setTab('lesson')
@@ -808,7 +940,7 @@ export default function Home() {
             }
             actionDisabled={allLessonsCompleted && currentLessonMistakeCount === 0}
           />
-          {effectiveCompletedLessons.some((index) => (index + 1) % 5 === 0) && (
+          {effectiveCompletedLessons.some((index) => (index + 1) % reviewCheckpointInterval === 0) && (
             <button className="primary wide" onClick={startMixedPractice}>
               开始综合混练（已完成课程） <span>→</span>
             </button>
@@ -834,6 +966,7 @@ export default function Home() {
           </section>
           <CurrentLessonCard
             lesson={currentLesson}
+            questionCount={questionCounts[nextLessonIndex] ?? 0}
             onOpen={() => {
               setActive(nextLessonIndex)
               setTab('lesson')
@@ -845,8 +978,10 @@ export default function Home() {
         <>
           <div className="page-title">
             <p className="eyebrow">课程地图</p>
-            <h1>标准日本语·上册</h1>
-            <p className="muted">24 课 · 从句型骨架开始，逐步建立语感</p>
+            <h1>{textbookData.title}</h1>
+            <p className="muted">
+              {courses.length} 课 · {textbookData.description || '从句型骨架开始，逐步建立语感'}
+            </p>
           </div>
           <LessonGrid
             lessons={lessons}
@@ -869,7 +1004,7 @@ export default function Home() {
           </div>
           <div className="lesson-status">
             <b>
-              已作答 {activeLessonDone} / {LESSON_QUESTION_LIMIT} · 正确 {activeLessonCorrect} 题（
+              已作答 {activeLessonDone} / {activeLessonLimit} · 正确 {activeLessonCorrect} 题（
               {activeLessonAccuracy}%）
             </b>
             <small>{lessonUnlockMessage}</small>
@@ -880,16 +1015,17 @@ export default function Home() {
             grammar={selectedLesson.grammar}
             onStartPractice={() => startLessonPractice(active)}
             practiceDisabled={
-              activeLessonDone >= LESSON_QUESTION_LIMIT &&
+              activeLessonDone >= activeLessonLimit &&
+              activeLessonLimit > 0 &&
               mistakesForLesson(mistakes, selectedLesson.id).length === 0
             }
             practiceLabel={
-              activeLessonDone >= LESSON_QUESTION_LIMIT &&
+              activeLessonDone >= activeLessonLimit &&
               mistakesForLesson(mistakes, selectedLesson.id).length > 0
                 ? `重练本课错题（${mistakesForLesson(mistakes, selectedLesson.id).length} 题）`
-                : activeLessonDone >= LESSON_QUESTION_LIMIT
+                : activeLessonDone >= activeLessonLimit && activeLessonLimit > 0
                   ? '本课已完成，无错题需要重练'
-                  : `开始整课练习（${LESSON_QUESTION_LIMIT} 题）`
+                  : `开始整课练习（${activeLessonLimit} 题）`
             }
           />
           {active < displayedLessons.length - 1 && (

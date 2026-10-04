@@ -34,6 +34,9 @@ export function useStudyState(
     lessonCorrect: Record<number, number>
     completedLessons: number[]
   }) => void,
+  textbookId = 'builtin-japanese-syntax',
+  questionLimits: number[] = [],
+  questions: Question[] = [],
 ): UseStudyStateReturn {
   const [dueQuestionIds, setDueQuestionIds] = useState<string[]>([])
   const [knowledgePointMastery, setKnowledgePointMastery] = useState<Record<string, number>>({})
@@ -56,7 +59,9 @@ export function useStudyState(
 
     void (async () => {
       try {
-        const response = await fetch('/api/study-state')
+        const response = await fetch(
+          `/api/study-state?textbookId=${encodeURIComponent(textbookId)}`,
+        )
         if (!response.ok) {
           if (!cancelled)
             setStudyStateError('云端学习记录暂时无法读取，将继续使用当前设备数据。')
@@ -65,7 +70,15 @@ export function useStudyState(
         const state = await response.json()
         if (cancelled) return
 
-        setDueQuestionIds(Array.isArray(state.dueQuestionIds) ? state.dueQuestionIds : [])
+        const questionIds = new Set(questions.map((question) => question.id))
+        setDueQuestionIds(
+          Array.isArray(state.dueQuestionIds)
+            ? state.dueQuestionIds.filter(
+                (id: unknown): id is string =>
+                  typeof id === 'string' && (questionIds.size === 0 || questionIds.has(id)),
+              )
+            : [],
+        )
         setKnowledgePointMastery(
           Object.fromEntries(
             (state.knowledgePoints || []).map(
@@ -84,7 +97,7 @@ export function useStudyState(
             (state.lessons || []).map(
               (lesson: { lesson_id: number; answered_count: number }) => [
                 lesson.lesson_id - 1,
-                clampLessonAnswered(lesson.answered_count),
+                clampLessonAnswered(lesson.answered_count, questionLimits[lesson.lesson_id - 1]),
               ],
             ),
           )
@@ -93,7 +106,7 @@ export function useStudyState(
               .filter((lesson: { correct_count?: number }) => typeof lesson.correct_count === 'number')
               .map((lesson: { lesson_id: number; correct_count: number }) => [
                 lesson.lesson_id - 1,
-                clampLessonCorrect(lesson.correct_count),
+                clampLessonCorrect(lesson.correct_count, questionLimits[lesson.lesson_id - 1]),
               ]),
           )
           if (Object.keys(persistedLessons).length) {
@@ -106,6 +119,8 @@ export function useStudyState(
                   .filter((lesson: { completed_at: string | null }) => lesson.completed_at)
                   .map((lesson: { lesson_id: number }) => lesson.lesson_id - 1),
                 persistedCorrect,
+                questionLimits.length || 24,
+                questionLimits,
               ),
             })
           }
@@ -125,7 +140,7 @@ export function useStudyState(
     return () => {
       cancelled = true
     }
-  }, [userId, studyStateRetry, onLessonProgressLoaded])
+  }, [userId, studyStateRetry, onLessonProgressLoaded, textbookId, questionLimits, questions])
 
   const loadStudyState = () => {
     setStudyStateRetry((v) => v + 1)

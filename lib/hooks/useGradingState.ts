@@ -12,7 +12,7 @@ import { useState, useCallback } from 'react'
 export type GradingState = {
   aiVerdict: 'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
   explanation: string
-  source: 'ai' | 'rule' | 'typesafe' | null
+  source: 'ai' | 'rule' | null
   isGraded: boolean
 }
 

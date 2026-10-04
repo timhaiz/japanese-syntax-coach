@@ -39,14 +39,15 @@ export function useLessonProgress(
   lessonDone: Record<number, number>,
   lessonCorrect: Record<number, number>,
   completedLessons: number[],
-  mistakes: Question[]
+  mistakes: Question[],
+  questionLimits: number[] = [],
 ) {
   /**
    * 计算有效的完成课程列表
    */
   const effectiveCompletedLessons = useMemo(() => {
-    return contiguousCompletedLessons(completedLessons)
-  }, [completedLessons])
+    return contiguousCompletedLessons(completedLessons, lessons.length)
+  }, [completedLessons, lessons.length])
 
   /**
    * 计算下一课索引
@@ -62,8 +63,9 @@ export function useLessonProgress(
    */
   const lessonsWithProgress = useMemo((): LessonWithProgress[] => {
     return lessons.map((lesson, index) => {
-      const answered = clampLessonAnswered(lessonDone[index] ?? 0)
-      const progress = Math.round((answered / LESSON_QUESTION_LIMIT) * 100)
+      const limit = questionLimits[index] ?? LESSON_QUESTION_LIMIT
+      const answered = clampLessonAnswered(lessonDone[index] ?? 0, limit)
+      const progress = limit > 0 ? Math.round((answered / limit) * 100) : 0
 
       // 锁定逻辑：必须完成前一课才能解锁
       const locked = index > 0 && !effectiveCompletedLessons.includes(index - 1)
@@ -83,7 +85,7 @@ export function useLessonProgress(
         mistakeCount,
       }
     })
-  }, [lessons, lessonDone, effectiveCompletedLessons, mistakes])
+  }, [lessons, lessonDone, effectiveCompletedLessons, mistakes, questionLimits])
 
   /**
    * 计算总体进度指标

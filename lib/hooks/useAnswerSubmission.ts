@@ -18,7 +18,7 @@ export type GradeResult = {
   correct: boolean
   verdict: 'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect'
   explanation: string
-  source: 'ai' | 'rule' | 'typesafe'
+  source: 'ai' | 'rule'
   aiVerdict?: 'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
 }
 
@@ -29,6 +29,8 @@ export type SubmissionContext = {
   replayMode: boolean
   currentLesson: number
   userId?: string
+  textbookId?: string
+  questionLimit?: number
 }
 
 export type ProgressUpdate = {
@@ -86,7 +88,8 @@ export function useAnswerSubmission() {
     question: Question,
     isCorrect: boolean,
     practiceMode: 'lesson' | 'mistakes' | 'mixed',
-    replayMode: boolean
+    replayMode: boolean,
+    questionLimit = LESSON_QUESTION_LIMIT,
   ): Question[] => {
     if (!isCorrect) {
       // 添加到错题集
@@ -107,7 +110,7 @@ export function useAnswerSubmission() {
         replayMistakesRef.current = replayMistakesRef.current.filter(
           (item) => item.id !== question.id
         )
-        replayCorrectRef.current = Math.min(LESSON_QUESTION_LIMIT, replayCorrectRef.current + 1)
+        replayCorrectRef.current = Math.min(questionLimit, replayCorrectRef.current + 1)
       }
 
       return currentMistakes.filter((item) => item.id !== question.id)
@@ -123,7 +126,8 @@ export function useAnswerSubmission() {
     currentProgress: ProgressUpdate,
     question: Question,
     isCorrect: boolean,
-    replayMode: boolean
+    replayMode: boolean,
+    questionLimit = LESSON_QUESTION_LIMIT,
   ): Partial<ProgressUpdate> => {
     const lessonIndex = question.lessonId - 1
     const updates: Partial<ProgressUpdate> = {}
@@ -134,7 +138,7 @@ export function useAnswerSubmission() {
         updates.lessonCorrect = {
           ...currentProgress.lessonCorrect,
           [lessonIndex]: Math.min(
-            LESSON_QUESTION_LIMIT,
+            questionLimit,
             (currentProgress.lessonCorrect[lessonIndex] ?? 0) + 1
           ),
         }
@@ -159,7 +163,9 @@ export function useAnswerSubmission() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           questionId: context.question.id,
+          textbookId: context.textbookId ?? 'builtin-japanese-syntax',
           lessonId: context.question.lessonId,
+          questionLimit: context.questionLimit ?? LESSON_QUESTION_LIMIT,
           answer: context.answer,
           correct: gradeResult.correct,
           verdict: gradeResult.aiVerdict ?? gradeResult.verdict,
@@ -215,7 +221,8 @@ export function useAnswerSubmission() {
       question,
       localMatches,
       context.practiceMode,
-      context.replayMode
+      context.replayMode,
+      context.questionLimit,
     )
 
     // 更新进度
@@ -223,7 +230,8 @@ export function useAnswerSubmission() {
       currentProgress,
       question,
       localMatches,
-      context.replayMode
+      context.replayMode,
+      context.questionLimit,
     )
 
     // 更新复习队列（混合模式）。本轮已经作答的题目不应在用户

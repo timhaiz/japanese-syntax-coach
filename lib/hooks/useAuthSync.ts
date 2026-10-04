@@ -38,6 +38,9 @@ type UseAuthSyncReturn = {
  */
 export function useAuthSync(
   onProgressLoaded: (progress: LearningProgress) => void,
+  textbookId = 'builtin-japanese-syntax',
+  questionLimits: number[] = [],
+  questions: Question[] = [],
 ): UseAuthSyncReturn {
   const [userId, setUserId] = useState('')
   const [userEmail, setUserEmail] = useState('')
@@ -50,6 +53,7 @@ export function useAuthSync(
   const cloudApplied = useRef(false)
   const onProgressLoadedRef = useRef(onProgressLoaded)
   const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const learningProgressRef = useRef<Record<string, unknown>>({})
 
   useEffect(() => {
     onProgressLoadedRef.current = onProgressLoaded
@@ -76,13 +80,35 @@ export function useAuthSync(
       setUserEmail(user.email || '')
       setRegisteredAt(user.created_at || '')
 
-      const progress = user.user_metadata?.learning_progress
+      const allProgress = user.user_metadata?.learning_progress
+      learningProgressRef.current =
+        allProgress && typeof allProgress === 'object' && !Array.isArray(allProgress)
+          ? (allProgress as Record<string, unknown>)
+          : {}
+      const byTextbook = learningProgressRef.current.byTextbook
+      const scopedProgress =
+        byTextbook &&
+        typeof byTextbook === 'object' &&
+        !Array.isArray(byTextbook) &&
+        (byTextbook as Record<string, unknown>)[textbookId]
+      const progress =
+        scopedProgress && typeof scopedProgress === 'object'
+          ? (scopedProgress as Record<string, unknown>)
+          : textbookId === 'builtin-japanese-syntax' &&
+              learningProgressRef.current.lessonDone &&
+              typeof learningProgressRef.current.lessonDone === 'object'
+            ? learningProgressRef.current
+            : null
       if (progress) {
+        const questionsById = new Map(questions.map((question) => [question.id, question]))
         const cloudLessonDone =
           progress.lessonDone && typeof progress.lessonDone === 'object'
             ? Object.fromEntries(
                 Object.entries(progress.lessonDone as Record<number, number>).map(
-                  ([index, count]) => [index, clampLessonAnswered(count)],
+                  ([index, count]) => [
+                    index,
+                    clampLessonAnswered(count, questionLimits[Number(index)]),
+                  ],
                 ),
               )
             : {}
@@ -91,7 +117,10 @@ export function useAuthSync(
           progress.lessonCorrect && typeof progress.lessonCorrect === 'object'
             ? Object.fromEntries(
                 Object.entries(progress.lessonCorrect as Record<number, number>).map(
-                  ([index, count]) => [index, clampLessonCorrect(count)],
+                  ([index, count]) => [
+                    index,
+                    clampLessonCorrect(count, questionLimits[Number(index)]),
+                  ],
                 ),
               )
             : {}
@@ -103,8 +132,10 @@ export function useAuthSync(
             cloudLessonDone,
             progress.completedLessons,
             cloudLessonCorrect,
+            questionLimits.length,
+            questionLimits,
           ),
-          mistakes: normalizeMistakes(progress.mistakes),
+          mistakes: normalizeMistakes(progress.mistakes, (id) => questionsById.get(id)),
         })
       } else {
         onProgressLoadedRef.current({
@@ -175,22 +206,36 @@ export function useAuthSync(
       progress.lessonDone,
       progress.completedLessons,
       progress.lessonCorrect,
+      questionLimits.length,
+      questionLimits,
     )
 
     syncTimerRef.current = setTimeout(() => {
       void (async () => {
         setSyncState('syncing')
+        const scopedProgress = {
+          version: 3,
+          lessonDone: progress.lessonDone,
+          lessonCorrect: progress.lessonCorrect,
+          completedLessons: syncedCompleted,
+          mistakes: progress.mistakes,
+          updatedAt: new Date().toISOString(),
+        }
+        const existingByTextbook =
+          learningProgressRef.current.byTextbook &&
+          typeof learningProgressRef.current.byTextbook === 'object' &&
+          !Array.isArray(learningProgressRef.current.byTextbook)
+            ? (learningProgressRef.current.byTextbook as Record<string, unknown>)
+            : {}
+        const nextLearningProgress = {
+          ...learningProgressRef.current,
+          version: 3,
+          byTextbook: { ...existingByTextbook, [textbookId]: scopedProgress },
+          ...(textbookId === 'builtin-japanese-syntax' ? scopedProgress : {}),
+        }
+        learningProgressRef.current = nextLearningProgress
         const { error } = await s.auth.updateUser({
-          data: {
-            learning_progress: {
-              version: 2,
-              lessonDone: progress.lessonDone,
-              lessonCorrect: progress.lessonCorrect,
-              completedLessons: syncedCompleted,
-              mistakes: progress.mistakes,
-              updatedAt: new Date().toISOString(),
-            },
-          },
+          data: { learning_progress: nextLearningProgress },
         })
         if (error) {
           console.error('Failed to sync learning progress', error)
@@ -200,7 +245,7 @@ export function useAuthSync(
         setSyncState('synced')
       })()
     }, 500)
-  }, [cloudLoaded, userId])
+  }, [cloudLoaded, userId, textbookId, questionLimits])
 
   useEffect(() => () => {
     if (syncTimerRef.current) clearTimeout(syncTimerRef.current)

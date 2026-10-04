@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "textbook": {
+    "id": "beginner-japanese",
+    "title": "初级日语示例教材",
+    "shortTitle": "初级日语",
+    "description": "用于导入功能的教材 JSON 示例。"
+  },
+  "lessons": [
+    {
+      "id": 1,
+      "title": "自我介绍",
+      "description": "能用简单判断句介绍自己。",
+      "questions": [
+      {
+        "id": "lesson-1-question-1",
+        "lessonId": 1,
+        "type": "翻译",
+        "prompt": "我是学生。",
+        "answer": "私は学生です。",
+        "hint": "名词判断句。",
+        "acceptedAnswers": ["わたしは学生です。"]
+      },
+      {
+        "id": "lesson-1-question-2",
+        "lessonId": 1,
+        "type": "选择",
+        "prompt": "选择“这是书”的正确表达。",
+        "answer": "A",
+        "hint": "使用物品指示词。",
+        "options": ["A：これは本です。", "B：ここは本です。"]
+      }
+      ]
+    }
+  ]
+}

@@ -41,7 +41,20 @@ export function GrammarCarousel({
     move(distance < 0 ? 1 : -1)
   }
 
-  if (!current) return null
+  if (!current) {
+    return (
+      <section className="grammar-carousel grammar-empty" aria-label={`第 ${lessonId} 课句型卡片`}>
+        <div className="grammar-carousel-head">
+          <span>句型卡片</span>
+          <b>暂无</b>
+        </div>
+        <p className="muted">本教材没有提供句型说明，可以直接开始本课练习。</p>
+        <button className="primary wide" type="button" onClick={onStartPractice} disabled={practiceDisabled}>
+          {practiceLabel} <span>→</span>
+        </button>
+      </section>
+    )
+  }
 
   return (
     <section

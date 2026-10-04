@@ -13,6 +13,7 @@ export function HomeHero({
   learnerName,
   lessonId,
   progress,
+  questionCount = 20,
   onStart,
   actionLabel,
   actionDisabled = false,
@@ -20,6 +21,7 @@ export function HomeHero({
   learnerName: string
   lessonId: number
   progress: number
+  questionCount?: number
   onStart: () => void
   actionLabel?: string
   actionDisabled?: boolean
@@ -40,7 +42,7 @@ export function HomeHero({
         <h1>
           一课一练，<em>把句型练成反射。</em>
         </h1>
-        <p className="muted">每课 20 道主动输出题：先看句型骨架，再练到能快速组织日语。</p>
+        <p className="muted">每课 {questionCount} 道主动输出题：先看句型骨架，再练到能快速组织日语。</p>
         <button className="primary" onClick={onStart} disabled={actionDisabled}>
           {actionLabel ?? `学习第 ${lessonId} 课句型`} <span>→</span>
         </button>

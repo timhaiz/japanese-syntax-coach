@@ -1,6 +1,5 @@
 import {NextResponse} from 'next/server'
 import {gradeWithAI} from '@/lib/ai'
-import {gradeWithJev} from '@/lib/typesafe-grading'
 type Verdict='correct'|'mostly_correct'|'needs_fix'|'incorrect'
 const normalize=(s:string)=>s.replace(/[\s。！？!?，,、]/g,'')
 export async function POST(req:Request){
@@ -21,13 +20,7 @@ export async function POST(req:Request){
   })
  }
 
- // TypeSafe Jev path (primary AI grading)
- const jev=await gradeWithJev({answer,standardAnswer:standard,context:String(body.hint||''),userAgent:req.headers.get('user-agent')||undefined})
- if(jev){
-  return NextResponse.json({...jev,source:'typesafe',hint:body.hint})
- }
-
- // OpenAI fallback (if Jev fails)
+ // OpenAI grading
  const ai=await gradeWithAI({answer,standardAnswer:standard,context:String(body.hint||''),userAgent:req.headers.get('user-agent')||undefined})
  if(ai)return NextResponse.json({...ai,source:'ai'})
 

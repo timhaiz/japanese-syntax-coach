@@ -1,7 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getSupabaseBrowser } from '@/lib/supabase'
 import type { Question } from '@/lib/question-bank'
-import { courses } from '@/lib/courses'
 import {
   clampLessonAnswered,
   clampLessonCorrect,
@@ -31,7 +29,9 @@ type LocalProgressState = {
 export function useLocalProgressLoader(
   cloudLoaded: boolean,
   cloudApplied: boolean,
-  hasAuthUser: boolean,
+  textbookId = 'builtin-japanese-syntax',
+  questionCounts: number[] = [],
+  questions: Question[] = [],
 ) {
   const [lessonDone, setLessonDone] = useState<Record<number, number>>({})
   const [lessonCorrect, setLessonCorrect] = useState<Record<number, number>>({})
@@ -48,17 +48,12 @@ export function useLocalProgressLoader(
       setCompletedLoaded(true)
       return
     }
-    if (getSupabaseBrowser() && !hasAuthUser) {
-      setCompletedLessons([])
-      setCompletedLoaded(true)
-      return
-    }
-    const saved = completedLessonsStorage.get()
+    const saved = completedLessonsStorage.get(textbookId)
     setCompletedLessons(
-      saved.filter((n) => Number.isInteger(n) && n >= 0 && n < courses.length),
+      saved.filter((n) => Number.isInteger(n) && n >= 0 && n < questionCounts.length),
     )
     setCompletedLoaded(true)
-  }, [cloudLoaded, cloudApplied, hasAuthUser])
+  }, [cloudLoaded, cloudApplied, textbookId, questionCounts.length])
 
   // 加载课程进度和正确数
   useEffect(() => {
@@ -67,43 +62,50 @@ export function useLocalProgressLoader(
       setLessonLoaded(true)
       return
     }
-    if (getSupabaseBrowser() && !hasAuthUser) {
-      setLessonDone({})
-      setLessonCorrect({})
-      setLessonLoaded(true)
-      return
-    }
-
-    const savedProgress = lessonProgressStorage.get()
+    const savedProgress = lessonProgressStorage.get(textbookId)
     const normalized = Object.fromEntries(
       Object.entries(savedProgress)
         .filter(
           ([index, count]) =>
             Number.isInteger(Number(index)) &&
             Number(index) >= 0 &&
-            Number(index) < courses.length &&
+            Number(index) < questionCounts.length &&
             typeof count === 'number',
         )
-        .map(([index, count]) => [Number(index), clampLessonAnswered(count)]),
+        .map(([index, count]) => {
+          const lessonIndex = Number(index)
+          return [lessonIndex, clampLessonAnswered(count, questionCounts[lessonIndex])]
+        }),
     )
     setLessonDone(normalized)
-    setCompletedLessons((value) => completedFromLessonProgress(normalized, value))
+    setCompletedLessons((value) =>
+      completedFromLessonProgress(
+        normalized,
+        value,
+        {},
+        questionCounts.length,
+        questionCounts,
+      ),
+    )
 
-    const savedCorrect = lessonCorrectStorage.get()
+    const savedCorrect = lessonCorrectStorage.get(textbookId)
     const normalizedCorrect = Object.fromEntries(
       Object.entries(savedCorrect)
         .filter(
           ([index, count]) =>
             Number.isInteger(Number(index)) &&
             Number(index) >= 0 &&
-            Number(index) < courses.length &&
+            Number(index) < questionCounts.length &&
             typeof count === 'number',
         )
-        .map(([index, count]) => [Number(index), clampLessonCorrect(count)]),
+        .map(([index, count]) => {
+          const lessonIndex = Number(index)
+          return [lessonIndex, clampLessonCorrect(count, questionCounts[lessonIndex])]
+        }),
     )
     setLessonCorrect(normalizedCorrect)
     setLessonLoaded(true)
-  }, [cloudLoaded, cloudApplied, hasAuthUser])
+  }, [cloudLoaded, cloudApplied, textbookId, questionCounts])
 
   // 加载错题记录
   useEffect(() => {
@@ -112,15 +114,11 @@ export function useLocalProgressLoader(
       setMistakesLoaded(true)
       return
     }
-    if (getSupabaseBrowser() && !hasAuthUser) {
-      setMistakes([])
-      setMistakesLoaded(true)
-      return
-    }
-    const saved = mistakesStorage.get()
+    const questionsById = new Map(questions.map((question) => [question.id, question]))
+    const saved = mistakesStorage.get(textbookId, (id) => questionsById.get(id))
     setMistakes(saved)
     setMistakesLoaded(true)
-  }, [cloudLoaded, cloudApplied, hasAuthUser])
+  }, [cloudLoaded, cloudApplied, textbookId, questions])
 
   return {
     lessonDone,

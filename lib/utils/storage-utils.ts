@@ -12,6 +12,12 @@ const STORAGE_KEYS = {
   LESSON_CORRECT: 'syntax-coach-lesson-correct',
   COMPLETED_LESSONS: 'syntax-coach-completed-lessons',
 } as const
+const DEFAULT_TEXTBOOK_ID = 'builtin-japanese-syntax'
+
+const storageKey = (key: string, textbookId: string) =>
+  textbookId === DEFAULT_TEXTBOOK_ID
+    ? key
+    : `syntax-coach:textbook:${textbookId}:${key.slice('syntax-coach-'.length)}`
 
 /**
  * 安全读取 JSON 数据
@@ -41,15 +47,18 @@ const safeJsonSet = (key: string, value: unknown): void => {
  * 错题记录管理
  */
 export const mistakesStorage = {
-  get: (): Question[] => {
-    const data = safeJsonParse(STORAGE_KEYS.MISTAKES, [])
-    return normalizeMistakes(data)
+  get: (
+    textbookId = DEFAULT_TEXTBOOK_ID,
+    resolveQuestion?: (id: string) => Question | undefined,
+  ): Question[] => {
+    const data = safeJsonParse(storageKey(STORAGE_KEYS.MISTAKES, textbookId), [])
+    return normalizeMistakes(data, resolveQuestion)
   },
-  set: (mistakes: Question[]): void => {
-    safeJsonSet(STORAGE_KEYS.MISTAKES, mistakes)
+  set: (mistakes: Question[], textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    safeJsonSet(storageKey(STORAGE_KEYS.MISTAKES, textbookId), mistakes)
   },
-  clear: (): void => {
-    localStorage.removeItem(STORAGE_KEYS.MISTAKES)
+  clear: (textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    localStorage.removeItem(storageKey(STORAGE_KEYS.MISTAKES, textbookId))
   },
 }
 
@@ -57,27 +66,34 @@ export const mistakesStorage = {
  * 课程进度管理
  */
 export const lessonProgressStorage = {
-  get: (): Record<number, number> => {
-    return safeJsonParse(STORAGE_KEYS.LESSON_PROGRESS, {})
+  get: (textbookId = DEFAULT_TEXTBOOK_ID): Record<number, number> => {
+    return safeJsonParse(storageKey(STORAGE_KEYS.LESSON_PROGRESS, textbookId), {})
   },
-  set: (progress: Record<number, number>): void => {
-    safeJsonSet(STORAGE_KEYS.LESSON_PROGRESS, progress)
+  set: (progress: Record<number, number>, textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    safeJsonSet(storageKey(STORAGE_KEYS.LESSON_PROGRESS, textbookId), progress)
   },
-  merge: (progress: Record<number, number>): void => {
-    const saved = lessonProgressStorage.get()
+  merge: (
+    progress: Record<number, number>,
+    textbookId = DEFAULT_TEXTBOOK_ID,
+    questionLimits: number[] = [],
+  ): void => {
+    const saved = lessonProgressStorage.get(textbookId)
     const merged = {
       ...saved,
       ...Object.fromEntries(
         Object.entries(progress).map(([index, count]) => [
           index,
-          clampLessonAnswered(Math.max(Number(saved?.[index]) || 0, Number(count) || 0)),
+          clampLessonAnswered(
+            Math.max(Number(saved?.[index]) || 0, Number(count) || 0),
+            questionLimits[Number(index)],
+          ),
         ]),
       ),
     }
-    lessonProgressStorage.set(merged)
+    lessonProgressStorage.set(merged, textbookId)
   },
-  clear: (): void => {
-    localStorage.removeItem(STORAGE_KEYS.LESSON_PROGRESS)
+  clear: (textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    localStorage.removeItem(storageKey(STORAGE_KEYS.LESSON_PROGRESS, textbookId))
   },
 }
 
@@ -85,14 +101,14 @@ export const lessonProgressStorage = {
  * 课程正确数管理
  */
 export const lessonCorrectStorage = {
-  get: (): Record<number, number> => {
-    return safeJsonParse(STORAGE_KEYS.LESSON_CORRECT, {})
+  get: (textbookId = DEFAULT_TEXTBOOK_ID): Record<number, number> => {
+    return safeJsonParse(storageKey(STORAGE_KEYS.LESSON_CORRECT, textbookId), {})
   },
-  set: (correct: Record<number, number>): void => {
-    safeJsonSet(STORAGE_KEYS.LESSON_CORRECT, correct)
+  set: (correct: Record<number, number>, textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    safeJsonSet(storageKey(STORAGE_KEYS.LESSON_CORRECT, textbookId), correct)
   },
-  clear: (): void => {
-    localStorage.removeItem(STORAGE_KEYS.LESSON_CORRECT)
+  clear: (textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    localStorage.removeItem(storageKey(STORAGE_KEYS.LESSON_CORRECT, textbookId))
   },
 }
 
@@ -100,23 +116,23 @@ export const lessonCorrectStorage = {
  * 已完成课程管理
  */
 export const completedLessonsStorage = {
-  get: (): number[] => {
-    return safeJsonParse(STORAGE_KEYS.COMPLETED_LESSONS, [])
+  get: (textbookId = DEFAULT_TEXTBOOK_ID): number[] => {
+    return safeJsonParse(storageKey(STORAGE_KEYS.COMPLETED_LESSONS, textbookId), [])
   },
-  set: (lessons: number[]): void => {
-    safeJsonSet(STORAGE_KEYS.COMPLETED_LESSONS, lessons)
+  set: (lessons: number[], textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    safeJsonSet(storageKey(STORAGE_KEYS.COMPLETED_LESSONS, textbookId), lessons)
   },
-  clear: (): void => {
-    localStorage.removeItem(STORAGE_KEYS.COMPLETED_LESSONS)
+  clear: (textbookId = DEFAULT_TEXTBOOK_ID): void => {
+    localStorage.removeItem(storageKey(STORAGE_KEYS.COMPLETED_LESSONS, textbookId))
   },
 }
 
 /**
  * 清除所有学习数据
  */
-export const clearAllProgress = (): void => {
-  mistakesStorage.clear()
-  lessonProgressStorage.clear()
-  lessonCorrectStorage.clear()
-  completedLessonsStorage.clear()
+export const clearAllProgress = (textbookId = DEFAULT_TEXTBOOK_ID): void => {
+  mistakesStorage.clear(textbookId)
+  lessonProgressStorage.clear(textbookId)
+  lessonCorrectStorage.clear(textbookId)
+  completedLessonsStorage.clear(textbookId)
 }

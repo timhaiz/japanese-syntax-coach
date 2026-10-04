@@ -1,9 +1,11 @@
 'use client'
 export function CurrentLessonCard({
   lesson,
+  questionCount = 20,
   onOpen,
 }: {
   lesson: { id: number; title: string; progress: number; grammar: { pattern: string }[] }
+  questionCount?: number
   onOpen: () => void
 }) {
   return (
@@ -31,7 +33,7 @@ export function CurrentLessonCard({
         <small>
           {lesson.progress
             ? `已完成 ${lesson.progress}% · 继续巩固句型`
-            : '查看本课句型，然后完成 20 道练习'}
+            : `查看本课句型，然后完成 ${questionCount} 道练习`}
         </small>
       </div>
       <span className="arrow">→</span>

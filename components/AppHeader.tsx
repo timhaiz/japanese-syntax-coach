@@ -2,10 +2,12 @@
 
 export function AppHeader({
   lessonId,
+  textbookTitle,
   learnerName,
   onProfile,
 }: {
   lessonId: number
+  textbookTitle: string
   learnerName: string
   onProfile: () => void
 }) {
@@ -15,7 +17,7 @@ export function AppHeader({
         <span className="brand-mark">文</span>
         <div>
           <strong>句型教练</strong>
-          <small>标准日本语 · 上册</small>
+          <small>{textbookTitle}</small>
         </div>
       </div>
       <div className="streak">第 {lessonId} 课</div>

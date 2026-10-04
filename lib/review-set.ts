@@ -4,12 +4,18 @@ import {questionsForLesson, type Question} from '@/lib/question-bank'
  * Builds a deterministic mixed review set after each five completed lessons.
  * The caller passes zero-based lesson indexes, matching the client progress model.
  */
-export function createMixedReviewSet(completedLessonIndexes:number[],limit=20):Question[]{
-  const eligible=[...new Set(completedLessonIndexes.filter(index=>Number.isInteger(index)&&index>=0&&index<24))]
-    .filter(index=>(index+1)%5===0)
+export function createMixedReviewSet(
+  completedLessonIndexes:number[],
+  limit=20,
+  getQuestions: (lessonId:number)=>Question[]=questionsForLesson,
+  lessonCount=24,
+  checkpointInterval=5,
+):Question[]{
+  const eligible=[...new Set(completedLessonIndexes.filter(index=>Number.isInteger(index)&&index>=0&&index<lessonCount))]
+    .filter(index=>checkpointInterval > 0 && (index+1)%checkpointInterval===0)
     .sort((a,b)=>a-b)
   if(!eligible.length)return []
-  const pool=eligible.flatMap(index=>questionsForLesson(index+1))
+  const pool=eligible.flatMap(index=>getQuestions(index+1))
   if(!pool.length)return []
   const output:Question[]=[]
   const seen=new Set<string>()

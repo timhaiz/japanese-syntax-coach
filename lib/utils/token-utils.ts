@@ -9,6 +9,9 @@ export const tokenPatterns = [
   'ではありません',
   'ませんでした',
   'かもしれません',
+  'ことができます',
+  'たことがあります',
+  'たほうがいい',
   'と思います',
   'ましょうか',
   'ています',
@@ -23,7 +26,28 @@ export const tokenPatterns = [
 
 export const tokenParticles = ['から', 'まで', 'は', 'が', 'を', 'に', 'で', 'と', 'の', 'も', 'へ', 'か']
 
-export const tokenWords = ['かばん', '売り場', '銀行', '郵便局', 'デパート', '会社', '学校', '駅']
+export const tokenWords = [
+  'かばん',
+  'かぎ',
+  'もう',
+  'もちろん',
+  'もらいます',
+  'もらいました',
+  'できます',
+  'います',
+  'とき',
+  'とても',
+  'にぎやか',
+  'もの',
+  'はい',
+  '売り場',
+  '銀行',
+  '郵便局',
+  'デパート',
+  '会社',
+  '学校',
+  '駅',
+]
 
 export const tokenizeAnswer = (answer: string): string[] => {
   const tokens: string[] = []
