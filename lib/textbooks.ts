@@ -70,8 +70,9 @@ export const builtInTextbookPackage: TextbookPackage = {
   schemaVersion: TEXTBOOK_SCHEMA_VERSION,
   textbook: {
     id: 'builtin-japanese-syntax',
-    title: '日语句型课程',
-    description: '应用内置课程与题库。',
+    title: '新版标准日本语 初级上册',
+    shortTitle: '新标日 初级上',
+    description: '基于《新版标准日本语》初级上册的 24 课句型与练习。',
     lessons: courses.map(copyLesson),
     questions: Object.values(questionBank).flat().map(copyQuestion),
   },

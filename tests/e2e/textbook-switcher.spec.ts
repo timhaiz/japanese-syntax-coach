@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { parseTextbookJson } from '../../lib/textbook-import'
+import { builtInTextbookPackage } from '../../lib/textbooks'
 
 const createPackage = (id: string, title: string) => ({
   schemaVersion: 1,
@@ -73,6 +74,11 @@ test('拒绝不受支持的远程封面地址', () => {
   if (!result.success) expect(result.errors.join(' ')).toContain('cover')
 })
 
+test('内置教材对应新版标准日本语初级上册', () => {
+  expect(builtInTextbookPackage.textbook.title).toBe('新版标准日本语 初级上册')
+  expect(builtInTextbookPackage.textbook.lessons).toHaveLength(24)
+})
+
 async function uploadPackage(
   page: import('@playwright/test').Page,
   id: string,
@@ -91,7 +97,7 @@ test('schemaVersion 1 教材导入后可选并显示真实题数', async ({ page
   await uploadPackage(page, 'test-imported-book', '导入测试教材')
 
   await expect(page.getByText('导入测试教材', { exact: true }).first()).toBeVisible()
-  await page.getByRole('button', { name: /课程/ }).click()
+  await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: /课程/ }).click()
   await page.getByRole('button', { name: /第 1 课：判断句/ }).click()
   await expect(page.getByRole('button', { name: /开始整课练习（3 题）/ })).toBeVisible()
 })
@@ -104,7 +110,7 @@ test('拒绝非法版本的 JSON，且不加入教材列表', async ({ page }) =
     buffer: Buffer.from(JSON.stringify({ schemaVersion: 9, textbook: {} })),
   })
 
-  await expect(page.getByRole('alert')).toContainText('schemaVersion')
+  await expect(page.locator('.textbook-upload-error')).toContainText('schemaVersion')
   await expect(page.locator('#textbook-select option')).toHaveCount(1)
   await expect(page.locator('#textbook-select')).toHaveValue('builtin-japanese-syntax')
 })
@@ -113,8 +119,10 @@ test('切换教材隔离同 ID 题目的本地进度并恢复原教材', async (
   await page.goto('/')
   await uploadPackage(page, 'test-book-a', '教材 A')
   await uploadPackage(page, 'test-book-b', '教材 B')
+  await page.locator('#textbook-select').selectOption('test-book-a')
+  await expect(page.locator('#textbook-select')).toHaveValue('test-book-a')
 
-  await page.getByRole('button', { name: /课程/ }).click()
+  await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: /课程/ }).click()
   await page.getByRole('button', { name: /第 1 课：判断句/ }).click()
   await page.getByRole('button', { name: /开始整课练习（3 题）/ }).click()
   await page.getByRole('button', { name: 'A：正确答案' }).click()
@@ -123,13 +131,13 @@ test('切换教材隔离同 ID 题目的本地进度并恢复原教材', async (
 
   await page.locator('#textbook-select').selectOption('test-book-b')
   await expect(page.locator('#textbook-select')).toHaveValue('test-book-b')
-  await page.getByRole('button', { name: /课程/ }).click()
+  await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: /课程/ }).click()
   await page.getByRole('button', { name: /第 1 课：判断句/ }).click()
   await expect(page.getByText(/已作答 0 \/ 3/)).toBeVisible()
 
   await page.locator('#textbook-select').selectOption('test-book-a')
   await expect(page.locator('#textbook-select')).toHaveValue('test-book-a')
-  await page.getByRole('button', { name: /课程/ }).click()
+  await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: /课程/ }).click()
   await page.getByRole('button', { name: /第 1 课：判断句/ }).click()
   await expect(page.getByText(/已作答 1 \/ 3/)).toBeVisible()
 })
