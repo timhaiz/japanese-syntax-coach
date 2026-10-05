@@ -43,7 +43,7 @@ export function TextbookLibrary() {
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜索词本"
+            placeholder="搜索教材"
             aria-label="搜索教材"
           />
         </label>
@@ -67,7 +67,7 @@ export function TextbookLibrary() {
 
       <section className="textbook-library-summary" aria-live="polite">
         <span>
-          当前 <strong>{selectedId ? 1 : 0}</strong> 本词本正在学习
+          当前 <strong>{selectedId ? 1 : 0}</strong> 本教材正在学习
         </span>
         <span className="textbook-library-count">共 {textbookOptions.length} 本</span>
       </section>

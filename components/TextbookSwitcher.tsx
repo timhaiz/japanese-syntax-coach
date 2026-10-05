@@ -17,7 +17,7 @@ export function TextbookSwitcher({
   return (
     <section className="textbook-switcher" aria-label="当前教材">
       <div className="textbook-cover" aria-hidden="true">
-        {textbook.cover ? <img src={textbook.cover} alt="" /> : <span>词本</span>}
+        {textbook.cover ? <img src={textbook.cover} alt="" /> : <span>教材</span>}
       </div>
       <div className="textbook-summary">
         <span className="eyebrow">当前教材</span>

@@ -14,7 +14,7 @@ export function TextbookCard({
   return (
     <article className={`textbook-card${selected ? ' selected' : ''}`}>
       <div className="textbook-card-cover" aria-hidden="true">
-        {textbook.cover ? <img src={textbook.cover} alt="" /> : <span>词本</span>}
+        {textbook.cover ? <img src={textbook.cover} alt="" /> : <span>教材</span>}
       </div>
       <div className="textbook-card-body">
         <div className="textbook-card-heading">
