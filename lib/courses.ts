@@ -1,4 +1,4 @@
-export type GrammarPoint={pattern:string;meaning:string;example:string;connection:string;explanation:string;responses?:string[];pitfalls?:string[]}
+export type GrammarPoint={pattern:string;meaning:string;example:string;connection:string;explanation:string;responses?:string[];pitfalls?:string[];audio?:string}
 export type Lesson={id:number;title:string;goal:string;grammar:GrammarPoint[]}
 const point=(pattern:string,meaning:string,example:string,connection='依照本课句型替换名词或动词。',explanation='这是本课核心句型。')=>({pattern,meaning,example,connection,explanation})
 const titles=['自我介绍与判断句','これは 本です','ここは デパートです','部屋に 机と 椅子が あります','森さんは 7時に 起きます','吉田さんは 来月 中国へ 行きます','李さんは 毎日 コーヒーを 飲みます','李さんは 日本語で 手紙を 書きます','四川料理は 辛いです','京都の 紅葉は 有名です','小野さんは 歌が 好きです','李さんは 森さんより 若いです','机の 上に 本が 3冊 あります','昨日 デパートへ 行きました','小野さんは 今 新聞を 読んで います','ホテルの 部屋は 広くて 明るいです','私は 新しい 洋服が 欲しいです','携帯電話は とても 小さく なりました','部屋の かぎを 忘れないで ください','スミスさんは ピアノを 弾く ことが できます','私は すき焼きを 食べた ことが あります','森さんは 毎晩 テレビを 見る','李さんは 毎朝 何時に 起きますか','李さんは もうすぐ 来ると 思います']

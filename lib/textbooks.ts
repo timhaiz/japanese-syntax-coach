@@ -11,6 +11,7 @@ export type TextbookGrammarPoint = {
   example: string
   connection: string
   explanation: string
+  audio?: string
   responses?: string[]
   pitfalls?: string[]
 }
@@ -57,6 +58,7 @@ const copyLesson = (lesson: TextbookLesson): TextbookLesson => ({
     ...point,
     ...(point.responses ? { responses: [...point.responses] } : {}),
     ...(point.pitfalls ? { pitfalls: [...point.pitfalls] } : {}),
+    ...(point.audio ? { audio: point.audio } : {}),
   })),
 })
 

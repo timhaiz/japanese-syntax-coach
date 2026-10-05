@@ -979,6 +979,7 @@ function TextbookHome({
           <GrammarCarousel
             key={selectedLesson.id}
             lessonId={selectedLesson.id}
+            textbookId={selectedTextbookId}
             grammar={selectedLesson.grammar}
             onStartPractice={() => startLessonPractice(active)}
             practiceLabel={

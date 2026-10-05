@@ -1,5 +1,10 @@
+import { resolveGeneratedAudio } from '@/lib/tts/audio-manifest'
+
+let activeAudio: HTMLAudioElement | null = null
+
 /**
- * Read a Japanese example sentence with the browser's speech synthesis API.
+ * Read a Japanese example sentence with generated VOICEVOX audio when it is
+ * available, then fall back to the browser's speech synthesis API.
  *
  * Some browsers return an empty voice list until the asynchronous
  * `voiceschanged` event fires. If we speak before that happens, the browser
@@ -7,13 +12,39 @@
  * set to `ja-JP`. Wait for the voice list once, then explicitly select a
  * Japanese voice when one is available.
  */
-export function speakJapanese(text: string) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return
+export function speakJapanese(
+  text: string,
+  textbookId = 'builtin-japanese-syntax',
+  explicitAudio?: string,
+) {
+  if (typeof window === 'undefined') return
 
-  const synthesis = window.speechSynthesis
+  const synthesis = 'speechSynthesis' in window ? window.speechSynthesis : null
   const sentence = text.trim()
   if (!sentence) return
 
+  activeAudio?.pause()
+  activeAudio = null
+
+  void (async () => {
+    const generatedAudio = await resolveGeneratedAudio(sentence, textbookId, explicitAudio)
+    if (generatedAudio) {
+      const audio = new Audio(generatedAudio)
+      activeAudio = audio
+      try {
+        synthesis?.cancel()
+        await audio.play()
+        return
+      } catch {
+        if (activeAudio === audio) activeAudio = null
+      }
+    }
+
+    if (synthesis) speakWithBrowserVoice(sentence, synthesis)
+  })()
+}
+
+function speakWithBrowserVoice(sentence: string, synthesis: SpeechSynthesis) {
   let spoken = false
   const speak = () => {
     if (spoken) return

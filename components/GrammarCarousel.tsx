@@ -6,6 +6,7 @@ import { speakJapanese } from '@/lib/speech'
 
 type GrammarCarouselProps = {
   lessonId: number
+  textbookId?: string
   grammar: GrammarPoint[]
   onStartPractice: () => void
   practiceDisabled?: boolean
@@ -14,6 +15,7 @@ type GrammarCarouselProps = {
 
 export function GrammarCarousel({
   lessonId,
+  textbookId = 'builtin-japanese-syntax',
   grammar,
   onStartPractice,
   practiceDisabled = false,
@@ -102,7 +104,7 @@ export function GrammarCarousel({
                 className="grammar-speak"
                 type="button"
                 aria-label={`朗读句型 ${item.pattern}`}
-                onClick={() => speakJapanese(item.example)}
+                onClick={() => speakJapanese(item.example, textbookId, item.audio)}
               >
                 🔊 朗读例句
               </button>

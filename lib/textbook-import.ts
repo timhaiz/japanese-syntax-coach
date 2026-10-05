@@ -28,7 +28,7 @@ const optionalTextbookKeys = ['shortTitle', 'cover', 'description']
 const requiredLessonKeys = ['id', 'title', 'goal', 'grammar']
 const optionalLessonKeys = ['description']
 const grammarPointRequiredKeys = ['pattern', 'meaning', 'example', 'connection', 'explanation']
-const grammarPointOptionalKeys = ['responses', 'pitfalls']
+const grammarPointOptionalKeys = ['responses', 'pitfalls', 'audio']
 const requiredQuestionKeys = ['id', 'lessonId', 'type', 'prompt', 'answer', 'hint']
 const optionalQuestionKeys = ['options', 'acceptedAnswers']
 
@@ -212,6 +212,10 @@ export function validateTextbookPackage(
           }
           validateOptionalStringArray(pointValue, 'responses', `${pointPath}「responses」`, errors)
           validateOptionalStringArray(pointValue, 'pitfalls', `${pointPath}「pitfalls」`, errors)
+          if (Object.prototype.hasOwnProperty.call(pointValue, 'audio') &&
+            (typeof pointValue.audio !== 'string' || !pointValue.audio.startsWith('/'))) {
+            errors.push(`${pointPath}「audio」必须是 / 开头的本地音频资源。`)
+          }
         })
       }
     })
