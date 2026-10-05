@@ -14,7 +14,7 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(pageSource).toContain('presentedQuestion.options')
   expect(pageSource).toContain('const practiceInstruction = useMemo')
   expect(pageSource).toContain('presentedQuestion.type')
-  expect(pageSource).toContain('setReplayMode(existingAnswered >= lessonLimit')
+  expect(pageSource).toContain('setReplayMode(false)')
   expect(pageSource).toContain('practiceState.isReplay')
   expect(pageSource).toContain('useTextbookCatalog')
   expect(pageSource).toContain('lessonQuestionsList')

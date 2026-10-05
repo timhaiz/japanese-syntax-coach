@@ -441,8 +441,7 @@ function TextbookHome({
   useEffect(() => {
     const lessonLimit = questionCounts[active] ?? 0
     const answered = clampLessonAnswered(lessonDone[active], lessonLimit)
-    const correct = clampLessonCorrect(lessonCorrect[active], lessonLimit)
-    if (lessonLimit > 0 && answered >= lessonLimit && correct >= Math.ceil(lessonLimit * 0.9))
+    if (lessonLimit > 0 && answered >= lessonLimit)
       setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
   }, [active, lessonDone, lessonCorrect, questionCounts])
   useEffect(() => {
@@ -450,17 +449,6 @@ function TextbookHome({
   }, [gradingState.isGraded])
   const activeLessonLimit = questionCounts[active] ?? 0
   const activeLessonDone = clampLessonAnswered(lessonDone[active], activeLessonLimit)
-  const activeLessonCorrect = clampLessonCorrect(lessonCorrect[active], activeLessonLimit)
-  const activeLessonAccuracy = activeLessonDone
-    ? Math.min(
-        100,
-        Math.round(
-          (Math.min(activeLessonCorrect, activeLessonLimit) /
-            Math.min(activeLessonDone, activeLessonLimit)) *
-            100,
-        ),
-      )
-    : 0
   const effectiveCompletedLessons = completedFromLessonProgress(
     lessonDone,
     completedLessons,
@@ -468,12 +456,6 @@ function TextbookHome({
     courses.length,
     questionCounts,
   )
-  const lessonUnlockMessage = effectiveCompletedLessons.includes(active)
-    ? '本课已达标，下一课已解锁。'
-    : activeLessonDone >= activeLessonLimit &&
-        activeLessonCorrect < Math.ceil(activeLessonLimit * 0.9)
-      ? `${activeLessonLimit} 题已全部完成，但正确率为 ${activeLessonAccuracy}%；请重练错题，至少答对 ${Math.ceil(activeLessonLimit * 0.9)} 题后解锁下一课。`
-      : `需完成 ${activeLessonLimit} 题且至少答对 ${Math.ceil(activeLessonLimit * 0.9)} 题（90%）才能解锁下一课。`
   const displayedLessons = courseLessons.map((lesson, index) => {
     const total = questionCounts[index] ?? 0
     return {
@@ -704,31 +686,22 @@ function TextbookHome({
           existingAnswered = Math.max(0, Math.min(lessonLimit, cached))
       } catch {}
     }
-    lessonReplayRef.current =
-      existingAnswered >= lessonLimit && lessonLimit > 0
-        ? { lesson: lessonIndex, count: existingAnswered }
-        : null
-    replayCorrectRef.current =
-      existingAnswered >= lessonLimit && lessonLimit > 0
-        ? clampLessonCorrect(lessonCorrect[lessonIndex], lessonLimit)
-        : 0
-    const lessonMistakes = mistakesForLesson(mistakes, lessonIndex + 1)
-    setRetryQuestions(lessonMistakes)
-    replayMistakesRef.current = lessonMistakes
-    if (existingAnswered > 0 && existingAnswered !== (lessonDone[lessonIndex] ?? 0))
+    const isCompletedLesson = existingAnswered >= lessonLimit && lessonLimit > 0
+    // 已完成课程重复答题时重新加载整课题目，从第一题开始；历史进度仍保留。
+    lessonReplayRef.current = null
+    replayCorrectRef.current = 0
+    setRetryQuestions([])
+    replayMistakesRef.current = []
+    if (!isCompletedLesson && existingAnswered > 0 && existingAnswered !== (lessonDone[lessonIndex] ?? 0))
       setLessonDone((value) => ({ ...value, [lessonIndex]: existingAnswered }))
-    setReplayMode(existingAnswered >= lessonLimit && lessonLimit > 0 && lessonMistakes.length > 0)
-    setFullLessonProgress(
-      existingAnswered >= lessonLimit && lessonLimit > 0
-        ? 0
-        : Math.min(existingAnswered, Math.max(0, lessonLimit - 1)),
-    )
+    setReplayMode(false)
+    setFullLessonProgress(isCompletedLesson ? 0 : Math.min(existingAnswered, Math.max(0, lessonLimit - 1)))
     if (existingAnswered === 0) setLessonCorrect((value) => ({ ...value, [lessonIndex]: 0 }))
     setActive(lessonIndex)
 
     // 使用统一初始化
     initializePractice({ mode: 'lesson', isFullLesson: true })
-  }, [active, lessonDone, lessonCorrect, mistakes, questionCounts, selectedTextbookId, setReplayMode, setFullLessonProgress, initializePractice])
+  }, [active, lessonDone, questionCounts, selectedTextbookId, setReplayMode, setFullLessonProgress, initializePractice])
 
   const startMistakePractice = useCallback(() => {
     if (mistakes.length) {
@@ -788,14 +761,14 @@ function TextbookHome({
             [active]: Math.min(lessonLimit, (value[active] ?? 0) + 1),
           }))
           setLessonCorrect((value) => ({ ...value, [active]: finalCorrect }))
-          if (complete && finalCorrect / sessionLimit >= 0.9)
+          if (complete)
             setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
         }
       } else if (replayCount !== null) {
         replayCorrectRef.current = finalCorrect
         setLessonDone((value) => ({ ...value, [active]: replayCount }))
         setLessonCorrect((value) => ({ ...value, [active]: finalCorrect }))
-        if (complete && finalCorrect >= Math.ceil(lessonLimit * 0.9))
+        if (complete)
           setCompletedLessons((value) => (value.includes(active) ? value : [...value, active]))
       }
     }
@@ -815,7 +788,7 @@ function TextbookHome({
           ? remainingMistakes
           : [...remainingMistakes, currentQuestion]
       const types = summaryMistakes.map((item) => item.type)
-      const lessonQualified = lessonLimit > 0 && finalCorrect >= Math.ceil(lessonLimit * 0.9)
+      const lessonQualified = lessonLimit > 0
       setLessonSummary({
         lessonId: active + 1,
         accuracy: lessonLimit > 0 ? Math.round((finalCorrect / lessonLimit) * 100) : 0,
@@ -925,10 +898,9 @@ function TextbookHome({
             }}
             actionLabel={
               allLessonsCompleted && currentLessonMistakeCount === 0
-                ? '全部课程已完成'
+                ? `重新答题第 ${currentLesson.id} 课`
                 : undefined
             }
-            actionDisabled={allLessonsCompleted && currentLessonMistakeCount === 0}
           />
           {effectiveCompletedLessons.some((index) => (index + 1) % reviewCheckpointInterval === 0) && (
             <button className="primary wide" onClick={startMixedPractice}>
@@ -992,37 +964,22 @@ function TextbookHome({
             <h1>{selectedLesson.title}</h1>
             <p className="muted">{selectedLesson.goal}</p>
           </div>
-          <div className="lesson-status">
-            <b>
-              已作答 {activeLessonDone} / {activeLessonLimit} · 正确 {activeLessonCorrect} 题（
-              {activeLessonAccuracy}%）
-            </b>
-            <small>{lessonUnlockMessage}</small>
-          </div>
           <GrammarCarousel
             key={selectedLesson.id}
             lessonId={selectedLesson.id}
             grammar={selectedLesson.grammar}
             onStartPractice={() => startLessonPractice(active)}
-            practiceDisabled={
-              activeLessonDone >= activeLessonLimit &&
-              activeLessonLimit > 0 &&
-              mistakesForLesson(mistakes, selectedLesson.id).length === 0
-            }
             practiceLabel={
-              activeLessonDone >= activeLessonLimit &&
-              mistakesForLesson(mistakes, selectedLesson.id).length > 0
-                ? `重练本课错题（${mistakesForLesson(mistakes, selectedLesson.id).length} 题）`
-                : activeLessonDone >= activeLessonLimit && activeLessonLimit > 0
-                  ? '本课已完成，无错题需要重练'
-                  : `开始整课练习（${activeLessonLimit} 题）`
+              activeLessonDone >= activeLessonLimit && activeLessonLimit > 0
+                ? `重新答题（${activeLessonLimit}题）`
+                : `开始整课练习（${activeLessonLimit}题）`
             }
           />
           {active < displayedLessons.length - 1 && (
             <div className="next-preview">
               <b>下一课预告：第 {selectedLesson.id + 1} 课</b>
               <p>{displayedLessons[active + 1].goal}</p>
-              <small>完成本课全部题目且正确率达到 90% 后解锁</small>
+              <small>完成本课全部题目后解锁</small>
             </div>
           )}
         </>

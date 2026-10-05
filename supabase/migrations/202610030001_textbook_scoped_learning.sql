@@ -159,8 +159,6 @@ begin
       correct_count = least(v_limit, public.lesson_progress.correct_count + case when p_correct then 1 else 0 end),
       completed_at = case
         when public.lesson_progress.answered_count + 1 >= v_limit
-          and (public.lesson_progress.correct_count + case when p_correct then 1 else 0 end)::numeric
-            / greatest(1, public.lesson_progress.answered_count + 1) >= 0.9
         then coalesce(public.lesson_progress.completed_at, now())
         else public.lesson_progress.completed_at
       end,
@@ -170,7 +168,7 @@ begin
     update public.lesson_progress set
       correct_count = least(v_limit, correct_count + case when p_correct then 1 else 0 end),
       completed_at = case
-        when correct_count + case when p_correct then 1 else 0 end >= ceil(v_limit * 0.9)
+        when answered_count >= v_limit
         then coalesce(completed_at, now())
         else completed_at
       end,

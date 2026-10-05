@@ -12,6 +12,11 @@ async function passFirstChoice(page:any){
 async function pickTokens(page:any,tokens:string[]){
   for(const token of tokens) await page.locator('.token-bank .token-button').filter({hasText:new RegExp(`^${token.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}$`)}).first().click()
 }
+async function startLesson(page:any){
+  await page.getByRole('button',{name:/学习第 1 课句型/}).click()
+  for(let i=0;i<3;i++) await page.getByRole('button',{name:'下一个 →'}).click()
+  await page.getByRole('button',{name:/开始整课练习|重新答题/}).click()
+}
 
 test.beforeEach(async({page})=>{
   await page.goto('/')
@@ -22,7 +27,7 @@ test.beforeEach(async({page})=>{
 test('首页入口会进入当前课程整课练习',async({page})=>{
   await expect(page.getByText('一课一练，',{exact:false})).toBeVisible()
   await expect(page.getByText('每课 20 道主动输出题：先看句型骨架，再练到能快速组织日语。')).toBeVisible()
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   await expect(page.getByText('第 1 课 · 练习')).toBeVisible()
   await expect(page.getByText('4 / 20')).toBeVisible()
@@ -42,7 +47,7 @@ test('课程列表中的锁定课程不可操作',async({page})=>{
 })
 
 test('候选词答案省略句末标点仍判定正确',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   await pickTokens(page,['私','は','先生','ではありません'])
   await page.getByRole('button',{name:/^提交答案/}).click()
@@ -50,7 +55,7 @@ test('候选词答案省略句末标点仍判定正确',async({page})=>{
 })
 
 test('提交后保持当前题目，点击下一题才切换',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   await expect(page.locator('.prompt')).toHaveText('我不是老师。')
   await pickTokens(page,['私','は','先生','ではありません'])
@@ -63,7 +68,7 @@ test('提交后保持当前题目，点击下一题才切换',async({page})=>{
 })
 
 test('候选词块可组成问句并提交判分',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   await pickTokens(page,['私','は','先生','ではありません'])
   await page.getByRole('button',{name:/^提交答案/}).click()
@@ -74,7 +79,7 @@ test('候选词块可组成问句并提交判分',async({page})=>{
 })
 
 test('候选词块不显示句末标点，触控后不会把相邻词显示为已选',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   await expect(page.locator('.token-bank .token-button',{hasText:'。'})).toHaveCount(0)
   await page.locator('.token-bank .token-button',{hasText:'私'}).click()
@@ -83,7 +88,7 @@ test('候选词块不显示句末标点，触控后不会把相邻词显示为�
 })
 
 test('选择候选词后提交答案按钮保持原位',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   const submit=page.getByRole('button',{name:/^提交答案/})
   const before=await submit.boundingBox()
@@ -96,7 +101,7 @@ test('选择候选词后提交答案按钮保持原位',async({page})=>{
 })
 
 test('助词选择题按选项内容判分',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   for(let i=0;i<3;i++){
     const choices=page.locator('.choice-list button')
     await choices.nth(i===0?0:1).click()
@@ -107,7 +112,7 @@ test('助词选择题按选项内容判分',async({page})=>{
 })
 
 test('答错后进入错题本并可独立练习',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   await page.locator('.token-bank .token-button').first().click()
   await page.getByRole('button',{name:/^提交答案/}).click()
@@ -120,11 +125,11 @@ test('答错后进入错题本并可独立练习',async({page})=>{
   await page.getByRole('button',{name:/^提交答案/}).click()
   await page.getByRole('button',{name:/完成训练/}).click()
   await page.getByRole('button',{name:/错题本/}).click()
-  await expect(page.getByText('目前没有错题')).toBeVisible()
+  await expect(page.getByRole('heading',{name:'错题本'})).toBeVisible()
 })
 
 test('未完成整课 20 题不会解锁下一课',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   for(let i=0;i<6;i++){
     await page.locator('.token-bank .token-button').first().click()
@@ -138,7 +143,7 @@ test('未完成整课 20 题不会解锁下一课',async({page})=>{
 })
 
 test('完成部分整课练习后刷新仍保留课程进度',async({page})=>{
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await passFirstChoice(page)
   await page.locator('.token-bank .token-button').first().click()
   await page.getByRole('button',{name:/^提交答案/}).click()
@@ -151,7 +156,7 @@ test('完成部分整课练习后刷新仍保留课程进度',async({page})=>{
 test('未完成课程再次进入时从已答题数继续，不重复第一题',async({page})=>{
   await page.evaluate(()=>localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:3})))
   await page.reload()
-  await page.getByRole('button',{name:/开始第 1 课/}).click()
+  await startLesson(page)
   await expect(page.getByText('第 1 课 · 练习')).toBeVisible()
   await expect(page.getByText('4 / 20')).toBeVisible()
   await expect(page.locator('.prompt')).not.toHaveText('“我是学生。”选择正确项。')
@@ -160,7 +165,7 @@ test('未完成课程再次进入时从已答题数继续，不重复第一题',
 test('未来课程的陈旧完成标记不会把当前课程跳到第24课',async({page})=>{
   await page.evaluate(()=>localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify(Array.from({length:24},(_,index)=>index))))
   await page.reload()
-  await expect(page.getByRole('button',{name:/开始第 1 课/})).toBeVisible()
+  await expect(page.getByRole('button',{name:/学习第 1 课句型/})).toBeVisible()
   await expect(page.getByText('第 24 课 · 练习')).not.toBeVisible()
 })
 
@@ -170,23 +175,25 @@ test('没有实际进度的云端完成标记不会解锁课程',async({page})=>
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0,23]))
   })
   await page.reload()
-  await expect(page.getByRole('button',{name:/开始第 1 课/})).toBeVisible()
+  await expect(page.getByRole('button',{name:/学习第 1 课句型/})).toBeVisible()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await expect(page.getByRole('button',{name:/02 第 2 课/})).toContainText('🔒')
 })
 
-test('陈旧的100%答题进度但没有正确率证明时仍从第一课开始',async({page})=>{
+test('完成全部题目后不要求正确率即可解锁下一课',async({page})=>{
   await page.evaluate(()=>{
-    const progress=Object.fromEntries(Array.from({length:24},(_,index)=>[index,20]))
+    const progress=Object.fromEntries(Array.from({length:24},(_,index)=>[index,index === 0 ? 20 : 0]))
+    const correct=Object.fromEntries(Array.from({length:24},(_,index)=>[index,index === 0 ? 0 : 0]))
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify(progress))
+    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify(correct))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
   })
   await page.reload()
-  await expect(page.getByRole('button',{name:/开始第 1 课/})).toBeVisible()
-  await expect(page.getByRole('button',{name:/开始第 24 课/})).not.toBeVisible()
+  await page.getByRole('button',{name:'▤ 课程'}).click()
+  await expect(page.getByRole('button',{name:/02 第 2 课/})).toBeEnabled()
 })
 
-test('历史答题数超过20时显示边界值且仍按真实正确数计算',async({page})=>{
+test('课程页不显示旧的答题统计和正确率解锁提示',async({page})=>{
   await page.addInitScript(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:21}))
     localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:18}))
@@ -196,11 +203,11 @@ test('历史答题数超过20时显示边界值且仍按真实正确数计算',a
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await expect(page.getByText(/已作答 20 \/ 20 · 正确 18 题（90%）/)).toBeVisible()
-  await expect(page.getByRole('button',{name:/重练本课错题/})).toBeVisible()
+  await expect(page.getByText(/已作答 .*正确 .*题/)).not.toBeVisible()
+  await expect(page.getByText(/正确率达到 90%|本课已达标/)).not.toBeVisible()
 })
 
-test('全部课程完成且没有错题时首页入口显示完成并禁用',async({page})=>{
+test('全部课程完成后首页仍允许重新答题',async({page})=>{
   await page.addInitScript(()=>{
     const progress=Object.fromEntries(Array.from({length:24},(_,index)=>[index,20]))
     const correct=Object.fromEntries(Array.from({length:24},(_,index)=>[index,20]))
@@ -210,12 +217,12 @@ test('全部课程完成且没有错题时首页入口显示完成并禁用',asy
     localStorage.setItem('syntax-coach-mistakes','[]')
   })
   await page.reload()
-  const start=page.getByRole('button',{name:/全部课程已完成/})
+  const start=page.getByRole('button',{name:/重新答题第 \d+ 课/})
   await expect(start).toBeVisible()
-  await expect(start).toBeDisabled()
+  await expect(start).toBeEnabled()
 })
 
-test('已完成课程无错题时不允许重新开始整课',async({page})=>{
+test('已完成课程可以从第一题重新答完整课',async({page})=>{
   await page.evaluate(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0]))
@@ -224,11 +231,14 @@ test('已完成课程无错题时不允许重新开始整课',async({page})=>{
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
-  const practiceButton = page.getByRole('button',{name:/本课已完成，无错题需要重练/})
-  await expect(practiceButton).toBeDisabled()
+  for(let i=0;i<3;i++) await page.getByRole('button',{name:'下一个 →'}).click()
+  const practiceButton = page.getByRole('button',{name:/重新答题（20题）/})
+  await expect(practiceButton).toBeEnabled()
+  await practiceButton.click()
+  await expect(page.getByText('1 / 20')).toBeVisible()
 })
 
-test('已完成课程再次进入只加载本课错题',async({page})=>{
+test('已完成课程重复答题加载完整课程而不是只加载错题',async({page})=>{
   await page.addInitScript(()=>{
     localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
     localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([0]))
@@ -237,113 +247,9 @@ test('已完成课程再次进入只加载本课错题',async({page})=>{
   await page.reload()
   await page.getByRole('button',{name:'▤ 课程'}).click()
   await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await page.getByRole('button',{name:/重练本课错题/}).click()
-  await expect(page.getByText(/1\s*\/\s*1/)).toBeVisible()
-  await expect(page.getByText('“我是学生。”选择正确项。')).toBeVisible()
-})
-
-test('重练本课多道错题后累计正确数并解锁下一课',async({page})=>{
-  await page.addInitScript(()=>{
-    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
-    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
-    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
-    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
-      {id:'L01-Q003',lessonId:1,type:'助词',prompt:'错题二',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
-      {id:'L01-Q007',lessonId:1,type:'助词',prompt:'错题三',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
-    ]))
-  })
-  await page.reload()
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await page.getByRole('button',{name:/重练本课错题（3 题）/}).click()
-  for (const answer of ['A：私は学生です。','B：の','B：の']) {
-    await page.getByRole('button',{name:answer,exact:true}).click()
-    await page.getByRole('button',{name:/^提交答案/}).click()
-    await page.getByRole('button',{name:/下一题|完成训练/}).click()
-  }
-  await expect.poll(async()=>page.evaluate(()=>localStorage.getItem('syntax-coach-completed-lessons'))).toBe('[0]')
-})
-
-test('重练时答对的题会移出本课错题，下次只保留仍错的题',async({page})=>{
-  await page.addInitScript(()=>{
-    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
-    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
-    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
-    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
-      {id:'L01-Q003',lessonId:1,type:'助词',prompt:'错题二',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
-    ]))
-  })
-  await page.reload()
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await page.getByRole('button',{name:/重练本课错题（2 题）/}).click()
-
-  await page.getByRole('button',{name:'A：私は学生です。',exact:true}).click()
-  await page.getByRole('button',{name:/^提交答案/}).click()
-  await page.getByRole('button',{name:'下一题'}).click()
-  await page.getByRole('button',{name:'A：は',exact:true}).click()
-  await page.getByRole('button',{name:/^提交答案/}).click()
-  await page.getByRole('button',{name:'完成训练'}).click()
-
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await expect(page.getByRole('button',{name:/重练本课错题（1 题）/})).toBeVisible()
-  await expect(page.getByRole('button',{name:/重练本课错题（2 题）/})).not.toBeVisible()
-})
-
-test('重练仍未达标时不会显示进入下一课入口',async({page})=>{
-  await page.addInitScript(()=>{
-    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
-    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
-    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
-    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
-    ]))
-  })
-  await page.reload()
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await page.getByRole('button',{name:/重练本课错题（1 题）/}).click()
-  await page.getByRole('button',{name:'B：私は先生ではありません。',exact:true}).click()
-  await page.getByRole('button',{name:/^提交答案/}).click()
-  await page.getByRole('button',{name:'完成训练'}).click()
-  await expect(page.getByText('进入第 2 课')).not.toBeVisible()
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await expect(page.getByRole('button',{name:/02 第 2 课已锁定/})).toBeDisabled()
-})
-
-test('重练中途退出后会保留已答对结果并继续累计',async({page})=>{
-  await page.addInitScript(()=>{
-    localStorage.setItem('syntax-coach-lesson-progress',JSON.stringify({0:20}))
-    localStorage.setItem('syntax-coach-lesson-correct',JSON.stringify({0:17}))
-    localStorage.setItem('syntax-coach-completed-lessons',JSON.stringify([]))
-    localStorage.setItem('syntax-coach-mistakes',JSON.stringify([
-      {id:'L01-Q001',lessonId:1,type:'选择',prompt:'错题一',answer:'A',hint:'提示',options:['A：正确','B：错误']},
-      {id:'L01-Q003',lessonId:1,type:'助词',prompt:'错题二',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
-      {id:'L01-Q007',lessonId:1,type:'助词',prompt:'错题三',answer:'の',hint:'提示',options:['A：は','B：の','C：も']},
-    ]))
-  })
-  await page.reload()
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await page.getByRole('button',{name:/重练本课错题（3 题）/}).click()
-  await page.getByRole('button',{name:'A：私は学生です。',exact:true}).click()
-  await page.getByRole('button',{name:/^提交答案/}).click()
-  await page.getByRole('button',{name:'× 退出'}).click()
-
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await page.getByRole('button',{name:/01 第 1 课/}).click()
-  await expect(page.getByRole('button',{name:/重练本课错题（2 题）/})).toBeVisible()
-  await page.getByRole('button',{name:/重练本课错题（2 题）/}).click()
-  for (const answer of ['A：は','A：は']) {
-    await page.getByRole('button',{name:answer,exact:true}).click()
-    await page.getByRole('button',{name:/^提交答案/}).click()
-    await page.getByRole('button',{name:/下一题|完成训练/}).click()
-  }
-  await page.getByRole('button',{name:'▤ 课程'}).click()
-  await expect(page.getByRole('button',{name:/02 第 2 课：/})).toBeEnabled()
+  for(let i=0;i<3;i++) await page.getByRole('button',{name:'下一个 →'}).click()
+  await page.getByRole('button',{name:/重新答题（20题）/}).click()
+  await expect(page.getByText('1 / 20')).toBeVisible()
 })
 
 test('注册表单要求邮箱和匹配的密码',async({page})=>{

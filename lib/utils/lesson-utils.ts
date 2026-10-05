@@ -55,15 +55,7 @@ export const completedFromLessonProgress = (
   const qualifies = (index: number) => {
     const limit = questionLimits[index] ?? LESSON_QUESTION_LIMIT
     const answered = clampLessonAnswered(progress[index], limit)
-    const right = clampLessonCorrect(correct[index], limit)
-    const requiredCorrect = Math.ceil(limit * 0.9)
-    return (
-      typeof answered === 'number' &&
-      limit > 0 &&
-      answered >= limit &&
-      typeof right === 'number' &&
-      right >= requiredCorrect
-    )
+    return typeof answered === 'number' && limit > 0 && answered >= limit
   }
   const values = Array.isArray(explicit)
     ? explicit.filter(
