@@ -55,11 +55,7 @@ const STUDY_STATE_CACHE_TTL_MS = 30_000
 export default function Home() {
   const {
     selectedTextbook,
-    selectedId,
     textbookOptions,
-    uploadError,
-    selectTextbook,
-    importTextbook,
     refreshProgress,
   } = useTextbookCatalog()
 
@@ -69,9 +65,6 @@ export default function Home() {
       textbook={selectedTextbook}
       textbookOptions={textbookOptions}
       selectedTextbookId={selectedTextbook.textbook.id}
-      uploadError={uploadError}
-      onSelectTextbook={selectTextbook}
-      onUploadTextbook={importTextbook}
       onProgressChange={refreshProgress}
     />
   )
@@ -81,17 +74,11 @@ function TextbookHome({
   textbook,
   textbookOptions,
   selectedTextbookId,
-  uploadError,
-  onSelectTextbook,
-  onUploadTextbook,
   onProgressChange,
 }: {
   textbook: TextbookPackage
   textbookOptions: TextbookOption[]
   selectedTextbookId: string
-  uploadError: string
-  onSelectTextbook: (id: string) => void
-  onUploadTextbook: (file: File) => void
   onProgressChange: (id: string, questionCounts: number[]) => void
 }) {
   const textbookData = textbook.textbook
@@ -879,14 +866,15 @@ function TextbookHome({
         onProfile={() => setTab('me')}
       />
       <TextbookSwitcher
-        textbooks={textbookOptions.map((option) => ({
-          ...option,
-          progress: option.id === selectedTextbookId ? overallProgress : option.progress,
-        }))}
-        selectedId={selectedTextbookId}
-        onSelect={onSelectTextbook}
-        onUpload={onUploadTextbook}
-        uploadError={uploadError}
+        textbook={{
+          ...(textbookOptions.find((option) => option.id === selectedTextbookId) ?? {
+            id: selectedTextbookId,
+            title: textbookData.title,
+            shortTitle: textbookData.shortTitle ?? textbookData.title,
+            builtIn: false,
+          }),
+          progress: overallProgress,
+        }}
       />
       {studyStateError && userId && (
         <div className="state-note warning" role="alert">

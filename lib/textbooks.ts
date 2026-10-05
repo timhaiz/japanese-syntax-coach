@@ -72,6 +72,7 @@ export const builtInTextbookPackage: TextbookPackage = {
     id: 'builtin-japanese-syntax',
     title: '新版标准日本语 初级上册',
     shortTitle: '新标日 初级上',
+    cover: '/textbooks/shin-standard-japanese-beginner.jpg',
     description: '基于《新版标准日本语》初级上册的 24 课句型与练习。',
     lessons: courses.map(copyLesson),
     questions: Object.values(questionBank).flat().map(copyQuestion),
