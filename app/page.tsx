@@ -865,17 +865,19 @@ function TextbookHome({
         learnerName={learnerName}
         onProfile={() => setTab('me')}
       />
-      <TextbookSwitcher
-        textbook={{
-          ...(textbookOptions.find((option) => option.id === selectedTextbookId) ?? {
-            id: selectedTextbookId,
-            title: textbookData.title,
-            shortTitle: textbookData.shortTitle ?? textbookData.title,
-            builtIn: false,
-          }),
-          progress: overallProgress,
-        }}
-      />
+      {tab === 'home' && (
+        <TextbookSwitcher
+          textbook={{
+            ...(textbookOptions.find((option) => option.id === selectedTextbookId) ?? {
+              id: selectedTextbookId,
+              title: textbookData.title,
+              shortTitle: textbookData.shortTitle ?? textbookData.title,
+              builtIn: false,
+            }),
+            progress: overallProgress,
+          }}
+        />
+      )}
       {studyStateError && userId && (
         <div className="state-note warning" role="alert">
           <span>{studyStateError}</span>

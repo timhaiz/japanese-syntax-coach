@@ -79,6 +79,17 @@ test('内置教材对应新版标准日本语初级上册', () => {
   expect(builtInTextbookPackage.textbook.lessons).toHaveLength(24)
 })
 
+test('教材入口只在首页显示', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('link', { name: /教材库/ })).toBeVisible()
+
+  await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: /课程/ }).click()
+  await expect(page.getByRole('link', { name: /教材库/ })).toHaveCount(0)
+
+  await page.getByRole('navigation', { name: '主导航' }).getByRole('button', { name: /我的/ }).click()
+  await expect(page.getByRole('link', { name: /教材库/ })).toHaveCount(0)
+})
+
 async function uploadPackage(
   page: import('@playwright/test').Page,
   id: string,
