@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { getSupabaseBrowser } from '@/lib/supabase'
 import {
   builtInTextbookPackage,
   type TextbookPackage,
@@ -12,14 +13,38 @@ import { textbookProgress } from '@/lib/textbook-progress'
 
 const SELECTED_TEXTBOOK_KEY = 'japanese-syntax-coach:selected-textbook:v1'
 
+const scopedSelectedKey = (scope: string) => `${SELECTED_TEXTBOOK_KEY}:${scope || 'anonymous'}`
+
 export function useTextbookCatalog() {
   const [textbooks, setTextbooks] = useState<TextbookPackage[]>([builtInTextbookPackage])
   const [selectedId, setSelectedId] = useState(builtInTextbookPackage.textbook.id)
+  const [storageScope, setStorageScope] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState('')
   const [progressById, setProgressById] = useState<Record<string, number>>({})
 
   useEffect(() => {
-    const available = [builtInTextbookPackage, ...getStoredTextbookPackages()]
+    const supabase = getSupabaseBrowser()
+    if (!supabase) {
+      setStorageScope('anonymous')
+      return
+    }
+    let mounted = true
+    const applyScope = (scope: string) => {
+      if (mounted) setStorageScope(scope || 'anonymous')
+    }
+    void supabase.auth.getUser().then(({ data }) => applyScope(data.user?.id ?? 'anonymous'))
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      applyScope(session?.user?.id ?? 'anonymous')
+    })
+    return () => {
+      mounted = false
+      data.subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!storageScope) return
+    const available = [builtInTextbookPackage, ...getStoredTextbookPackages(storageScope)]
     setTextbooks(available)
     setProgressById(
       Object.fromEntries(
@@ -35,12 +60,13 @@ export function useTextbookCatalog() {
       ),
     )
     try {
-      const savedId = localStorage.getItem(SELECTED_TEXTBOOK_KEY)
+      const savedId = localStorage.getItem(scopedSelectedKey(storageScope))
       if (savedId && available.some((item) => item.textbook.id === savedId)) setSelectedId(savedId)
+      else setSelectedId(builtInTextbookPackage.textbook.id)
     } catch {
       // Keep the built-in textbook active when browser storage is unavailable.
     }
-  }, [])
+  }, [storageScope])
 
   const selectedTextbook = useMemo(
     () => textbooks.find((item) => item.textbook.id === selectedId) ?? builtInTextbookPackage,
@@ -63,11 +89,11 @@ export function useTextbookCatalog() {
     setSelectedId(id)
     setUploadError('')
     try {
-      localStorage.setItem(SELECTED_TEXTBOOK_KEY, id)
+      localStorage.setItem(scopedSelectedKey(storageScope ?? 'anonymous'), id)
     } catch {
       // The active choice remains valid for the current tab.
     }
-  }, [])
+  }, [storageScope])
 
   const selectTextbook = useCallback((id: string) => {
     if (textbooks.some((item) => item.textbook.id === id)) activateTextbook(id)
@@ -75,6 +101,10 @@ export function useTextbookCatalog() {
 
   const importTextbook = useCallback(async (file: File) => {
     setUploadError('')
+    if (!storageScope) {
+      setUploadError('正在确认当前账号，请稍后再导入教材。')
+      return
+    }
     let text: string
     try {
       text = await file.text()
@@ -94,7 +124,7 @@ export function useTextbookCatalog() {
       setUploadError(`第 ${emptyLessons.map((lesson) => lesson.id).join('、')} 课没有练习题，无法导入。`)
       return
     }
-    const saved = saveTextbookPackage(parsed.data)
+    const saved = saveTextbookPackage(parsed.data, storageScope)
     if (!saved.success) {
       setUploadError(saved.errors.join(' '))
       return
@@ -102,7 +132,7 @@ export function useTextbookCatalog() {
     setTextbooks((current) => [...current, saved.data])
     setProgressById((current) => ({ ...current, [saved.data.textbook.id]: 0 }))
     activateTextbook(saved.data.textbook.id)
-  }, [activateTextbook, textbooks])
+  }, [activateTextbook, storageScope, textbooks])
 
   const refreshProgress = useCallback((id: string, questionCounts: number[]) => {
     setProgressById((current) => ({ ...current, [id]: textbookProgress(id, questionCounts) }))

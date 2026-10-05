@@ -12,14 +12,15 @@ export function TextbookCard({
   onSelect: () => void
 }) {
   return (
-    <article className={`textbook-card${selected ? ' selected' : ''}`}>
-      <div className="textbook-card-cover" aria-hidden="true">
+    <article className={`textbook-card${selected ? ' selected' : ''}`} aria-current={selected ? 'true' : undefined}>
+      <div className={`textbook-card-cover${selected ? ' active' : ''}`} aria-hidden="true">
         {textbook.cover ? <img src={textbook.cover} alt="" /> : <span>教材</span>}
       </div>
       <div className="textbook-card-body">
         <div className="textbook-card-heading">
           <h2>{textbook.title}</h2>
           {textbook.builtIn && <span className="textbook-card-badge">内置</span>}
+          {selected && <span className="textbook-card-active-badge">正在学习</span>}
         </div>
         <div className="textbook-card-progress-row">
           <span>学习进度 {textbook.progress}%</span>

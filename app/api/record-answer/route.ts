@@ -38,6 +38,9 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (textbookId !== BUILTIN_TEXTBOOK_ID) {
+    return NextResponse.json({ record: null, textbookScopeAvailable: false, localOnly: true })
+  }
 
   const errorTags = (body.errorTags ?? []).filter((tag): tag is string => typeof tag === 'string')
   const knowledgeTags = (body.knowledgeTags ?? []).filter((tag): tag is string => typeof tag === 'string')

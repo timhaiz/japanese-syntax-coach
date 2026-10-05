@@ -284,7 +284,18 @@ function TextbookHome({
   }, [cloudLoaded, studyStateLoaded, userId, lessonDone, lessonCorrect, completedLessons, mistakes, syncProgress])
 
   useEffect(() => {
-      if (!userId) return
+    if (!userId) return
+    // 用户导入的教材只保存在当前用户自己的本地/账号范围内，
+    // 不依赖需要数据库教材字段的云端复习接口。
+    if (selectedTextbookId !== 'builtin-japanese-syntax') {
+      setDueQuestionIds([])
+      setKnowledgePointMastery({})
+      setLearningMetrics({ correctStreak: 0, errorRate: 0, forgettingRate: 0, topErrorTags: [] })
+      setStudyStateError('')
+      setStudyStateLoaded(true)
+      loadedStudyUserId.current = userId
+      return
+    }
     let cancelled = false
     setStudyStateLoaded(false)
     setStudyStateError('')
@@ -963,6 +974,7 @@ function TextbookHome({
             <div className="tag">第 {selectedLesson.id} 课 · 核心句型</div>
             <h1>{selectedLesson.title}</h1>
             <p className="muted">{selectedLesson.goal}</p>
+            <p className="lesson-progress-note">已作答 {activeLessonDone} / {activeLessonLimit}</p>
           </div>
           <GrammarCarousel
             key={selectedLesson.id}
@@ -971,8 +983,8 @@ function TextbookHome({
             onStartPractice={() => startLessonPractice(active)}
             practiceLabel={
               activeLessonDone >= activeLessonLimit && activeLessonLimit > 0
-                ? `重新答题（${activeLessonLimit}题）`
-                : `开始整课练习（${activeLessonLimit}题）`
+                ? `重新答题（${activeLessonLimit} 题）`
+                : `开始整课练习（${activeLessonLimit} 题）`
             }
           />
           {active < displayedLessons.length - 1 && (

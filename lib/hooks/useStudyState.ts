@@ -53,6 +53,15 @@ export function useStudyState(
 
   useEffect(() => {
     if (!userId) return
+    if (textbookId !== 'builtin-japanese-syntax') {
+      setDueQuestionIds([])
+      setKnowledgePointMastery({})
+      setLearningMetrics({ correctStreak: 0, errorRate: 0, topErrorTags: [] })
+      setStudyStateError('')
+      setStudyStateLoaded(true)
+      loadedStudyUserId.current = userId
+      return
+    }
     let cancelled = false
     setStudyStateLoaded(false)
     setStudyStateError('')

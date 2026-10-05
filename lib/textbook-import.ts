@@ -19,6 +19,7 @@ export type StoredTextbookSummary = {
 }
 
 const STORAGE_KEY = 'japanese-syntax-coach:textbook-packages:v1'
+const LEGACY_STORAGE_KEY = STORAGE_KEY
 const validId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 const questionTypes = new Set<TextbookQuestionType>(['翻译', '助词', '选择', '问答'])
 const requiredPackageKeys = ['schemaVersion', 'textbook']
@@ -281,9 +282,14 @@ const getBrowserStorage = (): Storage | null => {
   }
 }
 
-const readStoredPackages = (storage: Storage): TextbookPackage[] => {
+const scopedStorageKey = (scope = 'anonymous') => `${STORAGE_KEY}:${scope || 'anonymous'}`
+
+const readStoredPackages = (storage: Storage, scope = 'anonymous'): TextbookPackage[] => {
   try {
-    const stored = storage.getItem(STORAGE_KEY)
+    const stored = storage.getItem(scopedStorageKey(scope))
+      // Preserve uploads made before account-scoped storage was introduced for
+      // anonymous users, while never exposing that legacy bucket to accounts.
+      ?? (scope === 'anonymous' ? storage.getItem(LEGACY_STORAGE_KEY) : null)
     if (!stored) return []
     const values: unknown = JSON.parse(stored)
     if (!Array.isArray(values)) return []
@@ -296,25 +302,25 @@ const readStoredPackages = (storage: Storage): TextbookPackage[] => {
   }
 }
 
-export function getStoredTextbookPackages(): TextbookPackage[] {
+export function getStoredTextbookPackages(scope = 'anonymous'): TextbookPackage[] {
   const storage = getBrowserStorage()
-  return storage ? readStoredPackages(storage) : []
+  return storage ? readStoredPackages(storage, scope) : []
 }
 
-export function getStoredTextbooks(): Textbook[] {
-  return getStoredTextbookPackages().map((item) => item.textbook)
+export function getStoredTextbooks(scope = 'anonymous'): Textbook[] {
+  return getStoredTextbookPackages(scope).map((item) => item.textbook)
 }
 
-export function getAvailableTextbookPackages(): TextbookPackage[] {
-  return [builtInTextbookPackage, ...getStoredTextbookPackages()]
+export function getAvailableTextbookPackages(scope = 'anonymous'): TextbookPackage[] {
+  return [builtInTextbookPackage, ...getStoredTextbookPackages(scope)]
 }
 
-export function getAvailableTextbookPackage(textbookId: string): TextbookPackage | undefined {
-  return getAvailableTextbookPackages().find((item) => item.textbook.id === textbookId)
+export function getAvailableTextbookPackage(textbookId: string, scope = 'anonymous'): TextbookPackage | undefined {
+  return getAvailableTextbookPackages(scope).find((item) => item.textbook.id === textbookId)
 }
 
-export function getStoredTextbookList(): StoredTextbookSummary[] {
-  return getStoredTextbooks().map(({ id, title, description, lessons, questions }) => ({
+export function getStoredTextbookList(scope = 'anonymous'): StoredTextbookSummary[] {
+  return getStoredTextbooks(scope).map(({ id, title, description, lessons, questions }) => ({
     id,
     title,
     ...(description ? { description } : {}),
@@ -323,8 +329,8 @@ export function getStoredTextbookList(): StoredTextbookSummary[] {
   }))
 }
 
-export function getAvailableTextbookList(): StoredTextbookSummary[] {
-  return getAvailableTextbookPackages().map(({ textbook: { id, title, description, lessons, questions } }) => ({
+export function getAvailableTextbookList(scope = 'anonymous'): StoredTextbookSummary[] {
+  return getAvailableTextbookPackages(scope).map(({ textbook: { id, title, description, lessons, questions } }) => ({
     id,
     title,
     ...(description ? { description } : {}),
@@ -333,35 +339,35 @@ export function getAvailableTextbookList(): StoredTextbookSummary[] {
   }))
 }
 
-export function saveTextbookPackage(input: unknown): TextbookImportResult {
+export function saveTextbookPackage(input: unknown, scope = 'anonymous'): TextbookImportResult {
   const storage = getBrowserStorage()
   if (!storage) return { success: false, errors: ['当前环境无法使用本地存储。'] }
 
-  const packages = readStoredPackages(storage)
+  const packages = readStoredPackages(storage, scope)
   const result = validateTextbookPackage(input, packages.map((item) => item.textbook.id))
   if (!result.success) return result
 
   try {
-    storage.setItem(STORAGE_KEY, JSON.stringify([...packages, result.data]))
+    storage.setItem(scopedStorageKey(scope), JSON.stringify([...packages, result.data]))
     return result
   } catch {
     return { success: false, errors: ['保存失败：浏览器本地存储不可用或空间不足。'] }
   }
 }
 
-export function saveTextbookJson(text: string): TextbookImportResult {
-  const existingIds = getStoredTextbooks().map((textbook) => textbook.id)
+export function saveTextbookJson(text: string, scope = 'anonymous'): TextbookImportResult {
+  const existingIds = getStoredTextbooks(scope).map((textbook) => textbook.id)
   const result = parseTextbookJson(text, existingIds)
   if (!result.success) return result
-  return saveTextbookPackage(result.data)
+  return saveTextbookPackage(result.data, scope)
 }
 
-export function removeStoredTextbook(textbookId: string): boolean {
+export function removeStoredTextbook(textbookId: string, scope = 'anonymous'): boolean {
   const storage = getBrowserStorage()
   if (!storage) return false
   try {
-    const remaining = readStoredPackages(storage).filter((item) => item.textbook.id !== textbookId)
-    storage.setItem(STORAGE_KEY, JSON.stringify(remaining))
+    const remaining = readStoredPackages(storage, scope).filter((item) => item.textbook.id !== textbookId)
+    storage.setItem(scopedStorageKey(scope), JSON.stringify(remaining))
     return true
   } catch {
     return false

@@ -15,6 +15,17 @@ export async function GET(request: Request) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (textbookId !== BUILTIN_TEXTBOOK_ID) {
+    return NextResponse.json({
+      textbookId,
+      textbookScopeAvailable: false,
+      localOnly: true,
+      dueQuestionIds: [],
+      lessons: [],
+      knowledgePoints: [],
+      metrics: { totalAttempts: 0, incorrectAttempts: 0, errorRate: 0, forgettingRate: 0, correctStreak: 0, topErrorTags: [] },
+    })
+  }
 
   const load = async (scoped: boolean) => {
     const dueQuery = supabase

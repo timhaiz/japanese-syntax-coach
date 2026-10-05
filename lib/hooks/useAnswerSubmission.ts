@@ -155,7 +155,9 @@ export function useAnswerSubmission() {
     context: SubmissionContext,
     gradeResult: GradeResult
   ): Promise<void> => {
-    if (!context.userId) return
+    // 自定义教材不写入教材范围 RPC。这样即使部署环境还没有最新
+    // textbook_id 迁移，导入教材也只使用当前用户自己的本地进度。
+    if (!context.userId || context.textbookId !== 'builtin-japanese-syntax') return
 
     try {
       const response = await fetch('/api/record-answer', {
