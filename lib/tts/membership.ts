@@ -8,7 +8,7 @@ type AuthUser = {
   app_metadata?: Record<string, unknown>
 }
 
-const activeStatuses = new Set(['active', 'trialing', 'paid'])
+const activeStatuses = new Set(['active', 'trialing', 'paid', 'member', 'premium'])
 
 /**
  * Voice generation is a paid capability. Billing can set this value on the

@@ -68,10 +68,16 @@ export function ProfileOverview({
           <span>同步状态</span>
           <b>{syncLabel}</b>
         </div>
-        {membershipStatus === 'member' && (
+        {email && (
           <div>
             <span>会员状态</span>
-            <b>{membershipEndsAt ? `${new Intl.DateTimeFormat('zh-CN').format(new Date(membershipEndsAt))} 到期` : '有效'}</b>
+            <b>{membershipStatus === 'member' ? '会员' : membershipStatus === 'loading' ? '检查中' : '免费版'}</b>
+          </div>
+        )}
+        {email && membershipStatus === 'member' && (
+          <div>
+            <span>会员有效期</span>
+            <b>{membershipEndsAt ? `${new Intl.DateTimeFormat('zh-CN').format(new Date(membershipEndsAt))} 到期` : '长期有效'}</b>
           </div>
         )}
         <div>
