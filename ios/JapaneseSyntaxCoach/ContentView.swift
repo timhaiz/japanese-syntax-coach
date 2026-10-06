@@ -2,11 +2,25 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var storeKit: StoreKitManager
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
     @State private var isLoading = true
     @State private var errorMessage: String?
     @State private var reloadToken = 0
 
     var body: some View {
+        Group {
+            if hasSeenOnboarding {
+                mainContent
+            } else {
+                OnboardingView {
+                    hasSeenOnboarding = true
+                }
+            }
+        }
+        .preferredColorScheme(.light)
+    }
+
+    private var mainContent: some View {
         ZStack {
             WebViewContainer(
                 storeKit: storeKit,
@@ -39,6 +53,5 @@ struct ContentView: View {
                 .padding(28)
             }
         }
-        .preferredColorScheme(.light)
     }
 }

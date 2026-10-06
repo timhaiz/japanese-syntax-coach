@@ -7,24 +7,36 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		012787DEFA53D2E4297F71BD /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185452ABC1AD2FC692AF4214 /* OnboardingView.swift */; };
+		196ACB9C5F125B839EEAA245 /* 05-feedback.png in Resources */ = {isa = PBXBuildFile; fileRef = 437EA3142A340A1BF531A65A /* 05-feedback.png */; };
+		1D0CEABED72C192035862CE9 /* 03-listen.png in Resources */ = {isa = PBXBuildFile; fileRef = EC24CD8936F7A739B65DA49B /* 03-listen.png */; };
 		24626BE31DD1D90C38DE2264 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9DE658C797A12C41FC6A3D4 /* ContentView.swift */; };
 		2BC4C1C92D83B1434EDE0047 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 77378C076A1E9661792D5302 /* PrivacyInfo.xcprivacy */; };
+		3ED88C0DAA06D2C5A750E99C /* 01-launch.png in Resources */ = {isa = PBXBuildFile; fileRef = A3987E166250B3EB10450B51 /* 01-launch.png */; };
 		57522373804FA221484C94E0 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE50C7412BF851E0EBE313E4 /* AppConfiguration.swift */; };
+		9195201F6DBA9C6DA560450E /* 02-structure.png in Resources */ = {isa = PBXBuildFile; fileRef = B84B595A846306AD6DCF3593 /* 02-structure.png */; };
 		BF7FE108C51D1D770ADD3BE4 /* JapaneseSyntaxCoachApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40A5E5CA7243D5EBFBD30BF /* JapaneseSyntaxCoachApp.swift */; };
+		DF85B04C5A74361007D4A904 /* 04-output.png in Resources */ = {isa = PBXBuildFile; fileRef = 1E8CB0BF56BE9EF6F6DF9E65 /* 04-output.png */; };
 		EBC04E1D3FCBEE7B4F090187 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE3C44E96A21CB339859AEBF /* Assets.xcassets */; };
 		ED097C6B80EEAD44BEACF387 /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A8AA702B5360CFD8733BBE /* StoreKitManager.swift */; };
 		F200C90182F06A77F1AFC804 /* WebViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5A4512109F52AC8BB9917A /* WebViewContainer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		185452ABC1AD2FC692AF4214 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		1E8CB0BF56BE9EF6F6DF9E65 /* 04-output.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "04-output.png"; sourceTree = "<group>"; };
 		27B1BEF76367AB03F02807AD /* JapaneseSyntaxCoach.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JapaneseSyntaxCoach.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37A8AA702B5360CFD8733BBE /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
+		437EA3142A340A1BF531A65A /* 05-feedback.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "05-feedback.png"; sourceTree = "<group>"; };
 		5D5A4512109F52AC8BB9917A /* WebViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewContainer.swift; sourceTree = "<group>"; };
 		77378C076A1E9661792D5302 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A3987E166250B3EB10450B51 /* 01-launch.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "01-launch.png"; sourceTree = "<group>"; };
 		A9DE658C797A12C41FC6A3D4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AFD862AA65D5A57C704D663C /* JapaneseSyntaxCoach.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = JapaneseSyntaxCoach.entitlements; sourceTree = "<group>"; };
+		B84B595A846306AD6DCF3593 /* 02-structure.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "02-structure.png"; sourceTree = "<group>"; };
 		CE50C7412BF851E0EBE313E4 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		E99EF67C8F064727B550EF43 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EC24CD8936F7A739B65DA49B /* 03-listen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "03-listen.png"; sourceTree = "<group>"; };
 		F40A5E5CA7243D5EBFBD30BF /* JapaneseSyntaxCoachApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapaneseSyntaxCoachApp.swift; sourceTree = "<group>"; };
 		FE3C44E96A21CB339859AEBF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -47,11 +59,25 @@
 				E99EF67C8F064727B550EF43 /* Info.plist */,
 				AFD862AA65D5A57C704D663C /* JapaneseSyntaxCoach.entitlements */,
 				F40A5E5CA7243D5EBFBD30BF /* JapaneseSyntaxCoachApp.swift */,
+				185452ABC1AD2FC692AF4214 /* OnboardingView.swift */,
 				77378C076A1E9661792D5302 /* PrivacyInfo.xcprivacy */,
 				37A8AA702B5360CFD8733BBE /* StoreKitManager.swift */,
 				5D5A4512109F52AC8BB9917A /* WebViewContainer.swift */,
+				B0EE1665B0D01E8CA2BE5FEF /* Onboarding */,
 			);
 			path = JapaneseSyntaxCoach;
+			sourceTree = "<group>";
+		};
+		B0EE1665B0D01E8CA2BE5FEF /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				A3987E166250B3EB10450B51 /* 01-launch.png */,
+				B84B595A846306AD6DCF3593 /* 02-structure.png */,
+				EC24CD8936F7A739B65DA49B /* 03-listen.png */,
+				1E8CB0BF56BE9EF6F6DF9E65 /* 04-output.png */,
+				437EA3142A340A1BF531A65A /* 05-feedback.png */,
+			);
+			path = Onboarding;
 			sourceTree = "<group>";
 		};
 		D858275077D610C02B0819D6 = {
@@ -122,6 +148,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				3ED88C0DAA06D2C5A750E99C /* 01-launch.png in Resources */,
+				9195201F6DBA9C6DA560450E /* 02-structure.png in Resources */,
+				1D0CEABED72C192035862CE9 /* 03-listen.png in Resources */,
+				DF85B04C5A74361007D4A904 /* 04-output.png in Resources */,
+				196ACB9C5F125B839EEAA245 /* 05-feedback.png in Resources */,
 				EBC04E1D3FCBEE7B4F090187 /* Assets.xcassets in Resources */,
 				2BC4C1C92D83B1434EDE0047 /* PrivacyInfo.xcprivacy in Resources */,
 			);
@@ -137,6 +168,7 @@
 				57522373804FA221484C94E0 /* AppConfiguration.swift in Sources */,
 				24626BE31DD1D90C38DE2264 /* ContentView.swift in Sources */,
 				BF7FE108C51D1D770ADD3BE4 /* JapaneseSyntaxCoachApp.swift in Sources */,
+				012787DEFA53D2E4297F71BD /* OnboardingView.swift in Sources */,
 				ED097C6B80EEAD44BEACF387 /* StoreKitManager.swift in Sources */,
 				F200C90182F06A77F1AFC804 /* WebViewContainer.swift in Sources */,
 			);
