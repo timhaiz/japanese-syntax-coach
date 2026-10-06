@@ -1,15 +1,20 @@
 'use client'
 
+import type { MembershipStatus } from '@/lib/hooks/useMembership'
+import { MembershipBadge } from '@/components/MembershipBadge'
+
 export function AppHeader({
   lessonId,
   textbookTitle,
   learnerName,
   onProfile,
+  membershipStatus = 'anonymous',
 }: {
   lessonId: number
   textbookTitle: string
   learnerName: string
   onProfile: () => void
+  membershipStatus?: MembershipStatus
 }) {
   return (
     <header>
@@ -20,7 +25,10 @@ export function AppHeader({
           <small>{textbookTitle}</small>
         </div>
       </div>
-      <div className="streak">第 {lessonId} 课</div>
+      <div className="header-actions">
+        <div className="streak">第 {lessonId} 课</div>
+        <MembershipBadge status={membershipStatus} />
+      </div>
       <button className="avatar" aria-label="打开个人中心" title="个人中心" onClick={onProfile}>
         {learnerName.slice(0, 1).toUpperCase()}
       </button>

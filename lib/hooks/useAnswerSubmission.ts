@@ -20,6 +20,7 @@ export type GradeResult = {
   explanation: string
   source: 'ai' | 'rule'
   aiVerdict?: 'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
+  memberRequired?: boolean
 }
 
 export type SubmissionContext = {
@@ -29,6 +30,7 @@ export type SubmissionContext = {
   replayMode: boolean
   currentLesson: number
   userId?: string
+  membershipStatus?: 'anonymous' | 'loading' | 'free' | 'member'
   textbookId?: string
   questionLimit?: number
 }
@@ -39,6 +41,50 @@ export type ProgressUpdate = {
   completedLessons: number[]
   mistakes: Question[]
   dueQuestionIds?: string[]
+}
+
+type MemberGrade = {
+  verdict: 'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect'
+  explanation: string
+}
+
+async function requestMemberGrade(question: Question, answer: string): Promise<{
+  grade: MemberGrade | null
+  memberRequired: boolean
+}> {
+  try {
+    const response = await fetch('/api/grade-answer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        answer,
+        standardAnswer: question.answer,
+        acceptedAnswers: question.acceptedAnswers ?? [],
+        hint: question.hint,
+      }),
+    })
+    const payload = await response.json().catch(() => null) as Partial<MemberGrade> & { memberRequired?: boolean } | null
+    if (!response.ok) {
+      return { grade: null, memberRequired: Boolean(payload?.memberRequired) }
+    }
+    if (
+      payload?.verdict !== 'correct' &&
+      payload?.verdict !== 'mostly_correct' &&
+      payload?.verdict !== 'needs_fix' &&
+      payload?.verdict !== 'incorrect'
+    ) {
+      return { grade: null, memberRequired: false }
+    }
+    return {
+      grade: {
+        verdict: payload.verdict,
+        explanation: typeof payload.explanation === 'string' ? payload.explanation : '',
+      },
+      memberRequired: false,
+    }
+  } catch {
+    return { grade: null, memberRequired: false }
+  }
 }
 
 export function useAnswerSubmission() {
@@ -205,13 +251,27 @@ export function useAnswerSubmission() {
     const localMatches = gradeLocally(question, answer)
     const localExplanation = generateFeedback(question, answer, localMatches)
 
-    // 构建判分结果
+    let aiGrade: MemberGrade | null = null
+    let memberRequired = context.membershipStatus === 'free' && !localMatches
+    if (context.membershipStatus === 'member' && !localMatches) {
+      const result = await requestMemberGrade(question, answer)
+      aiGrade = result.grade
+      memberRequired = result.memberRequired || memberRequired
+    }
+
+    const aiCorrect = aiGrade
+      ? aiGrade.verdict === 'correct' || aiGrade.verdict === 'mostly_correct'
+      : null
+    const finalCorrect = aiCorrect ?? localMatches
+
+    // 构建判分结果。会员的非精确答案会交给服务端 AI；免费用户继续使用规则判分。
     const gradeResult: GradeResult = {
-      correct: localMatches,
-      verdict: localMatches ? 'correct' : 'needs_fix',
-      explanation: localExplanation,
-      source: 'rule',
-      aiVerdict: null,
+      correct: finalCorrect,
+      verdict: aiGrade?.verdict ?? (localMatches ? 'correct' : 'needs_fix'),
+      explanation: aiGrade?.explanation || localExplanation,
+      source: aiGrade ? 'ai' : 'rule',
+      aiVerdict: aiGrade?.verdict ?? null,
+      memberRequired,
     }
 
     // 保存提交的问题引用
@@ -221,7 +281,7 @@ export function useAnswerSubmission() {
     const updatedMistakes = updateMistakes(
       currentProgress.mistakes,
       question,
-      localMatches,
+      finalCorrect,
       context.practiceMode,
       context.replayMode,
       context.questionLimit,
@@ -231,7 +291,7 @@ export function useAnswerSubmission() {
     const progressUpdates = updateProgress(
       currentProgress,
       question,
-      localMatches,
+      finalCorrect,
       context.replayMode,
       context.questionLimit,
     )
@@ -247,8 +307,7 @@ export function useAnswerSubmission() {
     // 添加错题更新
     progressUpdates.mistakes = updatedMistakes
 
-    // 记录到服务端不阻塞本地判分和结果展示。
-    // 题目答案由规则层立即判定，云端持久化在后台完成。
+    // 记录到服务端不阻塞结果展示。
     void recordAnswer(context, gradeResult)
 
     return {

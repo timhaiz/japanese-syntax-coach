@@ -13,6 +13,7 @@ export type AnalysisResult = {
   pitfalls?: string[]
   similarQuestions?: { prompt: string; answer: string }[]
   source?: string
+  memberRequired?: boolean
 }
 
 export function useStreamingAnalysis() {
@@ -34,6 +35,15 @@ export function useStreamingAnalysis() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
       })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({})) as { error?: string; memberRequired?: boolean }
+        setAnalysis({
+          analysis: payload.error || 'AI 深度分析暂不可用。',
+          source: 'membership',
+          memberRequired: Boolean(payload.memberRequired),
+        })
+        return
+      }
       const contentType = response.headers.get('content-type') || ''
       if (!contentType.includes('text/event-stream')) {
         setAnalysis(await response.json())

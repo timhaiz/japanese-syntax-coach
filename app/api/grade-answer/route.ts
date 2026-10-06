@@ -1,5 +1,8 @@
 import {NextResponse} from 'next/server'
 import {gradeWithAI} from '@/lib/ai'
+import { getCurrentMembership } from '@/lib/membership-server'
+
+export const runtime = 'nodejs'
 type Verdict='correct'|'mostly_correct'|'needs_fix'|'incorrect'
 const normalize=(s:string)=>s.replace(/[\s。！？!?，,、]/g,'')
 export async function POST(req:Request){
@@ -18,6 +21,17 @@ export async function POST(req:Request){
    source:'rule',
    hint:body.hint
   })
+ }
+
+ const membership = await getCurrentMembership()
+ if (membership.configured && !membership.user) {
+  return NextResponse.json({error:'请先登录后使用 AI 判分。',memberRequired:true},{status:401})
+ }
+ if (membership.configured && !membership.isMember) {
+  return NextResponse.json({error:'AI 判分仅对会员开放。',memberRequired:true},{status:403})
+ }
+ if (!membership.configured && process.env.NODE_ENV === 'production') {
+  return NextResponse.json({error:'会员服务暂未配置，请稍后重试。'},{status:503})
  }
 
  // OpenAI grading

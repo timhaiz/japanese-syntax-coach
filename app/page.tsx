@@ -32,6 +32,7 @@ import {
   type TextbookPackage,
 } from '@/lib/textbooks'
 import { useTextbookCatalog } from '@/lib/hooks/useTextbookCatalog'
+import { useMembership } from '@/lib/hooks/useMembership'
 import { withKana } from '@/lib/kana'
 import {
   LESSON_QUESTION_LIMIT,
@@ -142,6 +143,24 @@ function TextbookHome({
   }, selectedTextbookId, questionCounts, questions)
 
   const { userId, userEmail, registeredAt, cloudLoaded, syncState } = authState
+  const { status: membershipStatus, endsAt: membershipEndsAt } = useMembership(userId)
+  const deleteAccount = useCallback(async () => {
+    if (!userEmail || !window.confirm('确定要注销账号吗？云端学习记录和会员状态将被永久删除。')) return
+    const response = await fetch('/api/account/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ confirmation: 'DELETE' }),
+    })
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({})) as { error?: string }
+      window.alert(payload.error || '注销失败，请稍后重试。')
+      return
+    }
+    Object.keys(window.localStorage).forEach((key) => {
+      if (key.startsWith('syntax-coach') || key.startsWith('japanese-syntax-coach')) window.localStorage.removeItem(key)
+    })
+    window.location.href = '/login'
+  }, [userEmail])
   const loadedStudyUserId = useRef('')
 
   useEffect(() => {
@@ -169,6 +188,7 @@ function TextbookHome({
     setAiVerdict,
     setExplanation,
     setSource,
+    setMemberRequired,
     setGraded,
     resetGrading,
   } = useGradingState()
@@ -599,6 +619,7 @@ function TextbookHome({
       replayMode: practiceState.isReplay,
       currentLesson: active,
       userId,
+      membershipStatus,
       textbookId: selectedTextbookId,
       questionLimit: questionCounts[question.lessonId - 1] ?? LESSON_QUESTION_LIMIT,
     }
@@ -615,6 +636,7 @@ function TextbookHome({
 
     setExplanation(gradeResult.explanation)
     setSource(gradeResult.source)
+    setMemberRequired(Boolean(gradeResult.memberRequired))
     setAiVerdict(gradeResult.aiVerdict ?? null)
     setGraded(true)
 
@@ -644,7 +666,7 @@ function TextbookHome({
         replayMistakesRef.current = [...replayMistakesRef.current, question]
       }
     }
-  }, [ex, tokenAnswer, selectedChoiceText, submittedQuestion, resetAnalysis, practiceState.mode, practiceState.isReplay, active, userId, selectedTextbookId, questionCounts, lessonDone, lessonCorrect, completedLessons, mistakes, dueQuestionIds, submitAnswer, setExplanation, setSource, setAiVerdict, setGraded, setLessonDone, setLessonCorrect, setCompletedLessons, setMistakes, setDueQuestionIds, replayMistakesRef, replayCorrectRef])
+  }, [ex, tokenAnswer, selectedChoiceText, submittedQuestion, resetAnalysis, practiceState.mode, practiceState.isReplay, active, userId, membershipStatus, selectedTextbookId, questionCounts, lessonDone, lessonCorrect, completedLessons, mistakes, dueQuestionIds, submitAnswer, setExplanation, setSource, setMemberRequired, setAiVerdict, setGraded, setLessonDone, setLessonCorrect, setCompletedLessons, setMistakes, setDueQuestionIds, replayMistakesRef, replayCorrectRef])
   const displayCorrect = gradingState.aiVerdict
     ? gradingState.aiVerdict === 'correct' || gradingState.aiVerdict === 'mostly_correct'
     : answerMatches
@@ -848,6 +870,7 @@ function TextbookHome({
         textbookTitle={textbookData.title}
         learnerName={learnerName}
         onProfile={() => setTab('me')}
+        membershipStatus={membershipStatus}
       />
       {tab === 'home' && (
         <TextbookSwitcher
@@ -1046,6 +1069,7 @@ function TextbookHome({
                   expectedAnswerText,
                   gradeSource: gradingState.source,
                   gradeExplanation: gradingState.explanation,
+                  membershipRequired: gradingState.memberRequired,
                   question: presentedQuestion,
                 }}
                 analysisState={{
@@ -1132,6 +1156,9 @@ function TextbookHome({
             totalAnswered={totalAnswered}
             completedCount={completedLessons.length}
             metrics={learningMetrics}
+            membershipStatus={membershipStatus}
+            membershipEndsAt={membershipEndsAt}
+            onDeleteAccount={deleteAccount}
             syncLabel={
               userEmail
                 ? syncState === 'failed'

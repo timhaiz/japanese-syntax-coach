@@ -1,5 +1,8 @@
 import {NextResponse} from 'next/server'
 import OpenAI, {APIConnectionTimeoutError} from 'openai'
+import { getCurrentMembership } from '@/lib/membership-server'
+
+export const runtime = 'nodejs'
 
 type AnalysisWord = {
   word: string
@@ -37,6 +40,16 @@ function isAnalysisResult(value: unknown): value is AnalysisResult {
 }
 
 export async function POST(req:Request){
+  const membership = await getCurrentMembership()
+  if (membership.configured && !membership.user) {
+    return NextResponse.json({ error: '请先登录后使用 AI 深度分析。', memberRequired: true }, { status: 401 })
+  }
+  if (membership.configured && !membership.isMember) {
+    return NextResponse.json({ error: 'AI 深度分析仅对会员开放。', memberRequired: true }, { status: 403 })
+  }
+  if (!membership.configured && process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: '会员服务暂未配置，请稍后重试。' }, { status: 503 })
+  }
   const body=await req.json().catch(()=>({})) as {prompt?:string;answer?:string;standardAnswer?:string;hint?:string}
   const key=process.env.OPENAI_API_KEY
   if(!key)return NextResponse.json({analysis:'AI 分析未配置：缺少 OPENAI_API_KEY。',source:'fallback',reason:'missing-api-key'})

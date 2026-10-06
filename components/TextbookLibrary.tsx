@@ -13,6 +13,7 @@ export function TextbookLibrary() {
     selectTextbook,
     importTextbook,
     uploadError,
+    uploadNotice,
   } = useTextbookCatalog()
   const [query, setQuery] = useState('')
   const [moreOpen, setMoreOpen] = useState(false)
@@ -93,6 +94,11 @@ export function TextbookLibrary() {
       {uploadError && (
         <p className="textbook-library-error" role="alert">
           {uploadError}
+        </p>
+      )}
+      {uploadNotice && (
+        <p className="textbook-library-notice" role="status">
+          {uploadNotice}
         </p>
       )}
 

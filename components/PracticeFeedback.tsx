@@ -8,6 +8,7 @@ export type AnswerAnalysis = {
   words?: { word: string; kana: string; meaning: string; memory: string }[]
   pitfalls?: string[]
   similarQuestions?: { prompt: string; answer: string }[]
+  memberRequired?: boolean
 }
 
 type FeedbackData = {
@@ -17,6 +18,7 @@ type FeedbackData = {
   expectedAnswerText: string
   gradeSource: 'ai' | 'rule' | null
   gradeExplanation: string
+  membershipRequired?: boolean
   question: Question
 }
 
@@ -34,7 +36,7 @@ export function PracticeFeedback({
   feedbackData: FeedbackData
   analysisState: AnalysisState
 }) {
-  const { answerMatches, verdictLabel, responseText, expectedAnswerText, gradeSource, gradeExplanation, question } =
+  const { answerMatches, verdictLabel, responseText, expectedAnswerText, gradeSource, gradeExplanation, membershipRequired, question } =
     feedbackData
   const { analysis, analysisLoading, analysisPreview, onAnalyze } = analysisState
   return (
@@ -50,12 +52,17 @@ export function PracticeFeedback({
               {gradeExplanation}
             </small>
           )}
+          {membershipRequired && (
+            <small className="membership-prompt">
+              AI 判分仅对会员开放，当前使用规则判分。<a href="/subscription">开通会员</a>
+            </small>
+          )}
           <small>提示：{question.hint}</small>
         </>
       )}
       {!analysis && (
         <button className="analysis-button" onClick={onAnalyze} disabled={analysisLoading}>
-          {analysisLoading ? '分析中…' : 'AI 分析记忆方法'}
+          {analysisLoading ? '分析中…' : 'AI 分析记忆方法 · 会员'}
         </button>
       )}
       {analysisLoading && analysisPreview && (
@@ -66,6 +73,11 @@ export function PracticeFeedback({
       )}
       {analysis && (
         <div className="analysis">
+          {analysis.memberRequired && (
+            <p className="membership-prompt">
+              AI 深度分析仅对会员开放。<a href="/subscription">开通会员</a>
+            </p>
+          )}
           {analysis.analysis && <p>{analysis.analysis}</p>}
           {analysis.words?.map((word) => (
             <div key={word.word}>

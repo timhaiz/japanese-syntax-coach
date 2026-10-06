@@ -1,4 +1,6 @@
 'use client'
+import type { MembershipStatus } from '@/lib/hooks/useMembership'
+import { MembershipBadge } from '@/components/MembershipBadge'
 export function ProfileOverview({
   email,
   registrationDate,
@@ -9,6 +11,9 @@ export function ProfileOverview({
   syncLabel,
   onLogin,
   metrics,
+  membershipStatus = 'anonymous',
+  membershipEndsAt,
+  onDeleteAccount,
 }: {
   email: string
   registrationDate: string
@@ -19,6 +24,9 @@ export function ProfileOverview({
   syncLabel: string
   onLogin: () => void
   metrics?: { correctStreak: number; errorRate: number; forgettingRate?: number; topErrorTags: { tag: string; count: number }[] }
+  membershipStatus?: MembershipStatus
+  membershipEndsAt?: string | null
+  onDeleteAccount?: () => void
 }) {
   return (
     <>
@@ -27,6 +35,7 @@ export function ProfileOverview({
         <div>
           <h2>{email || 'N 学习者'}</h2>
           <p>{email ? '已登录' : '尚未登录'}</p>
+          <MembershipBadge status={membershipStatus} />
         </div>
         <button className="outline" onClick={onLogin}>
           {email ? '切换账号' : '登录 / 注册'}
@@ -59,6 +68,12 @@ export function ProfileOverview({
           <span>同步状态</span>
           <b>{syncLabel}</b>
         </div>
+        {membershipStatus === 'member' && (
+          <div>
+            <span>会员状态</span>
+            <b>{membershipEndsAt ? `${new Intl.DateTimeFormat('zh-CN').format(new Date(membershipEndsAt))} 到期` : '有效'}</b>
+          </div>
+        )}
         <div>
           <span>已完成课程</span>
           <b>{completedCount} / 24</b>
@@ -68,6 +83,15 @@ export function ProfileOverview({
           <b>{totalAnswered} 题</b>
         </div>
       </div>
+      {email && onDeleteAccount && (
+        <div className="account-danger-zone">
+          <h3>账号与数据</h3>
+          <p>注销后，云端学习记录、会员状态和账号数据将被删除，无法恢复。</p>
+          <p className="account-legal-links"><a href="/privacy">隐私政策</a><span>·</span><a href="/terms">用户协议</a></p>
+          {membershipStatus !== 'member' && <a className="membership-link" href="/subscription">开通会员</a>}
+          <button type="button" className="danger-button" onClick={onDeleteAccount}>注销账号</button>
+        </div>
+      )}
     </>
   )
 }

@@ -13,6 +13,7 @@ export type GradingState = {
   aiVerdict: 'correct' | 'mostly_correct' | 'needs_fix' | 'incorrect' | null
   explanation: string
   source: 'ai' | 'rule' | null
+  memberRequired: boolean
   isGraded: boolean
 }
 
@@ -20,6 +21,7 @@ const initialState: GradingState = {
   aiVerdict: null,
   explanation: '',
   source: null,
+  memberRequired: false,
   isGraded: false,
 }
 
@@ -42,6 +44,10 @@ export function useGradingState() {
     setState((prev) => ({ ...prev, source }))
   }, [])
 
+  const setMemberRequired = useCallback((memberRequired: boolean) => {
+    setState((prev) => ({ ...prev, memberRequired }))
+  }, [])
+
   const setGraded = useCallback((isGraded: boolean) => {
     setState((prev) => ({ ...prev, isGraded }))
   }, [])
@@ -56,6 +62,7 @@ export function useGradingState() {
     setAiVerdict,
     setExplanation,
     setSource,
+    setMemberRequired,
     setGraded,
     resetGrading: reset,
   }

@@ -10,9 +10,18 @@ const loadManifest = (textbookId: string): Promise<TtsManifest | null> => {
   const cached = manifestCache.get(textbookId)
   if (cached) return cached
 
-  const request = fetch(`/audio/grammar/${encodeURIComponent(textbookId)}/manifest.json`, {
-    cache: 'force-cache',
+  const request = fetch(`/api/tts/manifest?textbookId=${encodeURIComponent(textbookId)}`, {
+    cache: 'no-store',
   })
+    .catch(() => null)
+    .then(async (response) => {
+      if (!response?.ok) {
+        return fetch(`/audio/grammar/${encodeURIComponent(textbookId)}/manifest.json`, {
+          cache: 'force-cache',
+        })
+      }
+      return response
+    })
     .then(async (response) => {
       if (!response.ok) return null
       const value = (await response.json()) as Partial<TtsManifest>
@@ -22,6 +31,10 @@ const loadManifest = (textbookId: string): Promise<TtsManifest | null> => {
       return value as TtsManifest
     })
     .catch(() => null)
+
+  request.then((manifest) => {
+    if (!manifest) manifestCache.delete(textbookId)
+  })
 
   manifestCache.set(textbookId, request)
   return request
