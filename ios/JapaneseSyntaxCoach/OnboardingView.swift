@@ -68,7 +68,7 @@ private struct OnboardingImage: View {
     var body: some View {
         Image(name)
             .resizable()
-            .scaledToFit()
+            .scaledToFill()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .clipped()
             .accessibilityLabel("日句首次使用介绍")
