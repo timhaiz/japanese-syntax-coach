@@ -1,5 +1,5 @@
 'use client'
-import {useState} from 'react'
+import {useEffect, useState} from 'react'
 import {getSupabaseBrowser} from '@/lib/supabase'
 import '../auth.css'
 
@@ -16,6 +16,15 @@ export default function Login(){
  const [message,setMessage]=useState('')
  const [error,setError]=useState('')
  const supabase=getSupabaseBrowser()
+ useEffect(()=>{
+  const params=new URLSearchParams(location.search)
+  const authError=params.get('error')
+  const description=params.get('description')
+  if(authError){
+   const messages:Record<string,string>={provider_disabled:'Apple 登录尚未在 Supabase 中启用。',callback_failed:'登录回调失败，请重试。'}
+   setError(description||messages[authError]||'登录失败，请重试。')
+  }
+ },[])
  const clearFeedback=()=>{setMessage('');setError('')}
  const switchMode=(next:AuthMode)=>{setMode(next);setPassword('');setConfirmPassword('');setCode('');clearFeedback()}
  const submitLogin=async()=>{clearFeedback();const normalizedEmail=email.trim().toLowerCase();if(!normalizedEmail||!password){setError('请输入邮箱和密码。');return}if(!supabase){setError('尚未配置 Supabase，请先填写环境变量。');return}setBusy(true);const {error:authError}=await supabase.auth.signInWithPassword({email:normalizedEmail,password});setBusy(false);if(authError){setError('邮箱或密码不正确，请检查后重试。');return}location.href='/'}
