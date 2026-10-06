@@ -145,7 +145,7 @@ function TextbookHome({
   const { userId, userEmail, registeredAt, cloudLoaded, syncState } = authState
   const { status: membershipStatus, endsAt: membershipEndsAt } = useMembership(userId)
   const deleteAccount = useCallback(async () => {
-    if (!userEmail || !window.confirm('确定要注销账号吗？云端学习记录和会员状态将被永久删除。')) return
+    if (!userEmail || !window.confirm('确定要注销账号吗？云端学习记录、会员状态和账号数据将被永久删除，且无法恢复。')) return
     const response = await fetch('/api/account/delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

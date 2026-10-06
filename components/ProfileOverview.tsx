@@ -86,8 +86,18 @@ export function ProfileOverview({
       {email && onDeleteAccount && (
         <div className="account-danger-zone">
           <h3>账号与数据</h3>
-          <p>注销后，云端学习记录、会员状态和账号数据将被删除，无法恢复。</p>
-          <p className="account-legal-links"><a href="/privacy">隐私政策</a><span>·</span><a href="/terms">用户协议</a></p>
+          <div className="account-row">
+            <span>账号数据</span>
+            <small>学习记录、会员状态和账号信息</small>
+          </div>
+          <a className="account-row account-row-link" href="/privacy">
+            <span>隐私政策</span>
+            <b aria-hidden="true">→</b>
+          </a>
+          <a className="account-row account-row-link" href="/terms">
+            <span>用户协议</span>
+            <b aria-hidden="true">→</b>
+          </a>
           {membershipStatus !== 'member' && <a className="membership-link" href="/subscription">开通会员</a>}
           <button type="button" className="danger-button" onClick={onDeleteAccount}>注销账号</button>
         </div>
