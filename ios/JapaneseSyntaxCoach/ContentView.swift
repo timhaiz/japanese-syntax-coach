@@ -14,7 +14,6 @@ struct ContentView: View {
                 errorMessage: $errorMessage,
                 reloadToken: $reloadToken
             )
-            .ignoresSafeArea()
 
             if isLoading {
                 ProgressView("正在打开日句…")
