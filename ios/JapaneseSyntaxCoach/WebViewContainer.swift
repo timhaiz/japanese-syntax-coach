@@ -30,6 +30,10 @@ struct WebViewContainer: UIViewRepresentable {
         webView.navigationDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
         webView.allowsLinkPreview = false
+        webView.scrollView.bounces = false
+        webView.scrollView.alwaysBounceVertical = false
+        webView.scrollView.alwaysBounceHorizontal = false
+        webView.scrollView.contentInsetAdjustmentBehavior = .never
         context.coordinator.webView = webView
         webView.load(URLRequest(url: AppConfiguration.webURL))
         return webView
