@@ -104,7 +104,9 @@ export function ProfileOverview({
             <b aria-hidden="true">→</b>
           </a>
           {membershipStatus !== 'member' && <a className="membership-link" href="/subscription">开通会员</a>}
-          <button type="button" className="danger-button" onClick={onDeleteAccount}>注销账号</button>
+          <div className="account-action-row">
+            <button type="button" className="danger-button" onClick={onDeleteAccount}>注销账号</button>
+          </div>
         </div>
       )}
     </>
