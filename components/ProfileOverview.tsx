@@ -34,8 +34,7 @@ export function ProfileOverview({
         <div className="profile-avatar">{email ? email.slice(0, 1).toUpperCase() : 'N'}</div>
         <div>
           <h2>{email || 'N 学习者'}</h2>
-          <p>{email ? '已登录' : '尚未登录'}</p>
-          <MembershipBadge status={membershipStatus} />
+          <MembershipBadge status={membershipStatus} iconOnly />
         </div>
         <button className="outline" onClick={onLogin}>
           {email ? '切换账号' : '登录 / 注册'}
