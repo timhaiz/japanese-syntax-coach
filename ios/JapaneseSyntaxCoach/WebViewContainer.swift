@@ -99,6 +99,12 @@ struct WebViewContainer: UIViewRepresentable {
             errorMessage.wrappedValue = nil
         }
 
+        func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+            // Hide the native startup overlay as soon as the first web content is visible.
+            // Remaining scripts and API requests can continue loading in the page.
+            isLoading.wrappedValue = false
+        }
+
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
             isLoading.wrappedValue = false
         }
