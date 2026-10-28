@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { getSupabaseServer } from '@/lib/supabase-server'
-import { deleteUserTtsData } from '@/lib/tts/server'
+import { cancelUserTtsJobs, deleteUserTtsData, releaseUserTtsDeletion } from '@/lib/tts/server'
 
 export const runtime = 'nodejs'
 
@@ -21,8 +21,10 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: '请先登录。' }, { status: 401 })
 
   try {
+    await cancelUserTtsJobs(user.id)
     await deleteUserTtsData(user.id)
   } catch {
+    releaseUserTtsDeletion(user.id)
     return NextResponse.json({ error: '账号数据清理失败，请稍后重试。' }, { status: 500 })
   }
 
@@ -30,6 +32,15 @@ export async function POST(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   })
   const { error } = await admin.auth.admin.deleteUser(user.id)
-  if (error) return NextResponse.json({ error: '账号注销失败，请稍后重试。' }, { status: 500 })
+  if (error) {
+    releaseUserTtsDeletion(user.id)
+    return NextResponse.json({ error: '账号注销失败，请稍后重试。' }, { status: 500 })
+  }
+  try {
+    await cancelUserTtsJobs(user.id)
+    await deleteUserTtsData(user.id)
+  } catch {
+    // Account deletion already succeeded; leave a retryable cleanup path.
+  }
   return NextResponse.json({ deleted: true })
 }

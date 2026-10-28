@@ -13,10 +13,10 @@ export async function POST(request: Request) {
   if (typeof body?.signedTransaction !== 'string') return NextResponse.json({ error: 'signedTransaction required' }, { status: 400 })
   try {
     const transaction = await verifyAppleTransaction(body.signedTransaction)
-    if (transaction.appAccountToken && transaction.appAccountToken !== user.id) {
+    if (!transaction.appAccountToken || transaction.appAccountToken !== user.id) {
       return NextResponse.json({ error: '交易账号与当前账号不匹配。' }, { status: 403 })
     }
-    const result = await updateMembershipFromAppleTransaction({ ...transaction, appAccountToken: user.id }, 'SUBSCRIBED')
+    const result = await updateMembershipFromAppleTransaction(transaction, 'SUBSCRIBED')
     return NextResponse.json(result)
   } catch (error) {
     console.error('Apple entitlement rejected', error instanceof Error ? error.message : error)

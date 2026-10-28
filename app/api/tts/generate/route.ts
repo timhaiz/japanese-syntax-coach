@@ -24,8 +24,16 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => null) as { textbook?: unknown } | null
   const result = validateTextbookPackage(body?.textbook)
   if (!result.success) return NextResponse.json({ error: result.errors.join(' ') }, { status: 400 })
-  const job = queueTtsGeneration(user.id, result.data.textbook)
-  return NextResponse.json({ job }, { status: 202 })
+  try {
+    const job = await queueTtsGeneration(user.id, result.data.textbook)
+    return NextResponse.json({ job }, { status: 202 })
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Account deletion is in progress') {
+      return NextResponse.json({ error: '账号正在注销，暂不能创建语音任务。' }, { status: 409 })
+    }
+    console.error('Failed to persist TTS job', error instanceof Error ? error.message : error)
+    return NextResponse.json({ error: '语音任务暂不可用，请稍后重试。' }, { status: 500 })
+  }
 }
 
 export async function GET(request: Request) {

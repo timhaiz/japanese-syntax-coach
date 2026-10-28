@@ -42,9 +42,18 @@ export async function updateMembershipFromAppleTransaction(
 ) {
   const userId = transaction.appAccountToken
   if (!userId || !uuidPattern.test(userId)) return { updated: false, reason: 'missing-app-account-token' }
+  const originalTransactionId = transaction.originalTransactionId
+  const transactionId = transaction.transactionId
+  const productId = transaction.productId
+  const purchaseDate = transaction.purchaseDate
+  const signedDate = transaction.signedDate
+  if (
+    !originalTransactionId || !transactionId || !productId ||
+    !Number.isFinite(purchaseDate) || !Number.isFinite(signedDate)
+  ) return { updated: false, reason: 'invalid-transaction-data' }
   const allowedProducts = (process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS ?? '')
     .split(',').map((value) => value.trim()).filter(Boolean)
-  if (allowedProducts.length > 0 && (!transaction.productId || !allowedProducts.includes(transaction.productId))) {
+  if (allowedProducts.length > 0 && !allowedProducts.includes(productId)) {
     return { updated: false, reason: 'unknown-product' }
   }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -55,13 +64,22 @@ export async function updateMembershipFromAppleTransaction(
   const isInactive = inactiveNotificationTypes.has(notificationType ?? '') || Boolean(transaction.revocationDate)
   const isActive = !isInactive && Boolean(transaction.expiresDate && transaction.expiresDate > Date.now())
   if (!isActive && !isInactive) return { updated: false, reason: 'no-membership-state' }
-  const { error } = await admin.from('profiles').upsert({
-    id: userId,
-    membership_status: isActive ? 'active' : 'expired',
-    membership_ends_at: expiresAt,
-    apple_original_transaction_id: transaction.originalTransactionId ?? null,
-    apple_product_id: transaction.productId ?? null,
-  }, { onConflict: 'id' })
+  const { data, error } = await admin.rpc('apply_apple_entitlement', {
+    p_user_id: userId,
+    p_original_transaction_id: originalTransactionId,
+    p_transaction_id: transactionId,
+    p_product_id: productId,
+    p_membership_status: isActive ? 'active' : 'expired',
+    p_expires_at: expiresAt,
+    p_purchase_date: new Date(purchaseDate).toISOString(),
+    p_signed_date: new Date(signedDate).toISOString(),
+  })
   if (error) throw error
-  return { updated: true, status: isActive ? 'active' : 'expired', userId }
+  if (data && typeof data === 'object' && 'updated' in data && data.updated === true) {
+    return { updated: true, status: isActive ? 'active' : 'expired', userId }
+  }
+  if (data && typeof data === 'object' && 'reason' in data) {
+    return { updated: false, reason: String(data.reason) }
+  }
+  return { updated: false, reason: 'entitlement-not-updated' }
 }
