@@ -6,33 +6,52 @@ import { clampLessonAnswered, clampLessonCorrect, completedFromLessonProgress } 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
 const validTextbookId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
 
-type LegacyProgress = {
-  version: number
+type NormalizedLegacyProgress = {
+  version: 2 | 3
   lessonDone: Record<string, number>
   lessonCorrect: Record<string, number>
   completedLessons: number[]
   mistakes: Question[]
-  updatedAt?: string
+  updatedAt: string
+}
+
+type UnsupportedLegacyProgress = {
+  status: 'unsupported'
+  version: unknown
+  raw: unknown
+}
+
+type LegacyProgress = NormalizedLegacyProgress | UnsupportedLegacyProgress
+
+function unsupportedLegacyProgress(raw: unknown, version: unknown): UnsupportedLegacyProgress {
+  return {status: 'unsupported', version: version ?? null, raw}
 }
 
 function normalizeLegacyProgress(metadata: unknown, textbookId: string): LegacyProgress | null {
   if (textbookId !== BUILTIN_TEXTBOOK_ID || !metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
   const root = metadata as Record<string, unknown>
-  const raw = root.byTextbook && typeof root.byTextbook === 'object' && !Array.isArray(root.byTextbook)
-    ? (root.byTextbook as Record<string, unknown>)[BUILTIN_TEXTBOOK_ID]
-    : undefined
-  const candidate = raw && typeof raw === 'object' && !Array.isArray(raw)
-    ? raw as Record<string, unknown>
-    : root.lessonDone && typeof root.lessonDone === 'object' && !Array.isArray(root.lessonDone)
-      ? root
-      : null
-  if (!candidate) return null
-  const rawDone = candidate.lessonDone && typeof candidate.lessonDone === 'object' && !Array.isArray(candidate.lessonDone)
-    ? candidate.lessonDone as Record<string, unknown>
-    : {}
-  const rawCorrect = candidate.lessonCorrect && typeof candidate.lessonCorrect === 'object' && !Array.isArray(candidate.lessonCorrect)
-    ? candidate.lessonCorrect as Record<string, unknown>
-    : {}
+  const byTextbook = root.byTextbook && typeof root.byTextbook === 'object' && !Array.isArray(root.byTextbook)
+    ? root.byTextbook as Record<string, unknown>
+    : null
+  const hasScopedSnapshot = Boolean(byTextbook && Object.prototype.hasOwnProperty.call(byTextbook, BUILTIN_TEXTBOOK_ID))
+  const raw = hasScopedSnapshot ? byTextbook![BUILTIN_TEXTBOOK_ID] : root
+  if (!hasScopedSnapshot && byTextbook && !root.lessonDone) return null
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return hasScopedSnapshot ? unsupportedLegacyProgress(raw, root.version) : null
+  }
+  const candidate = raw as Record<string, unknown>
+  const version = candidate.version
+  const validShape =
+    candidate.lessonDone && typeof candidate.lessonDone === 'object' && !Array.isArray(candidate.lessonDone) &&
+    candidate.lessonCorrect && typeof candidate.lessonCorrect === 'object' && !Array.isArray(candidate.lessonCorrect) &&
+    Array.isArray(candidate.completedLessons) &&
+    Array.isArray(candidate.mistakes) &&
+    typeof candidate.updatedAt === 'string'
+  if ((version !== 2 && version !== 3) || !validShape) {
+    return unsupportedLegacyProgress(raw, version)
+  }
+  const rawDone = candidate.lessonDone as Record<string, unknown>
+  const rawCorrect = candidate.lessonCorrect as Record<string, unknown>
   const lessonDone = Object.fromEntries(Object.entries(rawDone).map(([index, value]) => [index, clampLessonAnswered(value)]))
   const lessonCorrect = Object.fromEntries(Object.entries(rawCorrect).map(([index, value]) => [index, clampLessonCorrect(value)]))
   const completedLessons = completedFromLessonProgress(
@@ -40,19 +59,17 @@ function normalizeLegacyProgress(metadata: unknown, textbookId: string): LegacyP
     candidate.completedLessons,
     lessonCorrect,
   )
-  const mistakes = Array.isArray(candidate.mistakes)
-    ? candidate.mistakes.map((item) => {
-        const id = item && typeof item === 'object' ? (item as {id?: unknown}).id : undefined
-        return typeof id === 'string' ? questionForId(id) : undefined
-      }).filter((item): item is NonNullable<ReturnType<typeof questionForId>> => Boolean(item))
-    : []
+  const mistakes = (candidate.mistakes as unknown[]).map((item) => {
+    const id = item && typeof item === 'object' ? (item as {id?: unknown}).id : undefined
+    return typeof id === 'string' ? questionForId(id) : undefined
+  }).filter((item): item is NonNullable<ReturnType<typeof questionForId>> => Boolean(item))
   return {
-    version: typeof candidate.version === 'number' && Number.isFinite(candidate.version) ? candidate.version : 1,
+    version: version as 2 | 3,
     lessonDone,
     lessonCorrect,
     completedLessons,
     mistakes,
-    ...(typeof candidate.updatedAt === 'string' ? {updatedAt: candidate.updatedAt} : {}),
+    updatedAt: candidate.updatedAt as string,
   }
 }
 
@@ -123,13 +140,13 @@ export async function GET(request: Request) {
     textbookScopeAvailable = false
   } else if (scopeColumnMissing) {
     return NextResponse.json(
-      { error: 'Textbook-scoped cloud sync requires the latest database migration.' },
+      { error: 'Textbook-scoped cloud sync requires the latest database migration.', ...legacyResponse },
       { status: 503 },
     )
   }
 
   if (due.error || completed.error) {
-    return NextResponse.json({ error: 'Unable to load study state' }, { status: 500 })
+    return NextResponse.json({ error: 'Unable to load study state', ...legacyResponse }, { status: 500 })
   }
   const lessons = (completed.data ?? []).map((lesson) => ({
     ...lesson,
