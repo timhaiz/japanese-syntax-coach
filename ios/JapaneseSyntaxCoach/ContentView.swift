@@ -5,6 +5,7 @@ struct ContentView: View {
     @ObservedObject var learning: LearningStore
     @ObservedObject var storeKit: StoreKitManager
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
 
     init(auth: AuthSessionStore, learning: LearningStore, storeKit: StoreKitManager) {
         self.auth = auth
@@ -14,7 +15,9 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if auth.phase == .signedIn {
+            if !hasSeenOnboarding {
+                OnboardingView { hasSeenOnboarding = true }
+            } else if auth.phase == .signedIn {
                 TabView {
                     NavigationStack { HomeView(store: learning) }
                         .tabItem { Label("首页", systemImage: "house") }
@@ -23,19 +26,7 @@ struct ContentView: View {
                     NavigationStack { LearningProgressView(store: learning) }
                         .tabItem { Label("进度", systemImage: "chart.bar") }
                     NavigationStack {
-                        Form {
-                            Section("已登录账户") { Text(auth.userEmail ?? "当前账户") }
-                            Section("学习同步") { LearningSyncStatusView(store: learning) }
-                            Section("账户与订阅") {
-                                Text("完整订阅与账户管理将在后续版本接入。").foregroundStyle(.secondary)
-                                Button("退出登录", role: .destructive) {
-                                    Task {
-                                        learning.clearUserScopedData()
-                                        await auth.signOut()
-                                    }
-                                }
-                            }
-                        }.navigationTitle("账户")
+                        AccountView(auth: auth, learning: learning, storeKit: storeKit)
                     }
                     .tabItem { Label("账户", systemImage: "person.circle") }
                 }

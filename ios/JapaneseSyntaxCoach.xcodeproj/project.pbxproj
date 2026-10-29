@@ -26,10 +26,12 @@
 		59A2B71E924F782728391628 /* AppEnvironment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45E4D7D8C2971CA6A954E512 /* AppEnvironment.swift */; };
 		69D16539BBAF7D86B82EC9D6 /* LearningStateModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 830C0F93D1A721436C1DAD13 /* LearningStateModels.swift */; };
 		7402F288F80870D39F6BE34A /* LessonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB25B5CBBEE2E2CB1C4B5AC0 /* LessonView.swift */; };
+		8DC2DEB414932462732B8205 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74144D06E2CF1D8DE2692C31 /* AccountView.swift */; };
 		9195201F6DBA9C6DA560450E /* 02-structure.png in Resources */ = {isa = PBXBuildFile; fileRef = B84B595A846306AD6DCF3593 /* 02-structure.png */; };
 		9BD6BD2058A8131933E669C5 /* AuthSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99937A4F93AAA179A9D81BB5 /* AuthSessionStore.swift */; };
 		B05AC311BDE923608DA2EB9D /* PendingTransactionQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 46A052016A16AE802F974726 /* PendingTransactionQueue.swift */; };
 		B146D200BA1746C4E0F3172E /* AnswerEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0784BA1033396CCFA517BDC /* AnswerEvaluator.swift */; };
+		B8443EED1E9F1BD31DB87B8B /* SubscriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34173C6EE78AD4109C91F556 /* SubscriptionView.swift */; };
 		B9EE445D08E38F121E3CE095 /* StoreKitProductProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCC204EE4D6054929C3D6C99 /* StoreKitProductProvider.swift */; };
 		BB2CE45DC8769C9B440E899D /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB2A14121E8C351E7CE5826 /* APIClient.swift */; };
 		BF7FE108C51D1D770ADD3BE4 /* JapaneseSyntaxCoachApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40A5E5CA7243D5EBFBD30BF /* JapaneseSyntaxCoachApp.swift */; };
@@ -66,6 +68,7 @@
 		23E0800B763F0AAE700FCF1E /* QuestionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionView.swift; sourceTree = "<group>"; };
 		27B1BEF76367AB03F02807AD /* JapaneseSyntaxCoach.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JapaneseSyntaxCoach.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2CB2A14121E8C351E7CE5826 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		34173C6EE78AD4109C91F556 /* SubscriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionView.swift; sourceTree = "<group>"; };
 		37A8AA702B5360CFD8733BBE /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
 		437EA3142A340A1BF531A65A /* 05-feedback.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "05-feedback.png"; sourceTree = "<group>"; };
 		45E4D7D8C2971CA6A954E512 /* AppEnvironment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppEnvironment.swift; sourceTree = "<group>"; };
@@ -77,6 +80,7 @@
 		63C094BE6F0DFB9AC897BF35 /* StoreKitStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitStateTests.swift; sourceTree = "<group>"; };
 		69ABA93940595928B0A24F74 /* OfflineAnswerQueue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OfflineAnswerQueue.swift; sourceTree = "<group>"; };
 		71EF9078C24B075A8D616033 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
+		74144D06E2CF1D8DE2692C31 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
 		77378C076A1E9661792D5302 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		7FDD85AABD3DEDA51A84F412 /* TextbookView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextbookView.swift; sourceTree = "<group>"; };
 		830C0F93D1A721436C1DAD13 /* LearningStateModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearningStateModels.swift; sourceTree = "<group>"; };
@@ -182,9 +186,11 @@
 			isa = PBXGroup;
 			children = (
 				092574DC0A81DC0E9005426B /* AccountDeletion.swift */,
+				74144D06E2CF1D8DE2692C31 /* AccountView.swift */,
 				F2400FF2FE695CC8E5549B50 /* EntitlementSync.swift */,
 				46A052016A16AE802F974726 /* PendingTransactionQueue.swift */,
 				BCC204EE4D6054929C3D6C99 /* StoreKitProductProvider.swift */,
+				34173C6EE78AD4109C91F556 /* SubscriptionView.swift */,
 			);
 			path = Billing;
 			sourceTree = "<group>";
@@ -352,6 +358,7 @@
 			files = (
 				BB2CE45DC8769C9B440E899D /* APIClient.swift in Sources */,
 				3563571B838E236E3C08A8C1 /* AccountDeletion.swift in Sources */,
+				8DC2DEB414932462732B8205 /* AccountView.swift in Sources */,
 				B146D200BA1746C4E0F3172E /* AnswerEvaluator.swift in Sources */,
 				57522373804FA221484C94E0 /* AppConfiguration.swift in Sources */,
 				59A2B71E924F782728391628 /* AppEnvironment.swift in Sources */,
@@ -372,6 +379,7 @@
 				F7404C8A8015096BC65C6251 /* QuestionView.swift in Sources */,
 				ED097C6B80EEAD44BEACF387 /* StoreKitManager.swift in Sources */,
 				B9EE445D08E38F121E3CE095 /* StoreKitProductProvider.swift in Sources */,
+				B8443EED1E9F1BD31DB87B8B /* SubscriptionView.swift in Sources */,
 				ECB432FF2AD61C626DC00235 /* TextbookModels.swift in Sources */,
 				57141DDB345E9807A934EC59 /* TextbookView.swift in Sources */,
 			);
