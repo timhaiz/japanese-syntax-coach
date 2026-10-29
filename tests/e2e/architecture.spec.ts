@@ -31,6 +31,10 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(recordSource).toContain("'lesson_replay'")
   expect(recordSource).toContain('p_knowledge_tags')
   expect(recordSource).toContain('p_verdict')
+  expect(recordSource).toContain('clientRequestId')
+  expect(recordSource).toContain('duplicate')
+  expect(recordSource).toContain('record_textbook_learning_attempt_idempotent')
+  expect(recordSource).toContain('p_user_id: user.id')
   expect(recordSource).toContain('legacy')
   const studySource=readFileSync(resolve(process.cwd(),'app/api/study-state/route.ts'),'utf8')
   expect(studySource).toContain("select('exercise_id,verdict,error_tags,created_at')")
@@ -38,6 +42,15 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   const masteryMigration=readFileSync(resolve(process.cwd(),'supabase/migrations/202609130005_knowledge_mastery_tags.sql'),'utf8')
   expect(masteryMigration).toContain('p_knowledge_tags')
   expect(migrationSource).toContain("elsif p_mode = 'lesson_replay'")
+})
+
+test('idempotency: record-answer uses a user-scoped durable request key',()=>{
+  const recordSource=readFileSync(resolve(process.cwd(),'app/api/record-answer/route.ts'),'utf8')
+  const migrationSource=readFileSync(resolve(process.cwd(),'supabase/migrations/202610291400_native_answer_idempotency.sql'),'utf8')
+  expect(recordSource).toContain('clientRequestId')
+  expect(recordSource).toContain('duplicate')
+  expect(recordSource).toContain('record_textbook_learning_attempt_idempotent')
+  expect(migrationSource).toMatch(/primary key\s*\(user_id, client_request_id\)|unique\s*\(user_id, client_request_id\)/i)
 })
 
 test('服务端 API 支持 Bearer/Cookie 双认证且路由不信任客户端 user ID',()=>{
