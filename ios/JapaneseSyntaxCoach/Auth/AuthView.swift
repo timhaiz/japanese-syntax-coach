@@ -40,7 +40,6 @@ struct AuthView: View {
                 if let message = store.errorMessage { Section { Text(message).foregroundStyle(.red) } }
             }
             .navigationTitle("账户")
-            .onOpenURL { url in Task { await store.handle(url: url) } }
         }
     }
 

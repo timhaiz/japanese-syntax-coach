@@ -136,7 +136,6 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
 
     private let service: AuthService
     private var authEventsTask: Task<Void, Never>?
-    private var pendingSignupEmail: String?
 
     public init(service: AuthService? = nil, restoreSession: Bool = true) {
         let resolved: AuthService
@@ -196,7 +195,7 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
             let result = try await service.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), password: password, redirectTo: AppConfiguration.authCallbackURL)
             switch result {
             case .session(let value): setSession(value)
-            case .confirmationRequired: pendingSignupEmail = email; phase = .needsEmailVerification; errorMessage = "验证码已发送，请检查邮箱。"
+            case .confirmationRequired: phase = .needsEmailVerification; errorMessage = "验证码已发送，请检查邮箱。"
             }
         } catch { showError("注册失败，请稍后重试。") }
     }
@@ -219,10 +218,7 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
 
     public func handle(url: URL) async {
         switch AuthCallbackRouter.route(url) {
-        case .signup(let code):
-            guard let email = pendingSignupEmail, !email.isEmpty else { showError("注册回调缺少邮箱信息，请重新注册。"); return }
-            await verifySignupCode(email: email, code: code)
-        case .recovery, .apple, .session:
+        case .signup, .recovery, .apple, .session:
             do { setSession(try await service.exchangeCallback(url: url)) }
             catch { showError("登录回调无效或已过期。") }
         case .ignored: break

@@ -37,10 +37,16 @@ final class APIClient {
         guard let http = response as? HTTPURLResponse else { throw APIClientError.invalidResponse }
         guard http.statusCode == 401 else { return try decode(data, response: http) }
 
-        guard let tokenProvider,
-              let refreshed = try await tokenProvider.refreshSession(), !refreshed.isEmpty else {
+        guard let tokenProvider else { throw APIClientError.unauthorized }
+        let refreshed: String?
+        do {
+            refreshed = try await tokenProvider.refreshSession()
+        } catch is URLError {
+            throw APIClientError.offline
+        } catch {
             throw APIClientError.unauthorized
         }
+        guard let refreshed, !refreshed.isEmpty else { throw APIClientError.unauthorized }
         var retry = authenticated
         retry.setValue("Bearer \(refreshed)", forHTTPHeaderField: "Authorization")
         let (retryData, retryResponse) = try await perform(retry)
