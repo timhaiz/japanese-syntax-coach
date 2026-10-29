@@ -38,10 +38,16 @@ export async function POST(request: Request) {
   if (hasClientRequestId && (typeof body.clientRequestId !== 'string' || !clientRequestIdPattern.test(body.clientRequestId))) {
     return NextResponse.json({ error: 'Invalid client request ID' }, { status: 400 })
   }
+  if (hasClientRequestId && (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+    return NextResponse.json({ error: 'Idempotent answer persistence is unavailable' }, { status: 503 })
+  }
   const authenticated = await getAuthenticatedSupabase(request)
   if ('response' in authenticated) return authenticated.response
   const {supabase, user} = authenticated
   if (textbookId !== BUILTIN_TEXTBOOK_ID) {
+    if (hasClientRequestId) {
+      return NextResponse.json({ error: 'Idempotent answer persistence is unavailable for this textbook' }, { status: 503 })
+    }
     return NextResponse.json({ record: null, textbookScopeAvailable: false, localOnly: true })
   }
 
