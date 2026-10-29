@@ -1,57 +1,36 @@
 import SwiftUI
 
 struct ContentView: View {
-    @ObservedObject var storeKit: StoreKitManager
-    @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
-    @State private var isLoading = true
-    @State private var errorMessage: String?
-    @State private var reloadToken = 0
+    @ObservedObject var auth: AuthSessionStore
 
     var body: some View {
         Group {
-            if hasSeenOnboarding {
-                mainContent
-            } else {
-                OnboardingView {
-                    hasSeenOnboarding = true
+            switch auth.phase {
+            case .loading:
+                ProgressView("正在恢复登录状态…")
+            case .misconfigured:
+                VStack(spacing: 14) {
+                    Image(systemName: "wrench.and.screwdriver")
+                        .font(.system(size: 34))
+                        .foregroundStyle(.orange)
+                    Text("服务尚未配置").font(.title3.bold())
+                    Text(auth.errorMessage ?? "请在构建设置中填入 Supabase 配置。")
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
                 }
+                .padding(24)
+            case .signedOut, .needsEmailVerification, .error:
+                AuthView(store: auth)
+            case .signedIn:
+                VStack(spacing: 16) {
+                    Image(systemName: "checkmark.circle").font(.system(size: 42)).foregroundStyle(.green)
+                    Text("登录成功").font(.title2.bold())
+                    Text(auth.userEmail ?? "").foregroundStyle(.secondary)
+                    Button("退出登录") { Task { await auth.signOut() } }.buttonStyle(.bordered)
+                    Text("原生学习界面将在后续任务接入。").font(.footnote).foregroundStyle(.secondary)
+                }.padding()
             }
         }
         .preferredColorScheme(.light)
-    }
-
-    private var mainContent: some View {
-        ZStack {
-            WebViewContainer(
-                storeKit: storeKit,
-                isLoading: $isLoading,
-                errorMessage: $errorMessage,
-                reloadToken: $reloadToken
-            )
-
-            if isLoading {
-                ProgressView("正在打开日句…")
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 14)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 14))
-            }
-
-            if let errorMessage {
-                VStack(spacing: 14) {
-                    Image(systemName: "wifi.exclamationmark")
-                        .font(.system(size: 30))
-                    Text(errorMessage)
-                        .multilineTextAlignment(.center)
-                    Button("重新加载") {
-                        self.errorMessage = nil
-                        reloadToken += 1
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding(24)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-                .padding(28)
-            }
-        }
     }
 }

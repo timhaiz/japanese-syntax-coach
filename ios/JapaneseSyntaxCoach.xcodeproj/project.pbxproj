@@ -10,20 +10,26 @@
 		012787DEFA53D2E4297F71BD /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185452ABC1AD2FC692AF4214 /* OnboardingView.swift */; };
 		196ACB9C5F125B839EEAA245 /* 05-feedback.png in Resources */ = {isa = PBXBuildFile; fileRef = 437EA3142A340A1BF531A65A /* 05-feedback.png */; };
 		1D0CEABED72C192035862CE9 /* 03-listen.png in Resources */ = {isa = PBXBuildFile; fileRef = EC24CD8936F7A739B65DA49B /* 03-listen.png */; };
+		1DAC4136958CAF15692DCACB /* AuthSessionStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F827C7EC0098ECCE9BDA5532 /* AuthSessionStoreTests.swift */; };
 		24626BE31DD1D90C38DE2264 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9DE658C797A12C41FC6A3D4 /* ContentView.swift */; };
 		2BC4C1C92D83B1434EDE0047 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 77378C076A1E9661792D5302 /* PrivacyInfo.xcprivacy */; };
+		3579FA7EBD78F5F4A7327B73 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71EF9078C24B075A8D616033 /* AuthView.swift */; };
 		3979D8AE9EDD6BEABAE2D7BA /* builtin-japanese-syntax.json in Resources */ = {isa = PBXBuildFile; fileRef = 55AE525EBB1829500B33ACF3 /* builtin-japanese-syntax.json */; };
 		3ED88C0DAA06D2C5A750E99C /* 01-launch.png in Resources */ = {isa = PBXBuildFile; fileRef = A3987E166250B3EB10450B51 /* 01-launch.png */; };
 		42C1BFE003FBC26A328EDDBB /* TextbookRepositoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0D349EABDDF708DDBD3F823 /* TextbookRepositoryTests.swift */; };
 		57522373804FA221484C94E0 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE50C7412BF851E0EBE313E4 /* AppConfiguration.swift */; };
 		9195201F6DBA9C6DA560450E /* 02-structure.png in Resources */ = {isa = PBXBuildFile; fileRef = B84B595A846306AD6DCF3593 /* 02-structure.png */; };
+		9BD6BD2058A8131933E669C5 /* AuthSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99937A4F93AAA179A9D81BB5 /* AuthSessionStore.swift */; };
+		BB2CE45DC8769C9B440E899D /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CB2A14121E8C351E7CE5826 /* APIClient.swift */; };
 		BF7FE108C51D1D770ADD3BE4 /* JapaneseSyntaxCoachApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F40A5E5CA7243D5EBFBD30BF /* JapaneseSyntaxCoachApp.swift */; };
 		C926427A5D932D0D337441E5 /* 01-launch.jpeg in Resources */ = {isa = PBXBuildFile; fileRef = AA8198C892570AD1F9D0396E /* 01-launch.jpeg */; };
 		DF85B04C5A74361007D4A904 /* 04-output.png in Resources */ = {isa = PBXBuildFile; fileRef = 1E8CB0BF56BE9EF6F6DF9E65 /* 04-output.png */; };
 		EBC04E1D3FCBEE7B4F090187 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FE3C44E96A21CB339859AEBF /* Assets.xcassets */; };
+		EC384B8999D27AC7007649E2 /* AuthCallbackRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95DBA6946B5178C2216EF27 /* AuthCallbackRouter.swift */; };
 		ECB432FF2AD61C626DC00235 /* TextbookModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FAA771D309A74D8593A2018 /* TextbookModels.swift */; };
 		ED097C6B80EEAD44BEACF387 /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A8AA702B5360CFD8733BBE /* StoreKitManager.swift */; };
 		F200C90182F06A77F1AFC804 /* WebViewContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D5A4512109F52AC8BB9917A /* WebViewContainer.swift */; };
+		FECC3B194D0DD4505FC56140 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 84C4C4CA95BE4CFFE9B8D5DD /* Supabase */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,13 +46,16 @@
 		185452ABC1AD2FC692AF4214 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		1E8CB0BF56BE9EF6F6DF9E65 /* 04-output.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "04-output.png"; sourceTree = "<group>"; };
 		27B1BEF76367AB03F02807AD /* JapaneseSyntaxCoach.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = JapaneseSyntaxCoach.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2CB2A14121E8C351E7CE5826 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		37A8AA702B5360CFD8733BBE /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
 		437EA3142A340A1BF531A65A /* 05-feedback.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "05-feedback.png"; sourceTree = "<group>"; };
 		55AE525EBB1829500B33ACF3 /* builtin-japanese-syntax.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "builtin-japanese-syntax.json"; sourceTree = "<group>"; };
 		5D5A4512109F52AC8BB9917A /* WebViewContainer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewContainer.swift; sourceTree = "<group>"; };
+		71EF9078C24B075A8D616033 /* AuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthView.swift; sourceTree = "<group>"; };
 		77378C076A1E9661792D5302 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		83B621CF56BB66302F5C6C9C /* JapaneseSyntaxCoachTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = JapaneseSyntaxCoachTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FAA771D309A74D8593A2018 /* TextbookModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextbookModels.swift; sourceTree = "<group>"; };
+		99937A4F93AAA179A9D81BB5 /* AuthSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSessionStore.swift; sourceTree = "<group>"; };
 		A3987E166250B3EB10450B51 /* 01-launch.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "01-launch.png"; sourceTree = "<group>"; };
 		A9DE658C797A12C41FC6A3D4 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA8198C892570AD1F9D0396E /* 01-launch.jpeg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = "01-launch.jpeg"; sourceTree = "<group>"; };
@@ -54,11 +63,24 @@
 		B0D349EABDDF708DDBD3F823 /* TextbookRepositoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextbookRepositoryTests.swift; sourceTree = "<group>"; };
 		B84B595A846306AD6DCF3593 /* 02-structure.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "02-structure.png"; sourceTree = "<group>"; };
 		CE50C7412BF851E0EBE313E4 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		D95DBA6946B5178C2216EF27 /* AuthCallbackRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthCallbackRouter.swift; sourceTree = "<group>"; };
 		E99EF67C8F064727B550EF43 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		EC24CD8936F7A739B65DA49B /* 03-listen.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "03-listen.png"; sourceTree = "<group>"; };
 		F40A5E5CA7243D5EBFBD30BF /* JapaneseSyntaxCoachApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JapaneseSyntaxCoachApp.swift; sourceTree = "<group>"; };
+		F827C7EC0098ECCE9BDA5532 /* AuthSessionStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSessionStoreTests.swift; sourceTree = "<group>"; };
 		FE3C44E96A21CB339859AEBF /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8B92CA6F7BCECE9C84700068 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FECC3B194D0DD4505FC56140 /* Supabase in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		16C41FC9627DA270ECB07F34 /* Products */ = {
@@ -73,6 +95,7 @@
 		2CA57A7DD4C1862AC7D28681 /* JapaneseSyntaxCoachTests */ = {
 			isa = PBXGroup;
 			children = (
+				F827C7EC0098ECCE9BDA5532 /* AuthSessionStoreTests.swift */,
 				B0D349EABDDF708DDBD3F823 /* TextbookRepositoryTests.swift */,
 			);
 			path = JapaneseSyntaxCoachTests;
@@ -91,11 +114,23 @@
 				77378C076A1E9661792D5302 /* PrivacyInfo.xcprivacy */,
 				37A8AA702B5360CFD8733BBE /* StoreKitManager.swift */,
 				5D5A4512109F52AC8BB9917A /* WebViewContainer.swift */,
+				4AAA226FA98E2DCD28FB7AB9 /* Auth */,
 				51469B8A7B8D8ABFBE46121A /* Models */,
+				D77A374F5E4FBA89F7FF3353 /* Networking */,
 				B0EE1665B0D01E8CA2BE5FEF /* Onboarding */,
 				749E977EE96D02FE18AF681E /* Resources */,
 			);
 			path = JapaneseSyntaxCoach;
+			sourceTree = "<group>";
+		};
+		4AAA226FA98E2DCD28FB7AB9 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				D95DBA6946B5178C2216EF27 /* AuthCallbackRouter.swift */,
+				99937A4F93AAA179A9D81BB5 /* AuthSessionStore.swift */,
+				71EF9078C24B075A8D616033 /* AuthView.swift */,
+			);
+			path = Auth;
 			sourceTree = "<group>";
 		};
 		51469B8A7B8D8ABFBE46121A /* Models */ = {
@@ -125,6 +160,14 @@
 				437EA3142A340A1BF531A65A /* 05-feedback.png */,
 			);
 			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		D77A374F5E4FBA89F7FF3353 /* Networking */ = {
+			isa = PBXGroup;
+			children = (
+				2CB2A14121E8C351E7CE5826 /* APIClient.swift */,
+			);
+			path = Networking;
 			sourceTree = "<group>";
 		};
 		D858275077D610C02B0819D6 = {
@@ -163,6 +206,7 @@
 			buildPhases = (
 				0DF2347DC5841C35B93C89A7 /* Sources */,
 				6F3FEBEBC8F1609566B099D4 /* Resources */,
+				8B92CA6F7BCECE9C84700068 /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -170,6 +214,7 @@
 			);
 			name = JapaneseSyntaxCoach;
 			packageProductDependencies = (
+				84C4C4CA95BE4CFFE9B8D5DD /* Supabase */,
 			);
 			productName = JapaneseSyntaxCoach;
 			productReference = 27B1BEF76367AB03F02807AD /* JapaneseSyntaxCoach.app */;
@@ -203,6 +248,9 @@
 			);
 			mainGroup = D858275077D610C02B0819D6;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				BC13DB212460F451510ECEA0 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 16C41FC9627DA270ECB07F34 /* Products */;
 			projectDirPath = "";
@@ -238,7 +286,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BB2CE45DC8769C9B440E899D /* APIClient.swift in Sources */,
 				57522373804FA221484C94E0 /* AppConfiguration.swift in Sources */,
+				EC384B8999D27AC7007649E2 /* AuthCallbackRouter.swift in Sources */,
+				9BD6BD2058A8131933E669C5 /* AuthSessionStore.swift in Sources */,
+				3579FA7EBD78F5F4A7327B73 /* AuthView.swift in Sources */,
 				24626BE31DD1D90C38DE2264 /* ContentView.swift in Sources */,
 				BF7FE108C51D1D770ADD3BE4 /* JapaneseSyntaxCoachApp.swift in Sources */,
 				012787DEFA53D2E4297F71BD /* OnboardingView.swift in Sources */,
@@ -252,6 +304,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1DAC4136958CAF15692DCACB /* AuthSessionStoreTests.swift in Sources */,
 				42C1BFE003FBC26A328EDDBB /* TextbookRepositoryTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -345,6 +398,8 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPABASE_ANON_KEY = "";
+				SUPABASE_URL = "";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -423,6 +478,8 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				SUPABASE_ANON_KEY = "";
+				SUPABASE_URL = "";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.0;
@@ -495,6 +552,25 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		BC13DB212460F451510ECEA0 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift.git";
+			requirement = {
+				kind = exactVersion;
+				version = 2.39.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		84C4C4CA95BE4CFFE9B8D5DD /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BC13DB212460F451510ECEA0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 6F9B20BEE0C511244ED38DA3 /* Project object */;
 }
