@@ -22,8 +22,17 @@ struct AuthView: View {
                 }
                 Section {
                     Button(action: submit) {
-                        HStack { Spacer(); Text(buttonTitle); if busy { ProgressView() }; Spacer() }
-                    }.disabled(busy)
+                        HStack {
+                            Spacer()
+                            Text(buttonTitle)
+                            if busy { ProgressView().tint(.white) }
+                            Spacer()
+                        }
+                        .frame(height: 22)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.black)
+                    .disabled(busy)
                     if mode == .login { Button("注册", action: { mode = .signup }); Button("忘记密码", action: { mode = .reset }) }
                     if mode == .signup { Button("返回登录", action: { mode = .login }) }
                     if mode == .verify { Button("返回注册", action: { mode = .signup }) }
