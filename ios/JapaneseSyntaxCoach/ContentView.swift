@@ -2,12 +2,14 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var auth: AuthSessionStore
-    @StateObject private var learning: LearningStore
+    @ObservedObject var learning: LearningStore
+    @ObservedObject var storeKit: StoreKitManager
     @Environment(\.scenePhase) private var scenePhase
 
-    init(auth: AuthSessionStore) {
+    init(auth: AuthSessionStore, learning: LearningStore, storeKit: StoreKitManager) {
         self.auth = auth
-        _learning = StateObject(wrappedValue: LearningStore(auth: auth))
+        self.learning = learning
+        self.storeKit = storeKit
     }
 
     var body: some View {
@@ -49,16 +51,25 @@ struct ContentView: View {
         }
         .task(id: auth.userEmail) {
             if auth.phase == .signedIn {
+                storeKit.activateAccount(auth.userID)
                 await learning.loadStudyState()
                 await learning.retryPending()
+                await storeKit.retryPendingTransactions()
             } else { learning.clearUserScopedData() }
         }
         .onChange(of: auth.phase) { phase in
-            if phase == .signedOut || phase == .misconfigured { learning.clearUserScopedData() }
+            if phase == .signedOut || phase == .misconfigured {
+                learning.clearUserScopedData()
+                storeKit.activateAccount(nil)
+            }
         }
         .onChange(of: scenePhase) { phase in
             if phase == .active, auth.phase == .signedIn {
-                Task { await learning.loadStudyState(); await learning.retryPending() }
+                Task {
+                    await learning.loadStudyState()
+                    await learning.retryPending()
+                    await storeKit.retryPendingTransactions()
+                }
             }
         }
         .preferredColorScheme(.light)

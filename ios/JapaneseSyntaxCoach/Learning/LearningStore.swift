@@ -145,10 +145,12 @@ final class LearningStore: ObservableObject {
 
     func deleteAccount() async throws {
         guard auth.phase == .signedIn else { throw LearningStoreError.notSignedIn }
+        let deletion = AccountDeletionRequest()
+        guard deletion.isConfirmed else { throw LearningStoreError.accountDeleteNotConfirmed }
         var request = URLRequest(url: AppConfiguration.webURL.appendingPathComponent("api/account/delete"))
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(AccountDeleteRequest(confirmation: "DELETE"))
+        request.httpBody = try JSONEncoder().encode(deletion)
         let response: AccountDeleteResponse = try await api.request(request)
         guard response.deleted else { throw LearningStoreError.accountDeleteNotConfirmed }
         clearUserScopedData()
@@ -268,10 +270,6 @@ private struct CachedTextbook: Codable {
     let schemaVersion: Int
     let contentHash: String
     let textbook: Textbook
-}
-
-private struct AccountDeleteRequest: Encodable {
-    let confirmation: String
 }
 
 enum LearningStoreError: LocalizedError {

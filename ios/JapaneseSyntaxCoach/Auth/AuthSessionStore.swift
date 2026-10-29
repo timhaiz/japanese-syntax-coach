@@ -8,15 +8,34 @@ struct AuthSession: Codable, Equatable {
     let accessToken: String
     let refreshToken: String
     let email: String?
+    let userID: String?
 
-    init(accessToken: String, refreshToken: String, email: String?) {
+    init(accessToken: String, refreshToken: String, email: String?, userID: String? = nil) {
         self.accessToken = accessToken
         self.refreshToken = refreshToken
         self.email = email
+        self.userID = userID
     }
 
     init(_ session: Session) {
-        self.init(accessToken: session.accessToken, refreshToken: session.refreshToken, email: session.user.email)
+        self.init(
+            accessToken: session.accessToken,
+            refreshToken: session.refreshToken,
+            email: session.user.email,
+            userID: session.user.id.uuidString
+        )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case accessToken, refreshToken, email, userID
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        accessToken = try container.decode(String.self, forKey: .accessToken)
+        refreshToken = try container.decode(String.self, forKey: .refreshToken)
+        email = try container.decodeIfPresent(String.self, forKey: .email)
+        userID = try container.decodeIfPresent(String.self, forKey: .userID)
     }
 }
 
@@ -132,6 +151,9 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
     @Published private(set) var phase: AuthPhase = .loading
     @Published private(set) var session: AuthSession?
     @Published private(set) var userEmail: String?
+    /// Supabase user id. StoreKit needs it as `appAccountToken`, and the server
+    /// rejects a transaction whose token does not match the signed-in account.
+    @Published private(set) var userID: String?
     @Published var errorMessage: String?
 
     private let service: AuthService
@@ -237,9 +259,9 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
     }
 
     private func setSession(_ value: AuthSession) {
-        session = value; userEmail = value.email; phase = .signedIn; errorMessage = nil
+        session = value; userEmail = value.email; userID = value.userID; phase = .signedIn; errorMessage = nil
     }
 
-    private func clearSession() { session = nil; userEmail = nil; phase = .signedOut }
+    private func clearSession() { session = nil; userEmail = nil; userID = nil; phase = .signedOut }
     private func showError(_ message: String) { phase = .error; errorMessage = message }
 }

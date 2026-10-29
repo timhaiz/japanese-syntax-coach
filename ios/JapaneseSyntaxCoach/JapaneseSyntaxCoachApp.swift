@@ -2,13 +2,12 @@ import SwiftUI
 
 @main
 struct JapaneseSyntaxCoachApp: App {
-    @StateObject private var auth = AuthSessionStore()
-    @StateObject private var storeKit = StoreKitManager()
+    @StateObject private var environment = AppEnvironment()
 
     var body: some Scene {
         WindowGroup {
-            ContentView(auth: auth)
-                .onOpenURL { url in Task { await auth.handle(url: url) } }
+            ContentView(auth: environment.auth, learning: environment.learning, storeKit: environment.storeKit)
+                .onOpenURL { url in Task { await environment.auth.handle(url: url) } }
         }
     }
 }
