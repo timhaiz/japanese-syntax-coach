@@ -8,7 +8,7 @@ struct QuestionView: View {
     @State private var typedAnswer = ""
 
     private var isTextInput: Bool { question.type == "翻译" || question.type == "问答" }
-    private var answer: String { isTextInput ? typedAnswer : selectedOption }
+    private var answer: String { isTextInput ? typedAnswer : Self.submittedOptionText(selectedOption) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -27,7 +27,7 @@ struct QuestionView: View {
                     Button { selectedOption = option } label: {
                         HStack(alignment: .top) {
                             Image(systemName: selectedOption == option ? "checkmark.circle.fill" : "circle")
-                            Text(displayText(option)).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(option).frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .padding(12)
                         .background(selectedOption == option ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.08))
@@ -51,8 +51,8 @@ struct QuestionView: View {
         }
     }
 
-    private func displayText(_ option: String) -> String {
-        // Preserve the full option as the submitted value, just like the website.
-        question.type == "选择" ? String(option.dropFirst(2)).trimmingCharacters(in: .whitespacesAndNewlines) : option
+    static func submittedOptionText(_ option: String) -> String {
+        // app/page.tsx submits slice(2).trim() for both choice and particle options.
+        String(option.dropFirst(2)).trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

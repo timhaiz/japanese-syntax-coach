@@ -29,13 +29,21 @@ enum AnswerEvaluator {
             variants.append(question.answer.replacingOccurrences(of: "くなかったです", with: "くありませんでした"))
         }
 
-        let accepted = variants.contains { normalizeAnswer($0) == normalizedAnswer }
+        // The bundled options have unique trimmed texts within each question.
+        // Recover the selected key from submitted text to mirror the website's text OR key check.
+        let selectedKey = question.options?.first(where: {
+            String($0.dropFirst(2)).trimmingCharacters(in: .whitespacesAndNewlines) == answer
+        }).map { String($0.prefix(1)) }
+        let accepted = variants.contains { variant in
+            normalizeAnswer(variant) == normalizedAnswer ||
+                selectedKey.map { normalizeAnswer(variant) == normalizeAnswer($0) } == true
+        }
         let expected = expectedAnswer(for: question)
         let verdict: String
         if accepted {
             verdict = "correct"
         } else {
-            let expectedNormalized = normalizeAnswer(question.answer)
+            let expectedNormalized = normalizeAnswer(expected)
             // Website spreads expected code points but indexes actual UTF-16 units.
             let actualUnits = Array(normalizedAnswer.utf16)
             let expectedCharacters = Array(expectedNormalized.unicodeScalars)

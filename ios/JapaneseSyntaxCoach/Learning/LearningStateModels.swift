@@ -136,6 +136,18 @@ struct StudyState: Codable, Equatable {
         case textbookId, textbookScopeAvailable, dueQuestionIds, lessons, knowledgePoints, metrics
         case legacyProgressAvailable, legacyProgress
     }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        textbookId = try container.decode(String.self, forKey: .textbookId)
+        textbookScopeAvailable = try container.decode(Bool.self, forKey: .textbookScopeAvailable)
+        dueQuestionIds = try container.decode([String].self, forKey: .dueQuestionIds)
+        lessons = try container.decode([StudyLessonProgress].self, forKey: .lessons)
+        knowledgePoints = try container.decode([JSONValue].self, forKey: .knowledgePoints)
+        metrics = try container.decode(StudyMetrics.self, forKey: .metrics)
+        legacyProgressAvailable = try container.decodeIfPresent(Bool.self, forKey: .legacyProgressAvailable) ?? false
+        legacyProgress = try container.decodeIfPresent(JSONValue.self, forKey: .legacyProgress)
+    }
 }
 
 struct StudyLessonProgress: Codable, Equatable, Identifiable {
