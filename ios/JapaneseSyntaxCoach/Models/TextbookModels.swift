@@ -1,6 +1,18 @@
+import CryptoKit
 import Foundation
 
 struct TextbookPackage: Decodable {
+    private static let contentHashLength = 64
+
+    private static func canonicalTextbookData(_ textbook: Textbook) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return try encoder.encode(textbook)
+    }
+
+    private static func sha256Hex(_ data: Data) -> String {
+        SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
+    }
     let schemaVersion: Int
     let contentHash: String
     let textbook: Textbook
@@ -19,12 +31,24 @@ struct TextbookPackage: Decodable {
         }
 
         schemaVersion = version
-        contentHash = try container.decode(String.self, forKey: .contentHash)
-        textbook = try container.decode(Textbook.self, forKey: .textbook)
+        let decodedHash = try container.decode(String.self, forKey: .contentHash)
+        guard decodedHash.utf8.count == Self.contentHashLength,
+              decodedHash.utf8.allSatisfy({
+                  ($0 >= 48 && $0 <= 57) || ($0 >= 97 && $0 <= 102)
+              }) else {
+            throw TextbookLoadError.invalidContentHash
+        }
+        let decodedTextbook = try container.decode(Textbook.self, forKey: .textbook)
+        guard let canonicalData = try? Self.canonicalTextbookData(decodedTextbook),
+              Self.sha256Hex(canonicalData) == decodedHash else {
+            throw TextbookLoadError.contentHashMismatch
+        }
+        contentHash = decodedHash
+        textbook = decodedTextbook
     }
 }
 
-struct Textbook: Decodable {
+struct Textbook: Codable {
     let id: String
     let title: String
     let shortTitle: String?
@@ -43,6 +67,17 @@ struct Textbook: Decodable {
         case questions
     }
 
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(title, forKey: .title)
+        try container.encodeIfPresent(shortTitle, forKey: .shortTitle)
+        try container.encodeIfPresent(cover, forKey: .cover)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encode(lessons, forKey: .lessons)
+        try container.encode(questions, forKey: .questions)
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decodeRequiredID(String.self, forKey: .id, entity: "textbook")
@@ -55,7 +90,7 @@ struct Textbook: Decodable {
     }
 }
 
-struct TextbookLesson: Decodable {
+struct TextbookLesson: Codable {
     let id: Int
     let title: String
     let goal: String
@@ -80,7 +115,7 @@ struct TextbookLesson: Decodable {
     }
 }
 
-struct TextbookGrammarPoint: Decodable {
+struct TextbookGrammarPoint: Codable {
     let pattern: String
     let meaning: String
     let example: String
@@ -91,7 +126,7 @@ struct TextbookGrammarPoint: Decodable {
     let pitfalls: [String]?
 }
 
-struct TextbookQuestion: Decodable {
+struct TextbookQuestion: Codable {
     let id: String
     let lessonId: Int
     let type: String
@@ -134,12 +169,18 @@ private extension KeyedDecodingContainer {
         guard contains(key), try decodeNil(forKey: key) == false else {
             throw TextbookLoadError.missingID(entity: entity)
         }
-        return try decode(T.self, forKey: key)
+        let value = try decode(T.self, forKey: key)
+        if let stringValue = value as? String, stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            throw TextbookLoadError.missingID(entity: entity)
+        }
+        return value
     }
 }
 
 enum TextbookLoadError: LocalizedError, Equatable {
     case unsupportedSchemaVersion(Int)
+    case invalidContentHash
+    case contentHashMismatch
     case missingID(entity: String)
     case missingBundledResource
 
@@ -147,6 +188,10 @@ enum TextbookLoadError: LocalizedError, Equatable {
         switch self {
         case .unsupportedSchemaVersion(let version):
             return "Unsupported textbook schema version: \(version)."
+        case .invalidContentHash:
+            return "The bundled textbook contains an invalid content hash."
+        case .contentHashMismatch:
+            return "The bundled textbook content hash does not match its contents."
         case .missingID(let entity):
             return "The bundled textbook contains an item without a \(entity) ID."
         case .missingBundledResource:

@@ -1,14 +1,38 @@
 import {test, expect} from '@playwright/test'
-import {readFileSync, existsSync} from 'node:fs'
+import {execFileSync} from 'node:child_process'
+import {mkdtempSync, readFileSync, existsSync, rmSync} from 'node:fs'
+import {tmpdir} from 'node:os'
 import {resolve} from 'node:path'
+import {createHash} from 'node:crypto'
 
 test('versioned textbook iOS export has a stable package contract',()=>{
-  expect(existsSync(resolve(process.cwd(),'scripts/textbook/export-ios-package.mjs'))).toBeTruthy()
-  const packageJson=JSON.parse(readFileSync(resolve(process.cwd(),'ios/JapaneseSyntaxCoach/Resources/builtin-japanese-syntax.json'),'utf8'))
-  expect(packageJson.schemaVersion).toBe(1)
-  expect(packageJson.contentHash).toMatch(/^[a-f0-9]{64}$/)
-  expect(packageJson.textbook.id).toBe('builtin-japanese-syntax')
-  expect(packageJson.textbook.questions.length).toBeGreaterThan(100)
+  const root=process.cwd()
+  const exporter=resolve(root,'scripts/textbook/export-ios-package.mjs')
+  expect(existsSync(exporter)).toBeTruthy()
+  const outputDir=mkdtempSync(resolve(tmpdir(),'ios-textbook-'))
+  const output=resolve(outputDir,'package.json')
+  try {
+    execFileSync(process.execPath,[exporter,'--output',output],{cwd:root,stdio:'pipe'})
+    const packageJson=JSON.parse(readFileSync(output,'utf8'))
+    const authoritative=JSON.parse(execFileSync(process.execPath,['--input-type=module','-e',`
+      import { registerHooks } from 'node:module'
+      import { pathToFileURL } from 'node:url'
+      registerHooks({ resolve(specifier, context, nextResolve) {
+        if (specifier.startsWith('@/')) return { url: pathToFileURL(${JSON.stringify(root)} + '/' + specifier.slice(2) + '.ts').href, shortCircuit: true }
+        return nextResolve(specifier, context)
+      }})
+      const { builtInTextbookPackage } = await import(pathToFileURL(${JSON.stringify(resolve(root,'lib/textbooks.ts'))}).href)
+      process.stdout.write(JSON.stringify(builtInTextbookPackage.textbook))
+    `],{cwd:root,stdio:['ignore','pipe','pipe']}).toString())
+    const sortKeys=(value:unknown):unknown=>Array.isArray(value)?value.map(sortKeys):value&&typeof value==='object'?Object.fromEntries(Object.entries(value as Record<string,unknown>).sort(([a],[b])=>a.localeCompare(b)).map(([key,item])=>[key,sortKeys(item)])):value
+    const canonical=JSON.stringify(sortKeys(authoritative))
+    const expectedHash=createHash('sha256').update(canonical,'utf8').digest('hex')
+    expect(packageJson).toEqual({schemaVersion:1,contentHash:expectedHash,textbook:authoritative})
+    expect(packageJson.textbook.lessons.map((lesson:{id:number})=>lesson.id)).toEqual(authoritative.lessons.map((lesson:{id:number})=>lesson.id))
+    expect(packageJson.textbook.questions.map((question:{id:string})=>question.id)).toEqual(authoritative.questions.map((question:{id:string})=>question.id))
+  } finally {
+    rmSync(outputDir,{recursive:true,force:true})
+  }
 })
 
 test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
