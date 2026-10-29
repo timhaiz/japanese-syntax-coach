@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { NextResponse } from 'next/server'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { getTtsDirectory } from '@/lib/tts/server'
 import { isVoiceGenerationMember } from '@/lib/tts/membership'
 
@@ -13,10 +13,9 @@ export async function GET(request: Request) {
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(textbookId) || !/^[a-f0-9]{16}\.wav$/.test(file)) {
     return NextResponse.json({ error: 'Invalid audio path' }, { status: 400 })
   }
-  const supabase = await getSupabaseServer()
-  if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const authenticated = await getAuthenticatedSupabase(request)
+  if ('response' in authenticated) return authenticated.response
+  const {supabase, user} = authenticated
   const { data: profile } = await supabase
     .from('profiles')
     .select('membership_status,membership_ends_at')

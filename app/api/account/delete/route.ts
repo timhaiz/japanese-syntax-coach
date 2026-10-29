@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { deleteUserTtsData } from '@/lib/tts/server'
 
 export const runtime = 'nodejs'
@@ -11,14 +11,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '请确认删除账号后再试。' }, { status: 400 })
   }
 
-  const supabase = await getSupabaseServer()
+  const authenticated = await getAuthenticatedSupabase(request)
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-  if (!supabase || !serviceRoleKey || !url) {
+  if ('response' in authenticated) return NextResponse.json({ error: '请先登录。' }, { status: 401 })
+  if (!serviceRoleKey || !url) {
     return NextResponse.json({ error: '账号注销服务尚未配置。' }, { status: 503 })
   }
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: '请先登录。' }, { status: 401 })
+  const {supabase, user} = authenticated
 
   try {
     await deleteUserTtsData(user.id)

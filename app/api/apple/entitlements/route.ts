@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { updateMembershipFromAppleTransaction, verifyAppleTransaction } from '@/lib/apple/server'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
-  const supabase = await getSupabaseServer()
-  if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: '请先登录。' }, { status: 401 })
+  const authenticated = await getAuthenticatedSupabase(request)
+  if ('response' in authenticated) return NextResponse.json({ error: '请先登录。' }, { status: 401 })
+  const {supabase, user} = authenticated
   const body = await request.json().catch(() => null) as { signedTransaction?: unknown } | null
   if (typeof body?.signedTransaction !== 'string') return NextResponse.json({ error: 'signedTransaction required' }, { status: 400 })
   try {

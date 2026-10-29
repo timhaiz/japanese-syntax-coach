@@ -40,6 +40,23 @@ test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   expect(migrationSource).toContain("elsif p_mode = 'lesson_replay'")
 })
 
+test('服务端 API 支持 Bearer/Cookie 双认证且路由不信任客户端 user ID',()=>{
+  const source=readFileSync(resolve(process.cwd(),'lib/supabase-server.ts'),'utf8')
+  expect(source).toContain('Authorization')
+  expect(source).toContain('Bearer')
+  expect(source).toContain('getUser')
+  for(const route of ['study-state','record-answer','membership']){
+    const routeSource=readFileSync(resolve(process.cwd(),`app/api/${route}/route.ts`),'utf8')
+    expect(routeSource).not.toMatch(/body\.userId|searchParams\.get\(['"]userId/)
+  }
+  const helper=readFileSync(resolve(process.cwd(),'lib/auth/request-supabase.ts'),'utf8')
+  expect(helper).toContain('getAuthenticatedSupabase')
+  for(const route of ['study-state','record-answer','apple/entitlements','account/delete','tts/generate','tts/audio','tts/manifest']){
+    const routeSource=readFileSync(resolve(process.cwd(),`app/api/${route}/route.ts`),'utf8')
+    expect(routeSource).toContain('getAuthenticatedSupabase')
+  }
+})
+
 test('AI 接口包含严格的响应结构校验',()=>{
   const analyzeSource=readFileSync(resolve(process.cwd(),'app/api/analyze-answer/route.ts'),'utf8')
   const aiSource=readFileSync(resolve(process.cwd(),'lib/ai.ts'),'utf8')

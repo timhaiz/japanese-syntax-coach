@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { readTtsManifest } from '@/lib/tts/server'
 import { isVoiceGenerationMember } from '@/lib/tts/membership'
 
@@ -7,10 +7,9 @@ export const runtime = 'nodejs'
 
 export async function GET(request: Request) {
   const textbookId = new URL(request.url).searchParams.get('textbookId') || ''
-  const supabase = await getSupabaseServer()
-  if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const authenticated = await getAuthenticatedSupabase(request)
+  if ('response' in authenticated) return authenticated.response
+  const {supabase, user} = authenticated
   const { data: profile } = await supabase
     .from('profiles')
     .select('membership_status,membership_ends_at')

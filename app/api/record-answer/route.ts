@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { nextReviewByVerdict, type ReviewVerdict } from '@/lib/review'
 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
@@ -32,12 +32,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid answer record' }, { status: 400 })
   }
 
-  const supabase = await getSupabaseServer()
-  if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const authenticated = await getAuthenticatedSupabase(request)
+  if ('response' in authenticated) return authenticated.response
+  const {supabase, user} = authenticated
   if (textbookId !== BUILTIN_TEXTBOOK_ID) {
     return NextResponse.json({ record: null, textbookScopeAvailable: false, localOnly: true })
   }
