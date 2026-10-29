@@ -50,7 +50,7 @@ struct AccountView: View {
             }
 
             Section {
-                Text("删除账号会清除你的云端学习记录，并清除本机的待同步答案与缓存进度。该操作不可撤销。")
+                Text("删除账号会清除你的云端学习记录，并清除本机的待同步答案、缓存进度与待同步购买记录。该操作不可撤销。")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if let deletionError {
@@ -83,6 +83,8 @@ struct AccountView: View {
         do {
             try await learning.deleteAccount()
             learning.clearUserScopedData()
+            // The account is gone, so no purchase record of it may stay on the device.
+            storeKit.clearAccountData()
             storeKit.activateAccount(nil)
             await auth.signOut()
         } catch {

@@ -34,6 +34,10 @@ enum StoreKitProviderError: Error {
 
 /// Narrow seam over StoreKit 2 so the purchase state machine can be unit-tested
 /// without a live StoreKit session or an Apple sandbox account.
+///
+/// The protocol is main-actor isolated, so the live implementation can keep its
+/// transaction table without a data race and finish a transaction only once.
+@MainActor
 protocol StoreKitProductProviding: AnyObject {
     func loadProducts() async throws -> [StoreProduct]
     func purchase(productID: String, appAccountToken: UUID?) async throws -> StorePurchaseOutcome
@@ -43,6 +47,7 @@ protocol StoreKitProductProviding: AnyObject {
     func finish(transactionID: String) async
 }
 
+@MainActor
 final class LiveStoreKitProductProvider: StoreKitProductProviding {
     /// Real transactions are kept so a verified transaction can be finished later,
     /// after the server acknowledged the entitlement.
@@ -145,8 +150,10 @@ final class LiveStoreKitProductProvider: StoreKitProductProviding {
 
     func finish(transactionID: String) async {
         guard let raw = UInt64(transactionID), let transaction = pendingTransactions[raw] else { return }
-        await transaction.finish()
+        // The entry is removed before the await, so a second finish for the same
+        // transaction is a no-op instead of a second StoreKit call.
         pendingTransactions[raw] = nil
+        await transaction.finish()
     }
 
     private static func periodDescription(for product: Product) -> String {

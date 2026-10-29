@@ -35,20 +35,9 @@ final class OfflineAnswerQueue {
     }
 
     func retry(using operation: RetryOperation) async -> Int {
-        lock.lock()
-        guard !isRetrying else {
-            lock.unlock()
-            return 0
-        }
-        isRetrying = true
-        lock.unlock()
+        guard beginRetry() else { return 0 }
+        defer { endRetry() }
         var removedCount = 0
-        defer {
-            lock.lock()
-            isRetrying = false
-            lock.unlock()
-        }
-
         while let item = peek().first {
             do {
                 guard try await operation(item) else { break }
@@ -66,6 +55,23 @@ final class OfflineAnswerQueue {
         defer { lock.unlock() }
         items = []
         persist()
+    }
+
+    /// Claims the retry slot. Returns false when another retry is already running.
+    /// The lock is taken inside a synchronous function, so it is never held across an
+    /// await.
+    private func beginRetry() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !isRetrying else { return false }
+        isRetrying = true
+        return true
+    }
+
+    private func endRetry() {
+        lock.lock()
+        defer { lock.unlock() }
+        isRetrying = false
     }
 
     private func loadFromDisk() {

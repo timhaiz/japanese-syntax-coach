@@ -20,6 +20,19 @@ struct SubscriptionView: View {
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("pendingEntitlementCount")
                 }
+                if storeKit.blockedSyncCount > 0 {
+                    Text("其中 \(storeKit.blockedSyncCount) 笔无法自动同步，需要手动重试。")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("blockedEntitlementCount")
+                    Button("重新尝试同步") { Task { await storeKit.retryBlockedTransactions() } }
+                        .accessibilityLabel("重新尝试同步无法自动同步的购买记录")
+                        .accessibilityIdentifier("retryBlockedEntitlements")
+                }
+                if let queueError = storeKit.queuePersistenceError {
+                    Text(queueError).font(.caption).foregroundStyle(.red)
+                        .accessibilityIdentifier("queuePersistenceError")
+                }
                 if let message { Text(message).font(.caption).accessibilityIdentifier("subscriptionMessage") }
                 if let errorMessage { Text(errorMessage).font(.caption).foregroundStyle(.red).accessibilityIdentifier("subscriptionError") }
             }
@@ -115,6 +128,8 @@ struct SubscriptionView: View {
             errorMessage = "Apple 无法验证这笔交易，请稍后重试。"
         case .notSignedIn:
             errorMessage = "请先登录后再购买会员。"
+        case .processing:
+            message = "这笔购买记录正在同步中，请稍候。"
         case .accountMismatch(let text):
             errorMessage = text
         case .rejected(let text):

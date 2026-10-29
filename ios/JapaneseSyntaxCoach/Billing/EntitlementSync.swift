@@ -110,6 +110,9 @@ struct MembershipResponse: Decodable {
     }
 }
 
+/// Main-actor isolated, so the StoreKit layer never reads a half-updated submission
+/// result while a purchase is being synced.
+@MainActor
 protocol EntitlementSubmitting: AnyObject {
     /// Detailed outcome used by the StoreKit layer to decide whether a transaction may be finished.
     func submitOutcome(signedTransaction: String) async -> EntitlementOutcome
@@ -180,6 +183,8 @@ final class EntitlementSync: EntitlementSubmitting {
             return .accountMismatch("交易账号与当前账号不匹配。")
         case "unknown-product":
             return .rejected(statusCode: 200, message: "该商品无法开通会员。")
+        case "no-membership-state":
+            return .rejected(statusCode: 200, message: "该购买记录没有有效的订阅有效期。")
         default:
             return .rejected(statusCode: 200, message: "服务器未确认这笔购买。")
         }
