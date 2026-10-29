@@ -22,6 +22,7 @@ targets:
       - path: JapaneseSyntaxCoach
     resources:
       - path: JapaneseSyntaxCoach/Onboarding
+      - path: JapaneseSyntaxCoach/Resources/builtin-japanese-syntax.json
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo
@@ -33,3 +34,19 @@ targets:
       path: JapaneseSyntaxCoach/JapaneseSyntaxCoach.entitlements
     scheme:
       gatherCoverageData: false
+      testTargets:
+        - JapaneseSyntaxCoachTests
+  JapaneseSyntaxCoachTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: JapaneseSyntaxCoachTests
+    dependencies:
+      - target: JapaneseSyntaxCoach
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo.tests
+        GENERATE_INFOPLIST_FILE: YES
+    scheme:
+      testTargets:
+        - JapaneseSyntaxCoachTests

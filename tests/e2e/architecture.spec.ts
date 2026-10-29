@@ -2,6 +2,15 @@ import {test, expect} from '@playwright/test'
 import {readFileSync, existsSync} from 'node:fs'
 import {resolve} from 'node:path'
 
+test('versioned textbook iOS export has a stable package contract',()=>{
+  expect(existsSync(resolve(process.cwd(),'scripts/textbook/export-ios-package.mjs'))).toBeTruthy()
+  const packageJson=JSON.parse(readFileSync(resolve(process.cwd(),'ios/JapaneseSyntaxCoach/Resources/builtin-japanese-syntax.json'),'utf8'))
+  expect(packageJson.schemaVersion).toBe(1)
+  expect(packageJson.contentHash).toMatch(/^[a-f0-9]{64}$/)
+  expect(packageJson.textbook.id).toBe('builtin-japanese-syntax')
+  expect(packageJson.textbook.questions.length).toBeGreaterThan(100)
+})
+
 test('题库与整课架构不会回退到页面硬编码或随机 ID',()=>{
   const pageSource=readFileSync(resolve(process.cwd(),'app/page.tsx'),'utf8')
   expect(pageSource).not.toMatch(/const\s+exercises\s*=\s*\[/)
