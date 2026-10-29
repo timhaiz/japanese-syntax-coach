@@ -1,8 +1,60 @@
 import { NextResponse } from 'next/server'
 import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
+import { questionForId, type Question } from '@/lib/question-bank'
+import { clampLessonAnswered, clampLessonCorrect, completedFromLessonProgress } from '@/lib/utils/lesson-utils'
 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
 const validTextbookId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
+
+type LegacyProgress = {
+  version: number
+  lessonDone: Record<string, number>
+  lessonCorrect: Record<string, number>
+  completedLessons: number[]
+  mistakes: Question[]
+  updatedAt?: string
+}
+
+function normalizeLegacyProgress(metadata: unknown, textbookId: string): LegacyProgress | null {
+  if (textbookId !== BUILTIN_TEXTBOOK_ID || !metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const root = metadata as Record<string, unknown>
+  const raw = root.byTextbook && typeof root.byTextbook === 'object' && !Array.isArray(root.byTextbook)
+    ? (root.byTextbook as Record<string, unknown>)[BUILTIN_TEXTBOOK_ID]
+    : undefined
+  const candidate = raw && typeof raw === 'object' && !Array.isArray(raw)
+    ? raw as Record<string, unknown>
+    : root.lessonDone && typeof root.lessonDone === 'object' && !Array.isArray(root.lessonDone)
+      ? root
+      : null
+  if (!candidate) return null
+  const rawDone = candidate.lessonDone && typeof candidate.lessonDone === 'object' && !Array.isArray(candidate.lessonDone)
+    ? candidate.lessonDone as Record<string, unknown>
+    : {}
+  const rawCorrect = candidate.lessonCorrect && typeof candidate.lessonCorrect === 'object' && !Array.isArray(candidate.lessonCorrect)
+    ? candidate.lessonCorrect as Record<string, unknown>
+    : {}
+  const lessonDone = Object.fromEntries(Object.entries(rawDone).map(([index, value]) => [index, clampLessonAnswered(value)]))
+  const lessonCorrect = Object.fromEntries(Object.entries(rawCorrect).map(([index, value]) => [index, clampLessonCorrect(value)]))
+  const completedLessons = completedFromLessonProgress(
+    lessonDone,
+    candidate.completedLessons,
+    lessonCorrect,
+  )
+  const mistakes = Array.isArray(candidate.mistakes)
+    ? candidate.mistakes.map((item) => {
+        const id = item && typeof item === 'object' ? (item as {id?: unknown}).id : undefined
+        return typeof id === 'string' ? questionForId(id) : undefined
+      }).filter((item): item is NonNullable<ReturnType<typeof questionForId>> => Boolean(item))
+    : []
+  return {
+    version: typeof candidate.version === 'number' && Number.isFinite(candidate.version) ? candidate.version : 1,
+    lessonDone,
+    lessonCorrect,
+    completedLessons,
+    mistakes,
+    ...(typeof candidate.updatedAt === 'string' ? {updatedAt: candidate.updatedAt} : {}),
+  }
+}
 
 export async function GET(request: Request) {
   const textbookId = new URL(request.url).searchParams.get('textbookId') ?? BUILTIN_TEXTBOOK_ID
@@ -12,6 +64,11 @@ export async function GET(request: Request) {
   const authenticated = await getAuthenticatedSupabase(request)
   if ('response' in authenticated) return authenticated.response
   const {supabase, user} = authenticated
+  const legacyProgress = normalizeLegacyProgress(user.user_metadata?.learning_progress, textbookId)
+  const legacyResponse = {
+    legacyProgressAvailable: Boolean(legacyProgress),
+    legacyProgress,
+  }
   if (textbookId !== BUILTIN_TEXTBOOK_ID) {
     return NextResponse.json({
       textbookId,
@@ -21,6 +78,7 @@ export async function GET(request: Request) {
       lessons: [],
       knowledgePoints: [],
       metrics: { totalAttempts: 0, incorrectAttempts: 0, errorRate: 0, forgettingRate: 0, correctStreak: 0, topErrorTags: [] },
+      ...legacyResponse,
     })
   }
 
@@ -122,5 +180,6 @@ export async function GET(request: Request) {
       correctStreak: streak,
       topErrorTags,
     },
+    ...legacyResponse,
   })
 }
