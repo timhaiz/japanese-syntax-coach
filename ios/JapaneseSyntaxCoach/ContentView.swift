@@ -2,33 +2,63 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var auth: AuthSessionStore
+    @StateObject private var learning: LearningStore
+    @Environment(\.scenePhase) private var scenePhase
+
+    init(auth: AuthSessionStore) {
+        self.auth = auth
+        _learning = StateObject(wrappedValue: LearningStore(auth: auth))
+    }
 
     var body: some View {
         Group {
-            switch auth.phase {
-            case .loading:
-                ProgressView("正在恢复登录状态…")
-            case .misconfigured:
-                VStack(spacing: 14) {
-                    Image(systemName: "wrench.and.screwdriver")
-                        .font(.system(size: 34))
-                        .foregroundStyle(.orange)
-                    Text("服务尚未配置").font(.title3.bold())
-                    Text(auth.errorMessage ?? "请在构建设置中填入 Supabase 配置。")
-                        .multilineTextAlignment(.center)
-                        .foregroundStyle(.secondary)
+            if auth.phase == .signedIn {
+                TabView {
+                    NavigationStack { HomeView(store: learning) }
+                        .tabItem { Label("首页", systemImage: "house") }
+                    NavigationStack { TextbookView(store: learning) }
+                        .tabItem { Label("教材", systemImage: "book") }
+                    NavigationStack { LearningProgressView(store: learning) }
+                        .tabItem { Label("进度", systemImage: "chart.bar") }
+                    NavigationStack {
+                        Form {
+                            Section("已登录账户") { Text(auth.userEmail ?? "当前账户") }
+                            Section("学习同步") { LearningSyncStatusView(store: learning) }
+                            Section("账户与订阅") {
+                                Text("完整订阅与账户管理将在后续版本接入。").foregroundStyle(.secondary)
+                                Button("退出登录", role: .destructive) {
+                                    Task {
+                                        learning.clearUserScopedData()
+                                        await auth.signOut()
+                                    }
+                                }
+                            }
+                        }.navigationTitle("账户")
+                    }
+                    .tabItem { Label("账户", systemImage: "person.circle") }
                 }
-                .padding(24)
-            case .signedOut, .needsEmailVerification, .error:
+            } else {
                 AuthView(store: auth)
-            case .signedIn:
-                VStack(spacing: 16) {
-                    Image(systemName: "checkmark.circle").font(.system(size: 42)).foregroundStyle(.green)
-                    Text("登录成功").font(.title2.bold())
-                    Text(auth.userEmail ?? "").foregroundStyle(.secondary)
-                    Button("退出登录") { Task { await auth.signOut() } }.buttonStyle(.bordered)
-                    Text("原生学习界面将在后续任务接入。").font(.footnote).foregroundStyle(.secondary)
-                }.padding()
+                    .overlay {
+                        if auth.phase == .loading {
+                            SwiftUI.ProgressView("正在恢复登录状态…")
+                                .padding().background(.regularMaterial).cornerRadius(12)
+                        }
+                    }
+            }
+        }
+        .task(id: auth.userEmail) {
+            if auth.phase == .signedIn {
+                await learning.loadStudyState()
+                await learning.retryPending()
+            } else { learning.clearUserScopedData() }
+        }
+        .onChange(of: auth.phase) { phase in
+            if phase == .signedOut || phase == .misconfigured { learning.clearUserScopedData() }
+        }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active, auth.phase == .signedIn {
+                Task { await learning.loadStudyState(); await learning.retryPending() }
             }
         }
         .preferredColorScheme(.light)
