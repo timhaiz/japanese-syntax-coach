@@ -1134,14 +1134,18 @@ SwiftDriver Supabase normal arm64 com.apple.xcode.tools.swift.compiler (in targe
 ```
 Next.js production build                 PASS
 TypeScript type check                    PASS
-Playwright end-to-end suite              FAIL (1)
+Playwright end-to-end suite              FAIL (1)  -> 109 passed, 3 failed
 XcodeGen project generation              PASS
-Xcode Release simulator build            PASS
-Xcode unit tests                         PASS
+Xcode Release simulator build            PASS  (BUILD SUCCEEDED)
+Xcode unit tests                         PASS  -> 78 tests, 0 failures
 Device archive with signing              SKIPPED
 App Store Connect record creation        SKIPPED
 Upload and review submission             SKIPPED
 ```
+
+The raw Playwright transcript earlier in this log is from the Task 8 run and shows 107 passed.
+The final run after the whole-branch review passed 109 tests; the two additional ones are the
+Apple account token regression tests added by the final review.
 
 
 ## Baseline note for the Playwright failure
@@ -1153,5 +1157,35 @@ The three failing tests are the pre-existing repository failures:
 - tests/e2e/lesson-flow.spec.ts:273 未登录时个人页不会显示已同步
 
 They reproduce identically at the branch base commit 8b01e69, so they are not caused by this
-branch. The remaining 107 Playwright tests passed, including the Bearer/Cookie authentication
+branch. This was re-verified directly: a detached worktree was created at 8b01e69 and the same
+three tests failed there with the same assertion at lesson-flow.spec.ts:275.
+
+The remaining 109 Playwright tests passed, including the Bearer/Cookie authentication
 contract tests that the earlier review round had left broken.
+
+Note: a stale `next dev` server that had been running for 11 hours made every browser test
+fail with `net::ERR_ABORTED`. That was an environment fault, not a code regression; the suite
+passes once the dev server is restarted.
+
+
+## Final whole-branch review
+
+Performed by the controller after the review subagent channel ran out of quota.
+
+Two findings were fixed on the branch:
+
+1. The Apple account token was compared case-sensitively against the Supabase user id.
+   The native client sends `UUID.uuidString`, which is upper case, while the Supabase user id
+   is lower case, so a genuine purchase of the signed-in account could be rejected with a
+   403 account mismatch. The comparison now ignores case and the write path normalizes the
+   same way, which keeps `profiles.id` consistent with the uuid representation Postgres
+   stores. Covered by two new tests in tests/e2e/auth-contract.spec.ts.
+
+2. The release material (`ios/README.md`, `docs/ios/app-store-launch-checklist.md`,
+   `docs/ios/app-store-metadata-draft.md`, `docs/ios/test-matrix.md`) was never committed,
+   because the repository `.gitignore` excludes `*.md` globally. The files are now tracked
+   explicitly so the branch matches what the Task 8 commit message claims.
+
+Everything else in the branch was reviewed without findings: the Cookie/Bearer dual
+authentication, the answer idempotency path, the legacy progress compatibility, the
+StoreKit transaction lifecycle, the credential boundaries and the textbook package contract.
