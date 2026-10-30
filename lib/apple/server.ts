@@ -40,7 +40,9 @@ export async function updateMembershipFromAppleTransaction(
   transaction: JWSTransactionDecodedPayload,
   notificationType?: string,
 ) {
-  const userId = transaction.appAccountToken
+  // `profiles.id` is a uuid column that Postgres canonicalizes to lower case, so
+  // the same account must always be written with the same representation.
+  const userId = transaction.appAccountToken?.trim().toLowerCase()
   if (!userId || !uuidPattern.test(userId)) return { updated: false, reason: 'missing-app-account-token' }
   const allowedProducts = (process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS ?? '')
     .split(',').map((value) => value.trim()).filter(Boolean)

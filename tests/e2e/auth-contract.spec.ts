@@ -2,6 +2,7 @@ import {test, expect} from '@playwright/test'
 import {readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
 import {parseBearerToken} from '../../lib/supabase-server'
+import {accountTokenBelongsToUser} from '../../lib/apple/account-token'
 
 test('Bearer parser accepts only non-empty Bearer tokens',()=>{
   expect(parseBearerToken('Bearer abc')).toBe('abc')
@@ -31,4 +32,21 @@ test('Bearer authentication contract is wired through protected APIs',()=>{
   const reviewSource=readFileSync(resolve(process.cwd(),'app/api/review/route.ts'),'utf8')
   expect(reviewSource).toContain("'userId' in body")
   expect(reviewSource).toContain('userId: user.id')
+})
+
+test('Apple account token comparison ignores UUID letter case',()=>{
+  const userId='3f7c1a2e-5b6d-4c8e-9a01-2b3c4d5e6f70'
+  expect(accountTokenBelongsToUser(userId,userId)).toBe(true)
+  expect(accountTokenBelongsToUser(userId.toUpperCase(),userId)).toBe(true)
+  expect(accountTokenBelongsToUser(` ${userId.toUpperCase()} `,userId)).toBe(true)
+  expect(accountTokenBelongsToUser('3f7c1a2e-5b6d-4c8e-9a01-2b3c4d5e6f71',userId)).toBe(false)
+  // A transaction without an account token claims no ownership.
+  expect(accountTokenBelongsToUser(undefined,userId)).toBe(true)
+  expect(accountTokenBelongsToUser('',userId)).toBe(true)
+})
+
+test('Apple entitlement route compares the account token case-insensitively',()=>{
+  const routeSource=readFileSync(resolve(process.cwd(),'app/api/apple/entitlements/route.ts'),'utf8')
+  expect(routeSource).toContain('accountTokenBelongsToUser')
+  expect(routeSource).not.toMatch(/appAccountToken\s*!==\s*user\.id/)
 })
