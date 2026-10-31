@@ -53,7 +53,7 @@
 | --- | --- | --- |
 | 关键词（≤100 字符） | `日语,语法,句型,初级,例句,朗读,练习,错题,日本,备考` | 草稿 |
 | 营销 URL | `https://japanese-syntax-coach.vercel.app/` | 草稿 |
-| 支持 URL | `https://japanese-syntax-coach.vercel.app/`（站点根页） | **待办**：App Store 要求一个可用的支持页面。当前站点只有 `/privacy` 与 `/terms`，没有 `/support`。建议在网站新增 `/support`（说明反馈渠道与账号注销入口）后改填该地址 |
+| 支持 URL | `https://japanese-syntax-coach.vercel.app/support` | 已就绪：站点已新增 `/support` 页面，包含支持邮箱 `service@niixmiro.com`、两条账号注销路径与常见问题 |
 | 隐私政策 URL | `https://japanese-syntax-coach.vercel.app/privacy` | 草稿（该页面已存在） |
 | 服务条款 URL | `https://japanese-syntax-coach.vercel.app/terms` | 草稿（该页面已存在） |
 | 自定义 EULA | 不使用，沿用 Apple 标准 EULA | 草稿 |
@@ -167,8 +167,8 @@ App Store Connect 隐私问卷（App 隐私）按以下内容填写：
 
 ## 9. 未完成事项汇总
 
-- [ ] 支持 URL 指向一个真实可用的支持页面（建议新增 `/support`）
-- [ ] 隐私政策补充 App 内账号删除路径
+- [x] 支持 URL 指向一个真实可用的支持页面：`/support`（已新增，含支持邮箱与账号注销入口）
+- [x] 隐私政策已补充 App 内账号删除路径（「账户 → 删除账号」）与网站路径（「我的 → 注销账号」）
 - [ ] 审核联系信息与演示账号（邮箱、密码、Apple 沙盒账号）
 - [ ] App Store Connect 商品、订阅组、审核截图与本地化
 - [ ] 1024×1024 图标与各尺寸截图

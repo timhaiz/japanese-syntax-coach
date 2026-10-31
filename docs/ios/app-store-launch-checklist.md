@@ -37,6 +37,8 @@
 - [ ] 创建 App 记录：名称「日句」、主要语言「简体中文」、主要类别「教育」
 - [ ] 填写 `docs/ios/app-store-metadata-draft.md` 中的名称、副标题、描述、关键词、
       支持 URL、隐私政策 URL、服务条款 URL
+- [ ] 支持 URL 填 `https://japanese-syntax-coach.vercel.app/support`。该页面已在代码中新增，
+      但**必须先把本分支合并并部署上线**，`/support` 才能公开访问——App Store 审核会直接打开它
 - [ ] 上传图标（1024×1024，无 alpha 通道）、截图（6.9" 与 6.5" 各至少一张）
 - [ ] 隐私问卷按 `docs/ios/app-store-metadata-draft.md` 的「隐私披露」逐项作答
 - [ ] 订阅组与两个自动续期商品已创建：
@@ -77,8 +79,8 @@
 
 - [ ] 审核被拒时按 Apple 的反馈修复并重新归档上传
 - [ ] 上线后用真实账号跑一遍：注册 → 登录 → 答题 → 同步 → 购买（沙盒）→ 恢复购买
-- [ ] 确认 `https://japanese-syntax-coach.vercel.app/privacy` 与 `/terms` 可公开访问
-      （App Store 审核会直接访问这两个地址）
+- [ ] 确认 `https://japanese-syntax-coach.vercel.app/privacy`、`/terms` 与 `/support` 均可公开访问
+      （App Store 审核会直接访问这三个地址）
 - [ ] 确认线上 API 对 Bearer token 鉴权正常（网站 Cookie 登录不受影响）
 
 ---
@@ -93,3 +95,5 @@
 | 服务端验签往返 | 需要生产环境的 Apple 根证书与 `APPLE_SUBSCRIPTION_PRODUCT_IDS` |
 | 迁移 `202610291400` 的线上效果 | 迁移只准备了源文件，尚未应用到线上 |
 | 签名归档与上传 | 需要真实证书与明确授权 |
+| `/support` 上线 | 页面已在代码中新增，但需本分支合并并部署后才会公开可访问 |
+| 支持邮箱可用性 | `service@niixmiro.com` 取自仓库 git 提交身份，上线前请确认该邮箱确实可收信 |

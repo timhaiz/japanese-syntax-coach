@@ -19,6 +19,6 @@ export default function TermsPage() {
     <section><h2>5. 合理使用</h2><p>不得滥用接口、批量制造无意义任务、绕过会员限制、攻击服务或尝试访问其他用户的数据。违反本条时，我们可以暂停或终止账号。</p></section>
     <section><h2>6. 免责声明</h2><p>学习内容用于辅助练习，不构成考试、升学、翻译或专业判断保证。因网络、设备、第三方服务或不可抗力造成的中断，我们会在合理范围内恢复服务。</p></section>
     <section><h2>7. 协议变更与终止</h2><p>我们会在协议发生重大变化时更新页面。你可以随时注销账号；注销后，账号及关联数据将按隐私政策处理。</p></section>
-    <p className="legal-links"><Link href="/privacy">查看隐私政策</Link> · <Link href="/login">登录 / 注册</Link></p>
+    <p className="legal-links"><Link href="/privacy">查看隐私政策</Link> · <Link href="/support">支持页面</Link> · <Link href="/login">登录 / 注册</Link></p>
   </main>
 }

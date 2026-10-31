@@ -43,7 +43,7 @@ npx playwright test
 | 规格 | 覆盖内容 |
 | --- | --- |
 | `tests/e2e/architecture.spec.ts` | 教材导出包契约、答题幂等迁移与路由契约、Bearer/Cookie 双认证且路由不信任客户端 user ID |
-| `tests/e2e/auth-contract.spec.ts` | Bearer 解析边界、受保护 API 统一使用 `getAuthenticatedSupabase(request)` |
+| `tests/e2e/auth-contract.spec.ts` | Bearer 解析边界、受保护 API 统一使用 `getAuthenticatedSupabase(request)`、Apple 账号令牌的大小写无关比较 |
 | `tests/e2e/record-answer-idempotency.spec.ts` | 带幂等键的答题请求契约、无键时保留旧路径、503 行为、迁移里的用户范围唯一键 |
 | `tests/e2e/learning-progress-compat.spec.ts` | legacy 与结构化进度分开呈现、v2/v3 兼容、未知版本标记 unsupported 并保留原始数据、503 分支保留 legacy 字段 |
 | `tests/e2e/question-bank.spec.ts` | 24 课题库回归：字段、ID 唯一性、题型覆盖、答案去标点与去重 |
@@ -51,6 +51,7 @@ npx playwright test
 | `tests/e2e/textbook-switcher.spec.ts` | 教材切换、schemaVersion 1 兼容、非法 JSON 拒绝 |
 | `tests/e2e/review-set.spec.ts` | 复习间隔与混合复习集合 |
 | `tests/e2e/pwa.spec.ts` | PWA manifest、图标、Service Worker、窄屏无横向滚动 |
+| `tests/e2e/support-page.spec.ts` | 支持页联系方式与两条账号注销路径、隐私政策写明应用内注销路径 |
 | `tests/e2e/ai-fallback.spec.ts` | AI 分析接口的降级、401/429/超时处理 |
 
 **已知既有失败（与本分支无关）**：`tests/e2e/lesson-flow.spec.ts` 的第 225、241、273 行共 3 项在分支

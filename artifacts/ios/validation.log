@@ -74,119 +74,123 @@ Route (app)
 ## Playwright end-to-end suite
 
 ```
+Running 115 tests using 4 workers
 
-Running 110 tests using 4 workers
-
-  ✓    1 tests/e2e/architecture.spec.ts:80:5 › idempotency: record-answer uses a user-scoped durable request key (6ms)
-  ✓    3 tests/e2e/architecture.spec.ts:38:5 › 题库与整课架构不会回退到页面硬编码或随机 ID (20ms)
-  ✓    4 tests/e2e/architecture.spec.ts:89:5 › 服务端 API 支持 Bearer/Cookie 双认证且路由不信任客户端 user ID (14ms)
-  ✓    5 tests/e2e/architecture.spec.ts:111:5 › AI 接口包含严格的响应结构校验 (5ms)
-  ✓    6 tests/e2e/auth-contract.spec.ts:6:5 › Bearer parser accepts only non-empty Bearer tokens (3ms)
-  ✓    7 tests/e2e/auth-contract.spec.ts:15:5 › Bearer authentication contract is wired through protected APIs (5ms)
-  ✓    9 tests/e2e/learning-progress-compat.spec.ts:53:7 › study-state legacy learning progress compatibility › only legacy metadata returns structured empty shape and separate normalized legacy snapshot (15ms)
-  ✓    8 tests/e2e/ai-fallback.spec.ts:41:7 › AI 分析接口降级 › 缺少 API Key 时返回可读降级结果 (6ms)
-  ✓   10 tests/e2e/learning-progress-compat.spec.ts:83:7 › study-state legacy learning progress compatibility › structured rows and legacy metadata remain separate without summing or overwriting (15ms)
-  ✓   12 tests/e2e/ai-fallback.spec.ts:55:9 › AI 分析接口降级 › 401 上游错误返回专门提示 (7ms)
-  ✓   13 tests/e2e/learning-progress-compat.spec.ts:135:7 › study-state legacy learning progress compatibility › malformed supported version is preserved and marked unsupported (5ms)
-  ✓   11 tests/e2e/learning-progress-compat.spec.ts:119:7 › study-state legacy learning progress compatibility › historical version 2 remains supported and normalized (6ms)
-  ✓   14 tests/e2e/ai-fallback.spec.ts:55:9 › AI 分析接口降级 › 429 上游错误返回专门提示 (3ms)
-  ✓   16 tests/e2e/learning-progress-compat.spec.ts:166:7 › study-state legacy learning progress compatibility › structured query errors still return legacy compatibility fields (4ms)
-  ✓   15 tests/e2e/learning-progress-compat.spec.ts:150:7 › study-state legacy learning progress compatibility › unsupported version is preserved and marked instead of normalized or hidden (6ms)
-  ✓   19 tests/e2e/learning-progress-compat.spec.ts:200:7 › study-state legacy learning progress compatibility › without legacy metadata returns false and preserves the structured empty shape (2ms)
-  ✓   18 tests/e2e/learning-progress-compat.spec.ts:195:7 › study-state legacy learning progress compatibility › scope-migration 503 response source retains both legacy fields (0ms)
-  ✓   17 tests/e2e/ai-fallback.spec.ts:65:7 › AI 分析接口降级 › 流式响应中的非法 JSON 和非法结构会返回可识别错误 (13ms)
-  ✓   21 tests/e2e/ai-fallback.spec.ts:77:7 › AI 分析接口降级 › 超时返回降级提示 (3ms)
-  ✓    2 tests/e2e/architecture.spec.ts:8:5 › versioned textbook iOS export has a stable package contract (308ms)
-  ✓   22 tests/e2e/lesson-flow.spec.ts:36:5 › 首页当前课程卡片支持键盘打开 (4.2s)
-  ✓   23 tests/e2e/lesson-flow.spec.ts:44:5 › 课程列表中的锁定课程不可操作 (4.4s)
-  ✓   20 tests/e2e/lesson-flow.spec.ts:27:5 › 首页入口会进入当前课程整课练习 (6.1s)
-  ✓   24 tests/e2e/lesson-flow.spec.ts:49:5 › 候选词答案省略句末标点仍判定正确 (6.4s)
-  ✓   25 tests/e2e/lesson-flow.spec.ts:57:5 › 提交后保持当前题目，点击下一题才切换 (3.4s)
-  ✓   26 tests/e2e/lesson-flow.spec.ts:70:5 › 候选词块可组成问句并提交判分 (3.6s)
-  ✓   27 tests/e2e/lesson-flow.spec.ts:81:5 › 候选词块不显示句末标点，触控后不会把相邻词显示为已选 (1.9s)
-  ✓   28 tests/e2e/lesson-flow.spec.ts:90:5 › 选择候选词后提交答案按钮保持原位 (1.9s)
-  ✓   29 tests/e2e/lesson-flow.spec.ts:103:5 › 助词选择题按选项内容判分 (1.6s)
-  ✓   33 tests/e2e/lesson-flow.spec.ts:156:5 › 未完成课程再次进入时从已答题数继续，不重复第一题 (1.1s)
-  ✓   32 tests/e2e/lesson-flow.spec.ts:145:5 › 完成部分整课练习后刷新仍保留课程进度 (2.4s)
-  ✓   30 tests/e2e/lesson-flow.spec.ts:114:5 › 答错后进入错题本并可独立练习 (2.9s)
-  ✓   31 tests/e2e/lesson-flow.spec.ts:131:5 › 未完成整课 20 题不会解锁下一课 (3.6s)
-  ✓   34 tests/e2e/lesson-flow.spec.ts:165:5 › 未来课程的陈旧完成标记不会把当前课程跳到第24课 (2.0s)
-  ✓   35 tests/e2e/lesson-flow.spec.ts:172:5 › 没有实际进度的云端完成标记不会解锁课程 (3.2s)
-  ✓   36 tests/e2e/lesson-flow.spec.ts:183:5 › 完成全部题目后不要求正确率即可解锁下一课 (3.7s)
-  ✓   37 tests/e2e/lesson-flow.spec.ts:196:5 › 课程页不显示旧的答题统计和正确率解锁提示 (3.9s)
-  ✓   38 tests/e2e/lesson-flow.spec.ts:210:5 › 全部课程完成后首页仍允许重新答题 (3.1s)
-  ✓   42 tests/e2e/lesson-flow.spec.ts:265:5 › 旧账号可以进入设置密码邮件流程 (1.9s)
-  ✓   41 tests/e2e/lesson-flow.spec.ts:255:5 › 注册表单要求邮箱和匹配的密码 (2.1s)
-  ✓   44 tests/e2e/lesson-flow.spec.ts:281:5 › 学习记录 API 拒绝未授权或未配置请求 (733ms)
-  ✓   45 tests/e2e/lesson-flow.spec.ts:288:5 › 服务端判分接受等价答案且规则正确结果优先 (465ms)
-  ✓   46 tests/e2e/lesson-flow.spec.ts:296:5 › 第 1 课展示判断、疑问应答和名词所属说明 (540ms)
-  ✓   47 tests/e2e/pwa.spec.ts:3:5 › PWA manifest、图标和 Service Worker 资源可用 (15ms)
-  ✓   48 tests/e2e/pwa.spec.ts:26:5 › 手机窄屏首页不产生横向滚动 (332ms)
-  ✓   49 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 1 课题目字段完整且 ID 稳定 (16ms)
-  ✓   50 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 2 课题目字段完整且 ID 稳定 (14ms)
-  ✓   51 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 3 课题目字段完整且 ID 稳定 (14ms)
-  ✓   52 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 4 课题目字段完整且 ID 稳定 (13ms)
-  ✓   53 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 5 课题目字段完整且 ID 稳定 (15ms)
-  ✓   54 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 6 课题目字段完整且 ID 稳定 (15ms)
-  ✓   55 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 7 课题目字段完整且 ID 稳定 (15ms)
-  ✓   56 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 8 课题目字段完整且 ID 稳定 (15ms)
-  ✓   57 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 9 课题目字段完整且 ID 稳定 (17ms)
-  ✓   58 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 10 课题目字段完整且 ID 稳定 (15ms)
-  ✓   59 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 11 课题目字段完整且 ID 稳定 (18ms)
-  ✓   60 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 12 课题目字段完整且 ID 稳定 (35ms)
-  ✓   61 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 13 课题目字段完整且 ID 稳定 (16ms)
-  ✓   62 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 14 课题目字段完整且 ID 稳定 (20ms)
-  ✓   63 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 15 课题目字段完整且 ID 稳定 (16ms)
-  ✓   64 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 16 课题目字段完整且 ID 稳定 (16ms)
-  ✓   65 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 17 课题目字段完整且 ID 稳定 (18ms)
-  ✓   66 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 18 课题目字段完整且 ID 稳定 (18ms)
-  ✓   67 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 19 课题目字段完整且 ID 稳定 (18ms)
-  ✓   68 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 20 课题目字段完整且 ID 稳定 (16ms)
-  ✓   69 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 21 课题目字段完整且 ID 稳定 (14ms)
-  ✓   70 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 22 课题目字段完整且 ID 稳定 (14ms)
-  ✓   71 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 23 课题目字段完整且 ID 稳定 (15ms)
-  ✓   72 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 24 课题目字段完整且 ID 稳定 (15ms)
-  ✓   73 tests/e2e/question-bank.spec.ts:37:7 › 第 1～24 课题库回归检查 › 题型顺序为选择、助词、翻译、问答 (3ms)
-  ✓   74 tests/e2e/question-bank.spec.ts:45:7 › 第 1～24 课题库回归检查 › 每课都包含选择、助词、翻译和问答四类练习 (2ms)
-  ✓   75 tests/e2e/question-bank.spec.ts:52:7 › 第 1～24 课题库回归检查 › 整课核心练习每课固定 20 题 (3ms)
-  ✓   76 tests/e2e/question-bank.spec.ts:58:7 › 第 1～24 课题库回归检查 › 24 课题目 ID 在全局范围内唯一 (0ms)
-  ✓   77 tests/e2e/question-bank.spec.ts:63:7 › 第 1～24 课题库回归检查 › 每课课程页都有具体语法说明，不保留占位语法 (88ms)
-  ✓   78 tests/e2e/question-bank.spec.ts:79:7 › 第 1～24 课题库回归检查 › 教材常见的じゃありません表达可作为可接受答案 (0ms)
-  ✓   79 tests/e2e/question-bank.spec.ts:87:7 › 第 1～24 课题库回归检查 › 第 1 课题目只覆盖教材的判断、应答和名词所属 (0ms)
-  ✓   80 tests/e2e/question-bank.spec.ts:96:7 › 第 1～24 课题库回归检查 › 第 2 课核心 20 题覆盖教材的指示、疑问和选择表达 (0ms)
-  ✓   81 tests/e2e/question-bank.spec.ts:103:7 › 第 1～24 课题库回归检查 › 第 3 课核心 20 题覆盖也、选择疑问和价格问句 (0ms)
-  ✓   82 tests/e2e/question-bank.spec.ts:112:7 › 第 1～24 课题库回归检查 › 第 4 课核心 20 题覆盖确认句和疑问词全面否定 (0ms)
-  ✓   83 tests/e2e/question-bank.spec.ts:119:7 › 第 1～24 课题库回归检查 › 第 5 课核心 20 题覆盖ごろ和时间对比 (0ms)
-  ✓   84 tests/e2e/question-bank.spec.ts:125:7 › 第 1～24 课题库回归检查 › 第 7 课核心 20 题覆盖宾语、场所、选择和请求 (1ms)
-  ✓   85 tests/e2e/question-bank.spec.ts:132:7 › 第 1～24 课题库回归检查 › 第 8 课核心 20 题覆盖授受、会面以及もう／よ (0ms)
-  ✓   86 tests/e2e/question-bank.spec.ts:139:7 › 第 1～24 课题库回归检查 › 第 9 课覆盖ちょうどいい和句尾よ (0ms)
-  ✓   87 tests/e2e/question-bank.spec.ts:146:7 › 第 1～24 课题库回归检查 › 第 12 课覆盖やっぱり和句尾が的委婉停顿 (0ms)
-  ✓   88 tests/e2e/question-bank.spec.ts:152:7 › 第 1～24 课题库回归检查 › 第 14 课覆盖それから、そうしてください、なかなか和礼貌请求 (0ms)
-  ✓   89 tests/e2e/question-bank.spec.ts:160:7 › 第 1～24 课题库回归检查 › 第 16～20 课覆盖教材表达及会话应答 (4ms)
-  ✓   90 tests/e2e/question-bank.spec.ts:175:7 › 第 1～24 课题库回归检查 › 填空题空格边界不会重复题干中的句尾 (1ms)
-  ✓   91 tests/e2e/question-bank.spec.ts:184:7 › 第 1～24 课题库回归检查 › 填空题替换后形成完整日文句子 (1ms)
-  ✓   92 tests/e2e/question-bank.spec.ts:198:7 › 第 1～24 课题库回归检查 › 所有助词题替换答案后不产生明显重复句尾 (8ms)
-  ✓   93 tests/e2e/question-bank.spec.ts:207:7 › 第 1～24 课题库回归检查 › 每课题干去标点后仍保持跨题型唯一 (55ms)
-  ✓   94 tests/e2e/record-answer-idempotency.spec.ts:26:5 › idempotency: 答题记录 API 声明原生请求幂等契约 (1ms)
-  ✓   95 tests/e2e/record-answer-idempotency.spec.ts:36:5 › idempotency: keyed unsupported textbook returns 503 without persistence or legacy RPC (2ms)
-  ✓   96 tests/e2e/record-answer-idempotency.spec.ts:65:5 › idempotency: missing Supabase config returns 503 before auth/network access (0ms)
-  ✓   97 tests/e2e/record-answer-idempotency.spec.ts:90:5 › idempotency: no-key unsupported textbook keeps the legacy local-only response (1ms)
-  ✓   98 tests/e2e/record-answer-idempotency.spec.ts:118:5 › idempotency: invalid credentials remain 401 when persistence is configured (1ms)
-  ✓   99 tests/e2e/record-answer-idempotency.spec.ts:138:5 › idempotency: 答题幂等迁移使用用户范围唯一键和持久化响应 (2ms)
-  ✓  100 tests/e2e/review-set.spec.ts:5:5 › 不同判定结果使用不同复习间隔 (0ms)
-  ✓  101 tests/e2e/review-set.spec.ts:14:5 › 第 5、10、15、20 课完成后生成稳定混合复习集合 (1ms)
-  ✓  102 tests/e2e/review-set.spec.ts:22:5 › 未完成五课时不生成混合复习集合 (0ms)
-  ✓  103 tests/e2e/review-set.spec.ts:26:5 › 到期题优先，其次按掌握度排序 (0ms)
-  ✓  104 tests/e2e/textbook-switcher.spec.ts:39:5 › 兼容计划格式：教材元数据与课内题目会归一化到运行格式 (1ms)
-  ✓  105 tests/e2e/textbook-switcher.spec.ts:68:5 › 拒绝不受支持的远程封面地址 (0ms)
-  ✓  106 tests/e2e/textbook-switcher.spec.ts:77:5 › 内置教材对应新版标准日本语初级上册 (0ms)
-  ✓  107 tests/e2e/textbook-switcher.spec.ts:82:5 › 教材入口只在首页显示 (537ms)
-  ✘   39 tests/e2e/lesson-flow.spec.ts:225:5 › 已完成课程可以从第一题重新答完整课 (8.1s)
-  ✓  108 tests/e2e/textbook-switcher.spec.ts:113:5 › schemaVersion 1 教材导入后可选并显示真实题数 (1.0s)
-  ✘   43 tests/e2e/lesson-flow.spec.ts:273:5 › 未登录时个人页不会显示已同步 (5.8s)
-  ✓  110 tests/e2e/textbook-switcher.spec.ts:124:5 › 拒绝非法版本的 JSON，且不加入教材列表 (572ms)
-  ✓  109 tests/e2e/textbook-switcher.spec.ts:136:5 › 切换教材隔离同 ID 题目的本地进度并恢复原教材 (1.7s)
-  ✘   40 tests/e2e/lesson-flow.spec.ts:241:5 › 已完成课程重复答题加载完整课程而不是只加载错题 (30.2s)
+  ✓    2 tests/e2e/architecture.spec.ts:38:5 › 题库与整课架构不会回退到页面硬编码或随机 ID (16ms)
+  ✓    3 tests/e2e/architecture.spec.ts:80:5 › idempotency: record-answer uses a user-scoped durable request key (9ms)
+  ✓    5 tests/e2e/architecture.spec.ts:111:5 › AI 接口包含严格的响应结构校验 (3ms)
+  ✓    4 tests/e2e/architecture.spec.ts:89:5 › 服务端 API 支持 Bearer/Cookie 双认证且路由不信任客户端 user ID (10ms)
+  ✓    7 tests/e2e/auth-contract.spec.ts:7:5 › Bearer parser accepts only non-empty Bearer tokens (3ms)
+  ✓    6 tests/e2e/auth-contract.spec.ts:16:5 › Bearer authentication contract is wired through protected APIs (14ms)
+  ✓    9 tests/e2e/auth-contract.spec.ts:37:5 › Apple account token comparison ignores UUID letter case (2ms)
+  ✓    8 tests/e2e/auth-contract.spec.ts:48:5 › Apple entitlement route compares the account token case-insensitively (3ms)
+  ✓   10 tests/e2e/ai-fallback.spec.ts:41:7 › AI 分析接口降级 › 缺少 API Key 时返回可读降级结果 (7ms)
+  ✓   11 tests/e2e/learning-progress-compat.spec.ts:53:7 › study-state legacy learning progress compatibility › only legacy metadata returns structured empty shape and separate normalized legacy snapshot (9ms)
+  ✓   12 tests/e2e/learning-progress-compat.spec.ts:83:7 › study-state legacy learning progress compatibility › structured rows and legacy metadata remain separate without summing or overwriting (11ms)
+  ✓   14 tests/e2e/learning-progress-compat.spec.ts:119:7 › study-state legacy learning progress compatibility › historical version 2 remains supported and normalized (3ms)
+  ✓   13 tests/e2e/ai-fallback.spec.ts:55:9 › AI 分析接口降级 › 401 上游错误返回专门提示 (7ms)
+  ✓   15 tests/e2e/learning-progress-compat.spec.ts:135:7 › study-state legacy learning progress compatibility › malformed supported version is preserved and marked unsupported (3ms)
+  ✓   16 tests/e2e/learning-progress-compat.spec.ts:150:7 › study-state legacy learning progress compatibility › unsupported version is preserved and marked instead of normalized or hidden (3ms)
+  ✓   18 tests/e2e/learning-progress-compat.spec.ts:166:7 › study-state legacy learning progress compatibility › structured query errors still return legacy compatibility fields (4ms)
+  ✓   19 tests/e2e/learning-progress-compat.spec.ts:195:7 › study-state legacy learning progress compatibility › scope-migration 503 response source retains both legacy fields (0ms)
+  ✓   17 tests/e2e/ai-fallback.spec.ts:55:9 › AI 分析接口降级 › 429 上游错误返回专门提示 (4ms)
+  ✓   20 tests/e2e/learning-progress-compat.spec.ts:200:7 › study-state legacy learning progress compatibility › without legacy metadata returns false and preserves the structured empty shape (2ms)
+  ✓   21 tests/e2e/ai-fallback.spec.ts:65:7 › AI 分析接口降级 › 流式响应中的非法 JSON 和非法结构会返回可识别错误 (29ms)
+  ✓   24 tests/e2e/ai-fallback.spec.ts:77:7 › AI 分析接口降级 › 超时返回降级提示 (2ms)
+  ✓    1 tests/e2e/architecture.spec.ts:8:5 › versioned textbook iOS export has a stable package contract (255ms)
+  ✓   23 tests/e2e/lesson-flow.spec.ts:36:5 › 首页当前课程卡片支持键盘打开 (2.4s)
+  ✓   25 tests/e2e/lesson-flow.spec.ts:44:5 › 课程列表中的锁定课程不可操作 (2.4s)
+  ✓   22 tests/e2e/lesson-flow.spec.ts:27:5 › 首页入口会进入当前课程整课练习 (3.3s)
+  ✓   26 tests/e2e/lesson-flow.spec.ts:49:5 › 候选词答案省略句末标点仍判定正确 (3.6s)
+  ✓   27 tests/e2e/lesson-flow.spec.ts:57:5 › 提交后保持当前题目，点击下一题才切换 (2.2s)
+  ✓   28 tests/e2e/lesson-flow.spec.ts:70:5 › 候选词块可组成问句并提交判分 (2.2s)
+  ✓   29 tests/e2e/lesson-flow.spec.ts:81:5 › 候选词块不显示句末标点，触控后不会把相邻词显示为已选 (1.7s)
+  ✓   30 tests/e2e/lesson-flow.spec.ts:90:5 › 选择候选词后提交答案按钮保持原位 (1.8s)
+  ✓   31 tests/e2e/lesson-flow.spec.ts:103:5 › 助词选择题按选项内容判分 (1.6s)
+  ✓   35 tests/e2e/lesson-flow.spec.ts:156:5 › 未完成课程再次进入时从已答题数继续，不重复第一题 (949ms)
+  ✓   32 tests/e2e/lesson-flow.spec.ts:114:5 › 答错后进入错题本并可独立练习 (2.5s)
+  ✓   34 tests/e2e/lesson-flow.spec.ts:145:5 › 完成部分整课练习后刷新仍保留课程进度 (2.1s)
+  ✓   33 tests/e2e/lesson-flow.spec.ts:131:5 › 未完成整课 20 题不会解锁下一课 (3.1s)
+  ✓   36 tests/e2e/lesson-flow.spec.ts:165:5 › 未来课程的陈旧完成标记不会把当前课程跳到第24课 (1.1s)
+  ✓   37 tests/e2e/lesson-flow.spec.ts:172:5 › 没有实际进度的云端完成标记不会解锁课程 (1.2s)
+  ✓   38 tests/e2e/lesson-flow.spec.ts:183:5 › 完成全部题目后不要求正确率即可解锁下一课 (1.7s)
+  ✓   40 tests/e2e/lesson-flow.spec.ts:210:5 › 全部课程完成后首页仍允许重新答题 (1.8s)
+  ✓   39 tests/e2e/lesson-flow.spec.ts:196:5 › 课程页不显示旧的答题统计和正确率解锁提示 (2.1s)
+  ✓   43 tests/e2e/lesson-flow.spec.ts:255:5 › 注册表单要求邮箱和匹配的密码 (1.3s)
+  ✓   44 tests/e2e/lesson-flow.spec.ts:265:5 › 旧账号可以进入设置密码邮件流程 (1.2s)
+  ✓   46 tests/e2e/lesson-flow.spec.ts:281:5 › 学习记录 API 拒绝未授权或未配置请求 (839ms)
+  ✓   47 tests/e2e/lesson-flow.spec.ts:288:5 › 服务端判分接受等价答案且规则正确结果优先 (520ms)
+  ✓   48 tests/e2e/lesson-flow.spec.ts:296:5 › 第 1 课展示判断、疑问应答和名词所属说明 (675ms)
+  ✓   49 tests/e2e/pwa.spec.ts:3:5 › PWA manifest、图标和 Service Worker 资源可用 (25ms)
+  ✓   50 tests/e2e/pwa.spec.ts:26:5 › 手机窄屏首页不产生横向滚动 (330ms)
+  ✓   51 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 1 课题目字段完整且 ID 稳定 (13ms)
+  ✓   52 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 2 课题目字段完整且 ID 稳定 (14ms)
+  ✓   53 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 3 课题目字段完整且 ID 稳定 (14ms)
+  ✓   54 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 4 课题目字段完整且 ID 稳定 (13ms)
+  ✓   55 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 5 课题目字段完整且 ID 稳定 (14ms)
+  ✓   56 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 6 课题目字段完整且 ID 稳定 (14ms)
+  ✓   57 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 7 课题目字段完整且 ID 稳定 (14ms)
+  ✓   58 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 8 课题目字段完整且 ID 稳定 (14ms)
+  ✓   59 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 9 课题目字段完整且 ID 稳定 (16ms)
+  ✓   60 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 10 课题目字段完整且 ID 稳定 (14ms)
+  ✓   61 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 11 课题目字段完整且 ID 稳定 (18ms)
+  ✓   62 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 12 课题目字段完整且 ID 稳定 (20ms)
+  ✓   63 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 13 课题目字段完整且 ID 稳定 (15ms)
+  ✓   64 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 14 课题目字段完整且 ID 稳定 (16ms)
+  ✓   65 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 15 课题目字段完整且 ID 稳定 (14ms)
+  ✓   66 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 16 课题目字段完整且 ID 稳定 (30ms)
+  ✓   67 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 17 课题目字段完整且 ID 稳定 (17ms)
+  ✓   68 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 18 课题目字段完整且 ID 稳定 (17ms)
+  ✓   69 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 19 课题目字段完整且 ID 稳定 (16ms)
+  ✓   70 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 20 课题目字段完整且 ID 稳定 (16ms)
+  ✓   71 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 21 课题目字段完整且 ID 稳定 (14ms)
+  ✓   72 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 22 课题目字段完整且 ID 稳定 (14ms)
+  ✓   73 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 23 课题目字段完整且 ID 稳定 (15ms)
+  ✓   74 tests/e2e/question-bank.spec.ts:7:9 › 第 1～24 课题库回归检查 › 第 24 课题目字段完整且 ID 稳定 (14ms)
+  ✓   75 tests/e2e/question-bank.spec.ts:37:7 › 第 1～24 课题库回归检查 › 题型顺序为选择、助词、翻译、问答 (3ms)
+  ✓   76 tests/e2e/question-bank.spec.ts:45:7 › 第 1～24 课题库回归检查 › 每课都包含选择、助词、翻译和问答四类练习 (2ms)
+  ✓   77 tests/e2e/question-bank.spec.ts:52:7 › 第 1～24 课题库回归检查 › 整课核心练习每课固定 20 题 (2ms)
+  ✓   78 tests/e2e/question-bank.spec.ts:58:7 › 第 1～24 课题库回归检查 › 24 课题目 ID 在全局范围内唯一 (0ms)
+  ✓   79 tests/e2e/question-bank.spec.ts:63:7 › 第 1～24 课题库回归检查 › 每课课程页都有具体语法说明，不保留占位语法 (84ms)
+  ✓   80 tests/e2e/question-bank.spec.ts:79:7 › 第 1～24 课题库回归检查 › 教材常见的じゃありません表达可作为可接受答案 (0ms)
+  ✓   81 tests/e2e/question-bank.spec.ts:87:7 › 第 1～24 课题库回归检查 › 第 1 课题目只覆盖教材的判断、应答和名词所属 (0ms)
+  ✓   82 tests/e2e/question-bank.spec.ts:96:7 › 第 1～24 课题库回归检查 › 第 2 课核心 20 题覆盖教材的指示、疑问和选择表达 (0ms)
+  ✓   83 tests/e2e/question-bank.spec.ts:103:7 › 第 1～24 课题库回归检查 › 第 3 课核心 20 题覆盖也、选择疑问和价格问句 (0ms)
+  ✓   84 tests/e2e/question-bank.spec.ts:112:7 › 第 1～24 课题库回归检查 › 第 4 课核心 20 题覆盖确认句和疑问词全面否定 (0ms)
+  ✓   85 tests/e2e/question-bank.spec.ts:119:7 › 第 1～24 课题库回归检查 › 第 5 课核心 20 题覆盖ごろ和时间对比 (0ms)
+  ✓   86 tests/e2e/question-bank.spec.ts:125:7 › 第 1～24 课题库回归检查 › 第 7 课核心 20 题覆盖宾语、场所、选择和请求 (0ms)
+  ✓   87 tests/e2e/question-bank.spec.ts:132:7 › 第 1～24 课题库回归检查 › 第 8 课核心 20 题覆盖授受、会面以及もう／よ (0ms)
+  ✓   88 tests/e2e/question-bank.spec.ts:139:7 › 第 1～24 课题库回归检查 › 第 9 课覆盖ちょうどいい和句尾よ (0ms)
+  ✓   89 tests/e2e/question-bank.spec.ts:146:7 › 第 1～24 课题库回归检查 › 第 12 课覆盖やっぱり和句尾が的委婉停顿 (0ms)
+  ✓   90 tests/e2e/question-bank.spec.ts:152:7 › 第 1～24 课题库回归检查 › 第 14 课覆盖それから、そうしてください、なかなか和礼貌请求 (0ms)
+  ✓   91 tests/e2e/question-bank.spec.ts:160:7 › 第 1～24 课题库回归检查 › 第 16～20 课覆盖教材表达及会话应答 (1ms)
+  ✓   92 tests/e2e/question-bank.spec.ts:175:7 › 第 1～24 课题库回归检查 › 填空题空格边界不会重复题干中的句尾 (0ms)
+  ✓   93 tests/e2e/question-bank.spec.ts:184:7 › 第 1～24 课题库回归检查 › 填空题替换后形成完整日文句子 (1ms)
+  ✓   94 tests/e2e/question-bank.spec.ts:198:7 › 第 1～24 课题库回归检查 › 所有助词题替换答案后不产生明显重复句尾 (8ms)
+  ✓   95 tests/e2e/question-bank.spec.ts:207:7 › 第 1～24 课题库回归检查 › 每课题干去标点后仍保持跨题型唯一 (51ms)
+  ✓   96 tests/e2e/record-answer-idempotency.spec.ts:26:5 › idempotency: 答题记录 API 声明原生请求幂等契约 (2ms)
+  ✓   97 tests/e2e/record-answer-idempotency.spec.ts:36:5 › idempotency: keyed unsupported textbook returns 503 without persistence or legacy RPC (5ms)
+  ✓   98 tests/e2e/record-answer-idempotency.spec.ts:65:5 › idempotency: missing Supabase config returns 503 before auth/network access (0ms)
+  ✓   99 tests/e2e/record-answer-idempotency.spec.ts:90:5 › idempotency: no-key unsupported textbook keeps the legacy local-only response (4ms)
+  ✓  100 tests/e2e/record-answer-idempotency.spec.ts:118:5 › idempotency: invalid credentials remain 401 when persistence is configured (1ms)
+  ✓  101 tests/e2e/record-answer-idempotency.spec.ts:138:5 › idempotency: 答题幂等迁移使用用户范围唯一键和持久化响应 (4ms)
+  ✓  102 tests/e2e/review-set.spec.ts:5:5 › 不同判定结果使用不同复习间隔 (2ms)
+  ✓  103 tests/e2e/review-set.spec.ts:14:5 › 第 5、10、15、20 课完成后生成稳定混合复习集合 (2ms)
+  ✓  104 tests/e2e/review-set.spec.ts:22:5 › 未完成五课时不生成混合复习集合 (0ms)
+  ✓  105 tests/e2e/review-set.spec.ts:26:5 › 到期题优先，其次按掌握度排序 (0ms)
+  ✓  106 tests/e2e/support-page.spec.ts:5:5 › 支持页面提供联系方式与账号注销入口 (357ms)
+  ✓  107 tests/e2e/support-page.spec.ts:13:5 › 支持页面说明两条账号注销路径 (277ms)
+  ✘   41 tests/e2e/lesson-flow.spec.ts:225:5 › 已完成课程可以从第一题重新答完整课 (7.0s)
+  ✓  108 tests/e2e/support-page.spec.ts:20:5 › 支持页面与隐私政策互相可达且都写明应用内注销路径 (376ms)
+  ✓  109 tests/e2e/textbook-switcher.spec.ts:68:5 › 拒绝不受支持的远程封面地址 (1ms)
+  ✓  110 tests/e2e/textbook-switcher.spec.ts:77:5 › 内置教材对应新版标准日本语初级上册 (0ms)
+  ✓  112 tests/e2e/textbook-switcher.spec.ts:39:5 › 兼容计划格式：教材元数据与课内题目会归一化到运行格式 (7ms)
+  ✓  111 tests/e2e/textbook-switcher.spec.ts:82:5 › 教材入口只在首页显示 (517ms)
+  ✓  114 tests/e2e/textbook-switcher.spec.ts:124:5 › 拒绝非法版本的 JSON，且不加入教材列表 (453ms)
+  ✘   45 tests/e2e/lesson-flow.spec.ts:273:5 › 未登录时个人页不会显示已同步 (5.9s)
+  ✓  113 tests/e2e/textbook-switcher.spec.ts:113:5 › schemaVersion 1 教材导入后可选并显示真实题数 (1.7s)
+  ✓  115 tests/e2e/textbook-switcher.spec.ts:136:5 › 切换教材隔离同 ID 题目的本地进度并恢复原教材 (2.3s)
+  ✘   42 tests/e2e/lesson-flow.spec.ts:241:5 › 已完成课程重复答题加载完整课程而不是只加载错题 (30.2s)
 
 
   1) tests/e2e/lesson-flow.spec.ts:225:5 › 已完成课程可以从第一题重新答完整课 ───────────────────────────────────────
@@ -287,7 +291,7 @@ Running 110 tests using 4 workers
     tests/e2e/lesson-flow.spec.ts:225:5 › 已完成课程可以从第一题重新答完整课 ────────────────────────────────────────
     tests/e2e/lesson-flow.spec.ts:241:5 › 已完成课程重复答题加载完整课程而不是只加载错题 ──────────────────────────────────
     tests/e2e/lesson-flow.spec.ts:273:5 › 未登录时个人页不会显示已同步 ───────────────────────────────────────────
-  107 passed (48.6s)
+  112 passed (41.7s)
 ```
 
 **Result: FAIL** (exit 1, 49s)
@@ -1134,7 +1138,7 @@ SwiftDriver Supabase normal arm64 com.apple.xcode.tools.swift.compiler (in targe
 ```
 Next.js production build                 PASS
 TypeScript type check                    PASS
-Playwright end-to-end suite              FAIL (1)  -> 109 passed, 3 failed
+Playwright end-to-end suite              FAIL (1)  -> 112 passed, 3 failed
 XcodeGen project generation              PASS
 Xcode Release simulator build            PASS  (BUILD SUCCEEDED)
 Xcode unit tests                         PASS  -> 78 tests, 0 failures
@@ -1143,9 +1147,6 @@ App Store Connect record creation        SKIPPED
 Upload and review submission             SKIPPED
 ```
 
-The raw Playwright transcript earlier in this log is from the Task 8 run and shows 107 passed.
-The final run after the whole-branch review passed 109 tests; the two additional ones are the
-Apple account token regression tests added by the final review.
 
 
 ## Baseline note for the Playwright failure
@@ -1189,3 +1190,25 @@ Two findings were fixed on the branch:
 Everything else in the branch was reviewed without findings: the Cookie/Bearer dual
 authentication, the answer idempotency path, the legacy progress compatibility, the
 StoreKit transaction lifecycle, the credential boundaries and the textbook package contract.
+
+
+## Support page and privacy policy
+
+Two App Store submission blockers that the final review had flagged were closed afterwards.
+
+- `app/support/page.tsx` is a new support page reachable at `/support`. It publishes the
+  support mailbox, both account deletion paths, the subscription and restore-purchase
+  guidance, and four common questions. The Apple subscription links were verified to
+  resolve to the intended articles before being published.
+- `app/privacy/page.tsx` now states both account deletion paths, the website
+  "我的 -> 注销账号" and the in-app "账户 -> 删除账号", and says that deleting in the app
+  also clears the on-device offline answers, cached progress and pending purchases. The
+  policy also gained an explicit scope section covering the website and the iOS app, and
+  now mentions the Keychain and the app sandbox.
+- The support page is linked from the privacy policy, the terms page, the profile page and
+  the subscription page. `tests/e2e/support-page.spec.ts` adds three end-to-end checks so
+  the release URL cannot silently break.
+
+The page only becomes publicly reachable after this branch is merged and deployed. The
+App Store reviewer opens the URL directly, so the deployment is part of the release
+checklist, not just a code change.

@@ -103,6 +103,10 @@ export function ProfileOverview({
             <span>用户协议</span>
             <b aria-hidden="true">→</b>
           </a>
+          <a className="account-row account-row-link" href="/support">
+            <span>支持与帮助</span>
+            <b aria-hidden="true">→</b>
+          </a>
           {membershipStatus !== 'member' && <a className="membership-link" href="/subscription">开通会员</a>}
           <div className="account-action-row">
             <button type="button" className="danger-button" onClick={onDeleteAccount}>注销账号</button>

@@ -35,6 +35,7 @@ export default function SubscriptionPage() {
           <a href="/textbooks">教材</a>
           <a href="/privacy">隐私政策</a>
           <a href="/terms">用户协议</a>
+          <a href="/support">支持</a>
         </nav>
       </header>
 
