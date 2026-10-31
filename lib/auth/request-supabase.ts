@@ -14,4 +14,3 @@ export async function getAuthenticatedSupabase(request: Request){
  if(!user)return {response:NextResponse.json({error:'Unauthorized'},{status:401})}
  return {supabase,user}
 }
-
