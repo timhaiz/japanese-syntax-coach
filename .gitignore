@@ -12,3 +12,5 @@ node_modules
 data/tts/
 supabase/.temp/
 artifacts/performance-*.json
+xcuserdata/
+*.xcuserstate
