@@ -1,0 +1,180 @@
+:root {
+  --ink: #17251f;
+  --muted: #53645b;
+  --line: #d9e1dc;
+  --cream: #f4f6f1;
+  --mint: #dcebe1;
+  --green: #176b53;
+  --orange: #98552f;
+  --paper: #fbfcf8;
+  --night: #17251f;
+  --copper: #c27645;
+}
+
+body {
+  background: #dfe8e1;
+  font-family: "Avenir Next", "PingFang SC", "Hiragino Sans GB", sans-serif;
+}
+
+.shell {
+  max-width: 520px;
+  padding: 28px 24px 112px;
+  background:
+    radial-gradient(circle at 88% 2%, rgba(194, 118, 69, .12), transparent 25%),
+    var(--cream);
+}
+
+.shell::before {
+  content: "JAPANESE SYNTAX / DAILY PRACTICE";
+  display: block;
+  margin-bottom: 22px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .18em;
+}
+
+header {
+  margin-bottom: 42px;
+  align-items: flex-start;
+}
+
+.brand { gap: 12px; }
+.brand-mark {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: var(--night);
+  box-shadow: 4px 4px 0 var(--copper);
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+}
+.brand strong { font-size: 17px; letter-spacing: -.04em; }
+.brand small { color: var(--muted); font-size: 9px; letter-spacing: .04em; }
+.header-actions { flex-wrap: wrap; justify-content: flex-end; max-width: 145px; }
+.streak { background: transparent; border: 1px solid #d8b49d; border-radius: 5px; color: var(--orange); padding: 6px 8px; font-size: 10px; }
+.avatar { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--green); }
+
+.eyebrow {
+  color: var(--orange);
+  font-size: 9px;
+  letter-spacing: .2em;
+  margin-bottom: 12px;
+}
+.hero { margin-bottom: 34px; }
+.home-hero { gap: 20px; }
+.home-hero .hero-copy h1 {
+  max-width: 295px;
+  font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+  font-size: 32px;
+  line-height: 1.12;
+  letter-spacing: -.07em;
+}
+.home-hero .hero-copy h1 em { color: var(--green); }
+.home-hero .muted { max-width: 245px; color: #66756d; line-height: 1.75; }
+.primary {
+  border-radius: 5px;
+  background: var(--night);
+  box-shadow: 4px 4px 0 var(--copper);
+  padding: 14px 16px;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+.primary:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--copper); }
+.primary span { color: #f0c4a7; }
+.orb {
+  width: 108px;
+  height: 108px;
+  margin-top: 94px !important;
+  background: conic-gradient(var(--green) 0 var(--progress, 42%), #d8e2db 42%);
+  border-radius: 50%;
+}
+.orb-inner { width: 84px; height: 84px; background: var(--cream); color: var(--muted); }
+.orb-inner b { color: var(--green); font-size: 18px; }
+
+.stats {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  gap: 0;
+  margin: 0 0 34px;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+.stats > div { padding: 15px 10px 14px 0; border-right: 1px solid var(--line); }
+.stats > div + div { padding-left: 12px; }
+.stats > div:last-child { border-right: 0; }
+.stats b { display: block; color: var(--night); font-size: 19px; letter-spacing: -.05em; }
+.stats span { display: block; margin-top: 5px; color: var(--muted); font-size: 10px; }
+
+.section-head { margin: 34px 0 14px; }
+.textbook-summary small,
+.lesson-info p,
+.lesson-info small,
+nav button { color: var(--muted); }
+.section-head h2, .page-title h1 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; letter-spacing: -.06em; }
+.section-head h2 { margin: 0; font-size: 22px; }
+.link { color: var(--green); text-underline-offset: 4px; }
+.lesson-card {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--paper);
+  box-shadow: 8px 8px 0 #dfe8e1;
+  padding: 18px;
+}
+.lesson-no { color: var(--orange); font-family: Georgia, serif; font-size: 28px; }
+.lesson-card h3 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; font-size: 19px; }
+.progress { height: 5px; background: #e4ebe5; border-radius: 0; }
+.progress i { background: var(--green); border-radius: 0; }
+.arrow { color: var(--orange); }
+
+.grammar-card, .lesson-summary, .loading-card {
+  border-radius: 7px;
+  border-color: var(--line);
+  background: var(--paper);
+  box-shadow: 8px 8px 0 #dfe8e1;
+}
+.grammar-card { min-height: 400px; }
+.grammar-card-number { border-radius: 5px; background: var(--night); color: #f4d7c2; }
+.grammar-card h2 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; letter-spacing: -.05em; }
+.grammar-card-meaning { color: var(--green); }
+.grammar-speak { border-radius: 5px; background: var(--mint); color: var(--green); }
+
+.quiz {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--paper);
+  box-shadow: 8px 8px 0 #dfe8e1;
+  padding: 20px;
+}
+.quiz h2 { font-family: "Hiragino Mincho ProN", "Yu Mincho", serif; letter-spacing: -.04em; }
+.prompt { background: #eef3ee; border-left: 3px solid var(--copper); border-radius: 0 5px 5px 0; }
+.choice-list button, .token-button, .token-answer { border-radius: 5px; border-color: var(--line); background: #fff; }
+.choice-list button.selected, .token-button:hover, .token-button:focus-visible { background: var(--mint); border-color: var(--green); color: var(--green); }
+
+nav {
+  left: 50% !important;
+  right: auto !important;
+  width: min(488px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(251, 252, 248, .94);
+  box-shadow: 0 8px 30px rgba(23, 37, 31, .12);
+  padding-top: 8px;
+  bottom: 16px !important;
+  left: 50% !important;
+  right: auto !important;
+}
+nav button { color: var(--muted); }
+nav button.selected { color: var(--green); }
+nav button.selected::before { background: var(--copper); }
+
+@media (max-width: 390px) {
+  .shell { padding-left: 18px; padding-right: 18px; }
+  .home-hero .hero-copy h1 { font-size: 28px; }
+  .orb { width: 94px; height: 94px; }
+  .orb-inner { width: 74px; height: 74px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}

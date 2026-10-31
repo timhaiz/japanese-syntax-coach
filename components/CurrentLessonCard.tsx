@@ -20,7 +20,6 @@ export function CurrentLessonCard({
           onOpen()
         }
       }}
-      aria-label={`打开第 ${lesson.id} 课：${lesson.title}`}
     >
       <div className="lesson-no">{String(lesson.id).padStart(2, '0')}</div>
       <div className="lesson-info">
