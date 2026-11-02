@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 import { getSupabaseServer } from '@/lib/supabase-server'
 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
@@ -9,8 +10,22 @@ export async function GET(request: Request) {
   if (!validTextbookId.test(textbookId)) {
     return NextResponse.json({ error: 'Invalid textbook ID' }, { status: 400 })
   }
-  const supabase = await getSupabaseServer()
-  if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
+  const authorization = request.headers.get('authorization')
+  let supabase
+  if (authorization !== null) {
+    const match = authorization.trim().match(/^Bearer\s+(\S+)$/i)
+    if (!match) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!url || !key) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
+    supabase = createClient(url, key, {
+      global: { headers: { Authorization: `Bearer ${match[1]}` } },
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+  } else {
+    supabase = await getSupabaseServer()
+    if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
+  }
   const {
     data: { user },
   } = await supabase.auth.getUser()
