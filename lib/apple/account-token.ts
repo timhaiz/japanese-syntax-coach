@@ -7,11 +7,12 @@
  * A case-sensitive comparison would reject a genuine purchase of the signed-in
  * account with a 403 account mismatch and strand the transaction forever.
  *
- * A transaction without a token carries no ownership claim, so it stays
- * compatible with every account and the caller keeps its previous behaviour.
+ * A missing or invalid token carries no usable ownership claim and must never
+ * be assigned to the signed-in account.
  */
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
 export function accountTokenBelongsToUser(token: string | null | undefined, userId: string): boolean {
-  const normalizedToken = token?.trim().toLowerCase()
-  if (!normalizedToken) return true
-  return normalizedToken === userId.trim().toLowerCase()
+  const normalizedToken = typeof token === 'string' ? token.trim().toLowerCase() : ''
+  return uuidPattern.test(normalizedToken) && normalizedToken === userId.trim().toLowerCase()
 }

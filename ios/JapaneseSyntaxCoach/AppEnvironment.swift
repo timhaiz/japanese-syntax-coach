@@ -13,7 +13,8 @@ final class AppEnvironment: ObservableObject {
         self.auth = auth
         self.storeKit = StoreKitManager(
             entitlements: EntitlementSync(api: APIClient(tokenProvider: auth)),
-            userIDProvider: { auth.userID }
+            userIDProvider: { auth.userID },
+            authGenerationProvider: { auth.phase == .signedIn ? auth.generationSnapshot() : nil }
         )
         self.learning = LearningStore(auth: auth)
     }

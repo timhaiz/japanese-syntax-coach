@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { questionForId, type Question } from '@/lib/question-bank'
 import { clampLessonAnswered, clampLessonCorrect, completedFromLessonProgress } from '@/lib/utils/lesson-utils'
+import { mistakeStateResponse } from '@/lib/learning/mistake-state-api.mjs'
 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
 const validTextbookId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
@@ -99,6 +100,13 @@ export async function GET(request: Request) {
     })
   }
 
+  let atomicMistakes: {mistakeStateAvailable: boolean; mistakeStates?: unknown[]}
+  try {
+    atomicMistakes = await mistakeStateResponse(supabase, textbookId, process.env.MISTAKE_STATE_V1_ENABLED === '1')
+  } catch {
+    return NextResponse.json({error: 'Mistake state unavailable', code: 'mistake_state_unavailable'}, {status: 503})
+  }
+
   const load = async (scoped: boolean) => {
     const dueQuery = supabase
       .from('question_review_state')
@@ -186,6 +194,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     textbookId,
     textbookScopeAvailable,
+    ...atomicMistakes,
     dueQuestionIds: (due.data ?? []).map((item) => item.question_id),
     lessons,
     knowledgePoints: mastery.error ? [] : mastery.data ?? [],

@@ -12,16 +12,16 @@ const plans = [
   {
     period: 'MONTHLY',
     name: '月度会员',
-    price: '¥18',
+    price: '$0.99',
     cadence: '每月自动续期',
     note: 'AI 判分 · 深度分析 · VOICEVOX 语音',
   },
   {
     period: 'YEARLY',
     name: '年度会员',
-    price: '¥180',
+    price: '$6.59',
     cadence: '每年自动续期',
-    note: '相当于每月 15 元，自动续期',
+    note: '折合每月约 $0.55，自动续期',
   },
 ]
 
@@ -43,6 +43,7 @@ export default function SubscriptionPage() {
         <p className="subscription-kicker">JAPANESE SYNTAX COACH</p>
         <h1 id="subscription-title">会员订阅<br />使用说明</h1>
         <p>会员可使用 AI 判分、AI 深度分析和 VOICEVOX 教材语音生成。订阅由 Apple 处理，取消和退款遵循 App Store 规则。</p>
+        <p>具体价格与当地币种折算以 App Store 购买页面展示为准。恢复购买会重新验证 Apple 交易，并将会员状态同步到当前账号。</p>
       </section>
 
       <AppleSubscriptionControls />
@@ -79,7 +80,7 @@ export default function SubscriptionPage() {
         <div className="subscription-timeline">
           <div className="subscription-timeline-item">
             <b>购买当天</b>
-            <p>购买完成后，会员功能会在服务端验证交易并开通。</p>
+            <p>确认购买后由 Apple 扣款，服务器验签确认交易后立即开通会员权益。</p>
           </div>
           <div className="subscription-timeline-item">
             <b>续期日期</b>
@@ -112,7 +113,7 @@ export default function SubscriptionPage() {
           </div>
           <div className="subscription-deadline">
             <p>IMPORTANT</p>
-            <h3>取消后仍可使用<br />已付款的剩余周期。</h3>
+            <h3>订阅周期请以<br />Apple 账户显示为准。</h3>
             <span>删除 App 不会自动取消订阅。</span>
           </div>
         </div>
@@ -127,7 +128,7 @@ export default function SubscriptionPage() {
           </div>
         </div>
         <ul>
-          <li>会员权益持续到当前 Apple 账单周期结束。</li>
+          <li>订阅账单周期以 Apple 账户显示为准；会员权益持续到当前 Apple 账单周期结束。</li>
           <li>取消后不会再产生下一周期的自动扣款。</li>
           <li>退款由 Apple 按 App Store 规则处理。</li>
           <li>恢复购买会重新验证 Apple 交易，并将会员状态同步到当前账号。</li>

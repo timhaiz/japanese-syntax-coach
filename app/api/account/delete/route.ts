@@ -6,6 +6,10 @@ import { deleteUserTtsData } from '@/lib/tts/server'
 export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
+  return deleteAccountWhenSafe(request)
+}
+
+async function deleteAccountWhenSafe(request: Request) {
   const body = await request.json().catch(() => ({})) as { confirmation?: string }
   if (body.confirmation !== 'DELETE') {
     return NextResponse.json({ error: '请确认删除账号后再试。' }, { status: 400 })
@@ -15,7 +19,7 @@ export async function POST(request: Request) {
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   if ('response' in authenticated) return NextResponse.json({ error: '请先登录。' }, { status: 401 })
-  if (!serviceRoleKey || !url) {
+  if (!url) {
     return NextResponse.json({ error: '账号注销服务尚未配置。' }, { status: 503 })
   }
   const {supabase, user} = authenticated
@@ -26,10 +30,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '账号数据清理失败，请稍后重试。' }, { status: 500 })
   }
 
-  const admin = createClient(url, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
+  if (serviceRoleKey) {
+    const admin = createClient(url, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+    const { error } = await admin.auth.admin.deleteUser(user.id)
+    if (error) return NextResponse.json({ error: '账号注销失败，请稍后重试。' }, { status: 500 })
+    return NextResponse.json({ deleted: true })
+  }
+
+  const { error } = await supabase.rpc('delete_current_authenticated_user', {
+    p_confirmation: 'DELETE',
   })
-  const { error } = await admin.auth.admin.deleteUser(user.id)
   if (error) return NextResponse.json({ error: '账号注销失败，请稍后重试。' }, { status: 500 })
   return NextResponse.json({ deleted: true })
 }

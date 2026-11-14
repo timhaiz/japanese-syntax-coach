@@ -9,6 +9,7 @@ test-results
 playwright-report
 blob-report
 node_modules
+.build/
 data/tts/
 xcuserdata/
 *.xcuserstate

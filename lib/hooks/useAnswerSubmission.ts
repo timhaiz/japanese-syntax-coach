@@ -8,11 +8,14 @@
  * - 云端记录同步
  */
 
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useState } from 'react'
 import type { Question } from '@/lib/question-bank'
 import { isAnswerAccepted, normalizeAnswer } from '@/lib/question-bank'
 import { errorTagsForAnswer, knowledgeTagsForQuestion, explainAnswerDifference } from '@/lib/utils/answer-utils'
 import { LESSON_QUESTION_LIMIT } from '@/lib/utils/lesson-utils'
+import { createMistakeQueue, matchesMistakeScope } from '@/lib/learning/mistake-queue.mjs'
+
+const mistakeQueue = typeof window === 'undefined' ? null : createMistakeQueue()
 
 export type GradeResult = {
   correct: boolean
@@ -30,10 +33,18 @@ export type SubmissionContext = {
   replayMode: boolean
   currentLesson: number
   userId?: string
+  authGeneration?: number
   membershipStatus?: 'anonymous' | 'loading' | 'free' | 'member'
   textbookId?: string
   questionLimit?: number
+  atomicMistakeStateAvailable?: boolean
+  expectedMistakeVersion?: number
+  currentMistake?: boolean
+  onMistakeQueueChange?: (notice: string) => void
+  onMistakeStateUpdate?: (state: {questionId: string; isMistake: boolean; version: number}) => void
 }
+
+export type SubmissionPersistence = 'saved' | 'queued' | 'failed' | 'local'
 
 export type ProgressUpdate = {
   lessonDone: Record<number, number>
@@ -87,10 +98,70 @@ async function requestMemberGrade(question: Question, answer: string): Promise<{
   }
 }
 
-export function useAnswerSubmission() {
+export function answerRecordMode(practiceMode: SubmissionContext['practiceMode'], replayMode: boolean) {
+  if (practiceMode === 'mistakes') return 'mistakes'
+  if (practiceMode === 'lesson') return replayMode ? 'lesson_replay' : 'lesson'
+  return 'review'
+}
+
+export function useAnswerSubmission(activeUserId = '', activeTextbookId = '', activeAuthGeneration = 0) {
+  const activeScopeRef = useRef({userId: activeUserId, textbookId: activeTextbookId, generation: activeAuthGeneration})
+  activeScopeRef.current = {userId: activeUserId, textbookId: activeTextbookId, generation: activeAuthGeneration}
   const submittedQuestionRef = useRef<Question | null>(null)
   const replayMistakesRef = useRef<Question[]>([])
   const replayCorrectRef = useRef(0)
+  const [mistakeQueueRevision, setMistakeQueueRevision] = useState(0)
+
+  const sendQueuedMistake = useCallback(async (item: Record<string, unknown>, generation: number) => {
+    const scope = activeScopeRef.current
+    if (!matchesMistakeScope(scope, String(item.userId), String(item.textbookId), generation)) return {status: 503, body: null}
+    const response = await fetch('/api/record-answer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(item),
+    })
+    const body = await response.json().catch(() => null)
+    if (!matchesMistakeScope(activeScopeRef.current, String(item.userId), String(item.textbookId), generation)) return {status: 503, body: null}
+    return {status: response.status, body}
+  }, [])
+
+  const retryMistakeQueue = useCallback(async (userId: string, textbookId: string, generation = activeScopeRef.current.generation, onStateUpdate?: SubmissionContext['onMistakeStateUpdate']) => {
+    if (!mistakeQueue) return {notice: '设备队列不可用', results: [], count: 0, blocked: 0}
+    if (!matchesMistakeScope(activeScopeRef.current, userId, textbookId, generation)) {
+      return {notice: '账号状态已变化，未发送待同步记录', results: [], count: 0, blocked: 0}
+    }
+    const candidateStates = new Map<string, {questionId: string; isMistake: boolean; version: number}>()
+    const results = await mistakeQueue.flush(async (item) => {
+      const response = await sendQueuedMistake(item, generation)
+      const state = response.body?.mistakeState
+      if (response.status === 200 && response.body?.mistakeStateAvailable === true &&
+        state && state.questionId === item.questionId && typeof state.isMistake === 'boolean' && Number.isSafeInteger(state.version)) {
+        candidateStates.set(String(item.clientRequestId), state)
+      }
+      return response
+    }, userId, textbookId)
+    if (matchesMistakeScope(activeScopeRef.current, userId, textbookId, generation)) {
+      for (const result of results) {
+        const state = result.persisted ? candidateStates.get(result.clientRequestId) : undefined
+        if (state) onStateUpdate?.(state)
+      }
+    }
+    const items = mistakeQueue.list(userId, textbookId)
+    setMistakeQueueRevision((revision) => revision + 1)
+    const failed = items.filter((item: {status?: string}) => item.status === 'conflict' || item.status === 'failed').length
+    const blocked = items.filter((item: {status?: string}) => item.status === 'blocked').length
+    if (items.length) {
+      const hasConflict = items.some((item: {status?: string}) => item.status === 'conflict')
+      const missingVersion = items.some((item: {expectedMistakeVersion?: number | null}) => !Number.isSafeInteger(item.expectedMistakeVersion))
+      const notice = hasConflict
+        ? '部分答题与云端错题版本冲突，记录仍保留在本设备；不会自动改写版本。'
+        : missingVersion
+          ? '部分答题已暂存但缺少协议版本，保持阻塞且不会自动发送。'
+          : failed
+            ? '部分答题暂未同步，记录已保留在本设备。'
+            : '同题后续答题等待前一条确认，记录已保留在本设备。'
+      return {notice, results, count: items.length, blocked}
+    }
+    return {notice: '', results, count: 0, blocked: 0}
+  }, [sendQueuedMistake])
 
   /**
    * 本地判分（规则检查）
@@ -200,10 +271,42 @@ export function useAnswerSubmission() {
   const recordAnswer = useCallback(async (
     context: SubmissionContext,
     gradeResult: GradeResult
-  ): Promise<void> => {
+  ): Promise<SubmissionPersistence> => {
     // 自定义教材不写入教材范围 RPC。这样即使部署环境还没有最新
     // textbook_id 迁移，导入教材也只使用当前用户自己的本地进度。
-    if (!context.userId || context.textbookId !== 'builtin-japanese-syntax') return
+    if (!context.userId || context.textbookId !== 'builtin-japanese-syntax') return 'local'
+
+    if (context.atomicMistakeStateAvailable) {
+      if (!mistakeQueue) {
+        context.onMistakeQueueChange?.('设备队列不可写，答案未提交；当前输入仍保留，请重试。')
+        return 'failed'
+      }
+      let queued = false
+      try {
+        const clientRequestId = globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`
+        await mistakeQueue.enqueue({
+          clientRequestId, userId: context.userId, textbookId: context.textbookId,
+          questionId: context.question.id, expectedMistakeVersion: context.expectedMistakeVersion,
+          requireVersioned: true,
+          expectedIsMistake: !gradeResult.correct ? true : ['mistakes', 'lesson_replay'].includes(answerRecordMode(context.practiceMode, context.replayMode)) ? false : Boolean(context.currentMistake),
+          lessonId: context.question.lessonId, questionLimit: context.questionLimit ?? LESSON_QUESTION_LIMIT,
+          answer: context.answer, correct: gradeResult.correct,
+          verdict: gradeResult.aiVerdict ?? gradeResult.verdict,
+          errorTags: gradeResult.correct ? [] : errorTagsForAnswer(context.question, context.answer),
+          knowledgeTags: knowledgeTagsForQuestion(context.question),
+          mode: answerRecordMode(context.practiceMode, context.replayMode),
+        })
+        queued = true
+        const result = await retryMistakeQueue(context.userId, context.textbookId, context.authGeneration ?? activeScopeRef.current.generation, context.onMistakeStateUpdate)
+        context.onMistakeQueueChange?.(result.notice)
+        return result.count > 0 ? 'queued' : 'saved'
+      } catch {
+        context.onMistakeQueueChange?.(queued
+          ? '答案已暂存到设备队列，但同步检查失败；可稍后重试。'
+          : '设备队列不可写，答案未提交；当前输入仍保留，请重试。')
+        return queued ? 'queued' : 'failed'
+      }
+    }
 
     try {
       const response = await fetch('/api/record-answer', {
@@ -219,21 +322,18 @@ export function useAnswerSubmission() {
           verdict: gradeResult.aiVerdict ?? gradeResult.verdict,
           errorTags: gradeResult.correct ? [] : errorTagsForAnswer(context.question, context.answer),
           knowledgeTags: knowledgeTagsForQuestion(context.question),
-          mode:
-            context.practiceMode === 'lesson'
-              ? context.replayMode
-                ? 'lesson_replay'
-                : 'lesson'
-              : 'review',
+          mode: answerRecordMode(context.practiceMode, context.replayMode),
         }),
       })
 
-      if (!response.ok) return
+      if (!response.ok) return 'local'
       await response.json()
+      return 'saved'
     } catch {
       console.warn('Unable to persist answer; using local fallback')
+      return 'local'
     }
-  }, [])
+  }, [retryMistakeQueue])
 
   /**
    * 提交答案（主函数）
@@ -244,6 +344,7 @@ export function useAnswerSubmission() {
   ): Promise<{
     gradeResult: GradeResult
     progressUpdates: Partial<ProgressUpdate>
+    persistence: SubmissionPersistence
   }> => {
     const { question, answer } = context
 
@@ -307,12 +408,12 @@ export function useAnswerSubmission() {
     // 添加错题更新
     progressUpdates.mistakes = updatedMistakes
 
-    // 记录到服务端不阻塞结果展示。
-    void recordAnswer(context, gradeResult)
+    const persistence = await recordAnswer(context, gradeResult)
 
     return {
       gradeResult,
       progressUpdates,
+      persistence,
     }
   }, [gradeLocally, generateFeedback, updateMistakes, updateProgress, recordAnswer])
 
@@ -336,6 +437,7 @@ export function useAnswerSubmission() {
 
   return {
     submitAnswer,
+    retryMistakeQueue,
     resetReplayState,
     getReplayState,
     submittedQuestion: submittedQuestionRef.current,

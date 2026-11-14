@@ -100,21 +100,18 @@ xcodebuild -project ios/JapaneseSyntaxCoach.xcodeproj -scheme JapaneseSyntaxCoac
 | 年付商品 | `com.juxintong.nihongo.yearly` |
 | 购买凭据提交 | `POST /api/apple/entitlements`，请求体 `{ "signedTransaction": "<JWS>" }` |
 | 会员状态 | `GET /api/membership`（**唯一**的会员状态来源，客户端不自行推导） |
-| 账号删除 | `POST /api/account/delete`，请求体 `{ "confirmation": "DELETE" }` |
+| 账号删除 | 本地 iOS 入口及服务端 `POST /api/account/delete` 暂不可用；本地服务端返回 503，尚未部署 |
 
-服务端环境变量 `APPLE_SUBSCRIPTION_PRODUCT_IDS` 必须包含上面两个商品 ID，否则服务端会以
-`unknown-product` 拒绝购买。
+上线前必须将服务端环境变量 `APPLE_SUBSCRIPTION_PRODUCT_IDS` 配置为包含上面两个商品 ID 的逗号分隔列表，并核对实际部署配置。本地服务端对账号 token 有效的交易在列表为空时抛出配置错误；不在非空列表中的商品以 `unknown-product` 被拒绝。账号 token 无效时会更早返回未更新；本地通知入口对有交易但未更新的结果返回 503，但这不保证通知持久保存或重试，其他通知处理缺口仍待解决。此改动尚未部署，线上行为须单独核实。
 
 ## 购买与同步的约定
 
 - 价格与周期**只**从 StoreKit 读取，界面里不硬编码任何价格。
-- 交易只有在服务端**确认接受或确认重复**之后才会 `finish`；任何其它结果都会把签名交易保留
-  在本机队列里，等待重放。
-- 队列按购买账号分区：交易的 Apple `appAccountToken` 决定了它属于哪个账号，账号切换时不会
-  互相污染。
+- 设计目标是在服务端确认接受或确认重复后才 `finish`，其他结果保留交易以供恢复；但队列写入失败及交易冲突仍有未解决的持久化缺口，不能保证所有记录都已安全保存或可重放。
+- 队列按账号分区，交易的 Apple `appAccountToken` 用于确定归属；无归属记录不得推断为当前账号。跨账号交易冲突、持久冻结和完整证据保全仍未解决，不能将当前实现视为已证明隔离安全。
 - 服务端比较 `appAccountToken` 与登录账号时**忽略大小写**：Apple 只保证它是一个 UUID 字符串，
   而 Supabase 用户 ID 是小写，大小写敏感比较会把本人购买误判成账号不匹配。
-- 账号被删除时，本机所有待同步购买记录文件都会被清除。
+- 当前本地账号删除入口关闭，不会执行删除或购买队列清理。删除恢复机制完成并验证前，不得清除归属不明或待同步的购买记录；线上行为仍需单独核实。
 
 ## 教材资源
 
@@ -133,4 +130,4 @@ npm run textbook:export:ios
 - App Store 元数据草稿：`docs/ios/app-store-metadata-draft.md`
 - 测试矩阵：`docs/ios/test-matrix.md`
 - 自动化验证日志：`artifacts/ios/validation.log`
-- 隐私清单：`docs/ios/PrivacyInfo.xcprivacy`
+- App 实际使用的隐私清单：`ios/JapaneseSyntaxCoach/PrivacyInfo.xcprivacy`。`docs/ios/PrivacyInfo.xcprivacy` 是旧参考副本，不是当前 App 构建使用的清单；上架前仍须核对实际归档、数据处理及 App Store Connect 隐私信息。

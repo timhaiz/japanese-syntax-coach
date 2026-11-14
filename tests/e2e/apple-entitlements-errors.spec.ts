@@ -1,10 +1,16 @@
 import {expect, test} from '@playwright/test'
+import {readFileSync} from 'node:fs'
+import {stripTypeScriptTypes} from 'node:module'
+import vm from 'node:vm'
+import {isAllowedAppleProduct} from '../../lib/apple/product-policy.mjs'
 import {
   VerificationException,
   VerificationStatus,
   type JWSTransactionDecodedPayload,
 } from '@apple/app-store-server-library'
-import {createPOST, type HandlerDependencies} from '../../lib/apple/entitlements-handler'
+import {createPOST, productionDependencies, type HandlerDependencies} from '../../lib/apple/entitlements-handler'
+import {AppleEntitlementWritesDisabledError, AppleVerifierConfigurationError} from '../../lib/apple/server'
+import {accountTokenBelongsToUser} from '../../lib/apple/account-token'
 
 type Dependencies = HandlerDependencies
 
@@ -12,6 +18,7 @@ const user = {id: '11111111-2222-4333-8444-555555555555'}
 const transaction = {
   appAccountToken: user.id,
   transactionId: 'test-transaction-id',
+  productId: 'com.juxintong.nihongo.monthly',
 } satisfies JWSTransactionDecodedPayload
 
 function makeDeps(overrides: Partial<Dependencies> = {}) {
@@ -33,18 +40,23 @@ function makeDeps(overrides: Partial<Dependencies> = {}) {
       order.push('accountTokenMatches')
       return token === userId
     },
+    productAllowed: (_productId: unknown) => true,
     updateMembership: async (
       receivedTransaction: JWSTransactionDecodedPayload,
       notificationType?: string,
     ) => {
       order.push('updateMembership')
-      calls.update += 1
       writtenTransaction = receivedTransaction
       writtenNotificationType = notificationType
       return {updated: true, status: 'active', userId: user.id}
     },
     ...overrides,
   } satisfies Dependencies
+  const updateMembership = deps.updateMembership
+  deps.updateMembership = async (...args) => {
+    calls.update += 1
+    return updateMembership(...args)
+  }
   return {post: createPOST(deps), calls, order, getWritten: () => ({writtenTransaction, writtenNotificationType})}
 }
 
@@ -61,6 +73,72 @@ async function json(response: Response) {
 }
 
 test.describe('Apple entitlement route error classification', () => {
+  test('actual route applies its product policy before membership update', async () => {
+    const source = readFileSync('app/api/apple/entitlements/route.ts', 'utf8')
+    const code = stripTypeScriptTypes(source, {mode: 'strip'})
+      .replace(/^import \{([^}]+)\} from '([^']+)'$/gm, 'const {$1} = require("$2")')
+      .replace('export const runtime', 'const runtime')
+      .replace('export const POST', 'const POST') + '\nmodule.exports = {POST}'
+    const module = {exports: {} as {POST: (request: Request) => Promise<Response>}}
+    let productId = 'com.juxintong.nihongo.other'
+    let writes = 0
+    const env: Record<string, string | undefined> = {APPLE_SUBSCRIPTION_PRODUCT_IDS: 'com.juxintong.nihongo.monthly'}
+    const context = vm.createContext({module, process: {env}, require(id: string) {
+      if (id === '@/lib/apple/entitlements-handler') return {createPOST}
+      if (id === '@/lib/auth/request-supabase') return {getAuthenticatedSupabase: async () => ({user})}
+      if (id === '@/lib/apple/account-token') return {accountTokenBelongsToUser}
+      if (id === '@/lib/apple/product-policy.mjs') return {isAllowedAppleProduct}
+      if (id === '@/lib/apple/server') return {
+        verifyAppleTransaction: async () => ({...transaction, productId}),
+        updateMembershipFromAppleTransaction: async () => { writes++; return {updated: true} },
+      }
+      throw new Error('Unexpected dependency')
+    }})
+    new vm.Script(code).runInContext(context)
+    const post = module.exports.POST
+    expect((await post(request())).status).toBe(400)
+    expect(writes).toBe(0)
+    productId = 'com.juxintong.nihongo.monthly'
+    delete env.APPLE_SUBSCRIPTION_PRODUCT_IDS
+    expect((await post(request())).status).toBe(503)
+    expect(writes).toBe(0)
+    env.APPLE_SUBSCRIPTION_PRODUCT_IDS = 'com.juxintong.nihongo.monthly'
+    expect((await post(request())).status).toBe(200)
+    expect(writes).toBe(1)
+  })
+
+  test('production product policy reads explicit configuration and fails closed', async () => {
+    const previous = process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS
+    try {
+      delete process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS
+      expect(() => productionDependencies.productAllowed(transaction.productId)).toThrow()
+      process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS = 'com.juxintong.nihongo.monthly,com.juxintong.nihongo.yearly'
+      expect(productionDependencies.productAllowed(transaction.productId)).toBe(true)
+      expect(productionDependencies.productAllowed('com.juxintong.nihongo.other')).toBe(false)
+      process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS = 'com.juxintong.nihongo.monthly, com.juxintong.nihongo.yearly'
+      expect(() => productionDependencies.productAllowed(transaction.productId)).toThrow()
+    } finally {
+      if (previous === undefined) delete process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS
+      else process.env.APPLE_SUBSCRIPTION_PRODUCT_IDS = previous
+    }
+  })
+
+  test('rejects non-allowlisted products before membership write', async () => {
+    const {post, calls, order} = makeDeps({productAllowed: () => false})
+    const response = await post(request())
+    expect(response.status).toBe(400)
+    expect(calls.update).toBe(0)
+    expect(order).toEqual(['authenticate', 'verify', 'accountTokenMatches'])
+  })
+
+  test('fails closed when product allowlist configuration is unavailable', async () => {
+    const {post, calls} = makeDeps({productAllowed: () => { throw new Error('private configuration detail') }})
+    const response = await post(request())
+    expect(response.status).toBe(503)
+    expect(await response.text()).not.toContain('private configuration detail')
+    expect(calls.update).toBe(0)
+  })
+
   test('returns 401 before validation or database write when unauthenticated', async () => {
     const {post, calls} = makeDeps({
       authenticate: async () => ({response: new Response(null, {status: 401})}),
@@ -101,6 +179,77 @@ test.describe('Apple entitlement route error classification', () => {
     expect(order).toEqual(['authenticate', 'verify', 'accountTokenMatches'])
   })
 
+  for (const [label, token] of [
+    ['missing', undefined],
+    ['null', null],
+    ['empty', ''],
+    ['whitespace', '   '],
+    ['malformed', 'not-a-uuid'],
+    ['different account', 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'],
+  ] as const) {
+    test(`rejects ${label} account token without writing membership`, async () => {
+      const {post, calls} = makeDeps({
+        accountTokenMatches: accountTokenBelongsToUser,
+        verifyTransaction: async () => ({...transaction, appAccountToken: token} as JWSTransactionDecodedPayload),
+      })
+      const response = await post(request())
+      expect(response.status).toBe(403)
+      expect(await json(response)).toEqual({error: '交易账号与当前账号不匹配。'})
+      expect(calls.update).toBe(0)
+    })
+  }
+
+  test('rejects a malformed token even if it equals the authenticated user id', async () => {
+    const {post, calls} = makeDeps({
+      authenticate: async () => ({user: {id: 'not-a-uuid'}}),
+      accountTokenMatches: accountTokenBelongsToUser,
+      verifyTransaction: async () => ({...transaction, appAccountToken: 'not-a-uuid'}),
+    })
+    const response = await post(request())
+    expect(response.status).toBe(403)
+    expect(calls.update).toBe(0)
+  })
+
+  test('accepts a matching account token regardless of UUID case', async () => {
+    const accountId = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee'
+    const {post, calls, getWritten} = makeDeps({
+      authenticate: async () => ({user: {id: accountId}}),
+      accountTokenMatches: accountTokenBelongsToUser,
+      verifyTransaction: async () => ({...transaction, appAccountToken: accountId.toUpperCase()}),
+    })
+    const response = await post(request())
+    expect(response.status).toBe(200)
+    expect(calls.update).toBe(1)
+    expect(getWritten()).toEqual({
+      writtenTransaction: {...transaction, appAccountToken: accountId},
+      writtenNotificationType: 'SUBSCRIBED',
+    })
+  })
+
+  test('returns 503 without writing when Apple verifier configuration is unavailable', async () => {
+    const {post, calls} = makeDeps({verifyTransaction: async () => { throw new AppleVerifierConfigurationError() }})
+    const response = await post(request())
+    expect(response.status).toBe(503)
+    expect(await json(response)).toEqual({error: '无法验证 Apple 购买记录。'})
+    expect(calls.update).toBe(0)
+  })
+
+  test('returns a retryable response when Apple entitlement writes are disabled', async () => {
+    const {post, calls} = makeDeps({updateMembership: async () => { throw new AppleEntitlementWritesDisabledError() }})
+    const response = await post(request())
+    expect(response.status).toBe(503)
+    expect(await json(response)).toEqual({error: '无法验证 Apple 购买记录。'})
+    expect(calls.update).toBe(1)
+  })
+
+  test('does not confirm an unprocessed membership result', async () => {
+    const {post, calls} = makeDeps({updateMembership: async () => ({updated: false, reason: 'missing-transaction-identity'})})
+    const response = await post(request())
+    expect(response.status).toBe(503)
+    expect(await json(response)).toEqual({error: '无法验证 Apple 购买记录。'})
+    expect(calls.update).toBe(1)
+  })
+
   test('preserves successful response payload', async () => {
     const {post, calls, order, getWritten} = makeDeps()
     const response = await post(request())
@@ -114,7 +263,7 @@ test.describe('Apple entitlement route error classification', () => {
     })
   })
 
-  test('returns 503 only for Apple retryable verification status', async () => {
+  test('returns 503 for Apple retryable verification status', async () => {
     const secret = 'private-verifier-detail test-jws'
     const {post, calls} = makeDeps({
       verifyTransaction: async () => {

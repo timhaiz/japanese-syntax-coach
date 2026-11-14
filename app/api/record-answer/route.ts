@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { nextReviewByVerdict, type ReviewVerdict } from '@/lib/review'
+import { recordAnswerWithMistakes } from '@/lib/learning/mistake-state-api.mjs'
+import { questionForId } from '@/lib/question-bank'
 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
 const textbookIdPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
@@ -18,6 +20,7 @@ type Body = {
   knowledgeTags?: string[]
   mode?: 'new' | 'review' | 'mistakes' | 'lesson' | 'lesson_replay'
   clientRequestId?: string
+  expectedMistakeVersion?: number
 }
 
 export async function POST(request: Request) {
@@ -69,6 +72,15 @@ export async function POST(request: Request) {
       Number.isInteger(body.questionLimit) && (body.questionLimit ?? 0) > 0
         ? body.questionLimit
         : 20,
+  }
+  // Enable only after the candidate database schema and both version-aware clients ship.
+  if (process.env.MISTAKE_STATE_V1_ENABLED === '1') {
+    const question = questionForId(body.questionId)
+    if (!question || question.lessonId !== body.lessonId) {
+      return NextResponse.json({error: 'Unknown textbook question'}, {status: 400})
+    }
+    const atomic = await recordAnswerWithMistakes(supabase, {...body, textbookId, errorTags, knowledgeTags, verdict})
+    return NextResponse.json(atomic.body, {status: atomic.status})
   }
   const result = hasClientRequestId
     ? await supabase.rpc('record_textbook_learning_attempt_idempotent', {

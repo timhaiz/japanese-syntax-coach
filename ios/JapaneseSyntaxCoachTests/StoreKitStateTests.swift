@@ -5,98 +5,93 @@ import XCTest
 final class StoreKitStateTests: XCTestCase {
     // MARK: - Purchase states
 
-    func testPurchaseWithUnavailableProductReportsUnavailable() async {
-        let provider = FakeStoreKitProvider(products: [])
-        let manager = makeManager(provider: provider, entitlements: FakeEntitlements())
+    func testEnabledPurchasesHandleSessionAvailabilityAndPurchaseOutcomes() async {
+        XCTAssertTrue(StoreKitManager.newPurchasesEnabled)
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        do {
+            let provider = FakeStoreKitProvider(products: [monthlyProduct], purchaseOutcome: .cancelled)
+            let entitlements = FakeEntitlements()
+            let manager = makeManager(provider: provider, entitlements: entitlements, userID: nil)
+            let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+            XCTAssertEqual(state, .notSignedIn)
+            XCTAssertTrue(provider.purchaseAttempts.isEmpty)
+        }
 
-        XCTAssertEqual(state, .unavailable)
-        XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
-    }
+        do {
+            let provider = FakeStoreKitProvider(products: [], purchaseOutcome: .cancelled)
+            let entitlements = FakeEntitlements()
+            let manager = makeManager(provider: provider, entitlements: entitlements, userID: signedInUserID)
+            let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+            XCTAssertEqual(state, .unavailable)
+            XCTAssertTrue(provider.purchaseAttempts.isEmpty)
+        }
 
-    func testPurchaseWithoutSignedInUserDoesNotPurchase() async {
-        let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        let manager = makeManager(provider: provider, entitlements: FakeEntitlements(), userID: nil)
-
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
-
-        XCTAssertEqual(state, .notSignedIn)
-        XCTAssertTrue(provider.purchaseAttempts.isEmpty)
-        XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
-    }
-
-    func testUserCancellationIsReportedAndNothingIsFinished() async {
-        let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .cancelled
-        let manager = makeManager(provider: provider, entitlements: FakeEntitlements())
-
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
-
-        XCTAssertEqual(state, .cancelled)
-        XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
-    }
-
-    func testPendingPurchaseIsReportedAndNothingIsFinished() async {
-        let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .pending
-        let manager = makeManager(provider: provider, entitlements: FakeEntitlements())
-
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
-
-        XCTAssertEqual(state, .pending)
-        XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
-    }
-
-    func testUnverifiedTransactionIsRejectedAndNotFinished() async {
-        let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .unverified
-        let manager = makeManager(provider: provider, entitlements: FakeEntitlements())
-
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
-
-        XCTAssertEqual(state, .unverified)
-        XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
+        do {
+            let provider = FakeStoreKitProvider(products: [monthlyProduct], purchaseOutcome: .purchased(verifiedTransaction))
+            let entitlements = FakeEntitlements(outcome: .accepted(memberState))
+            let manager = makeManager(provider: provider, entitlements: entitlements, userID: signedInUserID)
+            let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+            XCTAssertEqual(state, .success(memberState))
+            XCTAssertEqual(provider.purchaseAttempts.count, 1)
+            XCTAssertEqual(provider.finishedTransactionIDs, [verifiedTransaction.transactionID])
+            XCTAssertEqual(entitlements.submittedTransactions, [verifiedTransaction.signedTransaction])
+        }
     }
 
     // MARK: - Finish ordering
 
     func testSuccessfulSyncFinishesTheTransactionAfterAcknowledgement() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .accepted(memberState))
         let manager = makeManager(provider: provider, entitlements: entitlements)
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        let state = await manager.restorePurchases()
 
-        XCTAssertEqual(state, .success(memberState))
+        XCTAssertEqual(state, .restored(memberState))
         XCTAssertEqual(provider.finishedTransactionIDs, [verifiedTransaction.transactionID])
         XCTAssertEqual(entitlements.submittedTransactions, [verifiedTransaction.signedTransaction])
         XCTAssertEqual(manager.pendingSyncCount, 0)
     }
 
+    func testAcknowledgedPurchaseWithoutConfirmedFinishRemainsOnDisk() async {
+        let provider = FakeStoreKitProvider(products: [monthlyProduct])
+        provider.entitlements = [verifiedTransaction]
+        provider.finishSucceeds = false
+        let url = makeTemporaryQueueURL()
+        let queue = PendingTransactionQueue(fileURL: url)
+        let manager = makeManager(provider: provider, entitlements: FakeEntitlements(outcome: .accepted(memberState)), queue: queue)
+
+        let state = await manager.restorePurchases()
+
+        XCTAssertEqual(state, .failed("购买记录未能完成恢复。购买记录的完成状态暂时无法确认，请稍后再次恢复购买或联系客服。"))
+        XCTAssertEqual(PendingTransactionQueue(fileURL: url).peek().first?.signedTransaction, verifiedTransaction.signedTransaction)
+        XCTAssertEqual(manager.pendingSyncCount, 1)
+        XCTAssertNil(manager.membership)
+    }
+
     func testDuplicateAcknowledgementAlsoFinishesTheTransaction() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .duplicate(memberState))
         let manager = makeManager(provider: provider, entitlements: entitlements)
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        let state = await manager.restorePurchases()
 
-        XCTAssertEqual(state, .success(memberState))
+        XCTAssertEqual(state, .restored(memberState))
         XCTAssertEqual(provider.finishedTransactionIDs, [verifiedTransaction.transactionID])
     }
 
     func testServerSyncFailureDoesNotFinishAndKeepsTheTransactionQueued() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .networkFailure("网络不可用"))
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        let state = await manager.restorePurchases()
 
-        XCTAssertEqual(state, .syncFailed("网络不可用"))
+        XCTAssertEqual(state, .failed("购买记录未能完成恢复。同步暂未完成，请稍后重试或联系客服。"))
         XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
         XCTAssertEqual(queue.peek().count, 1)
         XCTAssertEqual(queue.peek().first?.signedTransaction, verifiedTransaction.signedTransaction)
@@ -105,14 +100,14 @@ final class StoreKitStateTests: XCTestCase {
 
     func testUnauthorizedSubmissionKeepsTheTransactionQueuedForARetry() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .unauthorized)
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        let state = await manager.restorePurchases()
 
-        XCTAssertEqual(state, .notSignedIn)
+        XCTAssertEqual(state, .failed("购买记录未能完成恢复。请先登录后重试。"))
         XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
         XCTAssertEqual(queue.peek().count, 1)
         XCTAssertEqual(manager.pendingSyncCount, 1)
@@ -121,14 +116,14 @@ final class StoreKitStateTests: XCTestCase {
 
     func testAccountMismatchIsNotFinishedAndStaysOnDisk() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .accountMismatch("交易账号与当前账号不匹配。"))
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        let state = await manager.restorePurchases()
 
-        XCTAssertEqual(state, .accountMismatch("交易账号与当前账号不匹配。"))
+        XCTAssertEqual(state, .failed("购买记录未能完成恢复。请确认当前登录的是购买时使用的账号。"))
         XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
         // The signed transaction is never dropped without a server confirmation.
         XCTAssertEqual(queue.peek().count, 1)
@@ -137,14 +132,14 @@ final class StoreKitStateTests: XCTestCase {
 
     func testRejectedTransactionIsNotFinishedAndIsMarkedBlocked() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .rejected(statusCode: 400, message: "无法验证 Apple 购买记录。"))
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        let state = await manager.restorePurchases()
 
-        XCTAssertEqual(state, .rejected("无法验证 Apple 购买记录。"))
+        XCTAssertEqual(state, .failed("购买记录未能完成恢复。请联系客服处理。"))
         XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
         XCTAssertEqual(queue.peek().count, 1)
         XCTAssertEqual(manager.blockedSyncCount, 1)
@@ -152,7 +147,7 @@ final class StoreKitStateTests: XCTestCase {
 
     func testPurchaseOfAnotherAccountIsFiledUnderTheAccountThatMadeIt() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(otherAccountTransaction)
+        provider.entitlements = [otherAccountTransaction]
         let entitlements = FakeEntitlements(outcome: .accountMismatch("交易账号与当前账号不匹配。"))
         var queues: [String: PendingTransactionQueue] = [:]
         let manager = makeManager(
@@ -167,9 +162,9 @@ final class StoreKitStateTests: XCTestCase {
             }
         )
 
-        let state = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        let state = await manager.restorePurchases()
 
-        XCTAssertEqual(state, .accountMismatch("交易账号与当前账号不匹配。"))
+        XCTAssertEqual(state, .failed("购买记录未能完成恢复。请确认当前登录的是购买时使用的账号。"))
         XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
         let ownerKey = StoreKitManager.accountKey(for: otherAccountUserID)
         XCTAssertEqual(queues[ownerKey]?.peek().count, 1)
@@ -183,12 +178,12 @@ final class StoreKitStateTests: XCTestCase {
 
     func testRetryFinishesTheTransactionOnceTheServerAcknowledges() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .networkFailure("网络不可用"))
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        _ = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        _ = await manager.restorePurchases()
         XCTAssertEqual(queue.peek().count, 1)
 
         entitlements.outcome = .accepted(memberState)
@@ -201,12 +196,12 @@ final class StoreKitStateTests: XCTestCase {
 
     func testRetryKeepsTheTransactionQueuedWhenTheServerStillFails() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .networkFailure("网络不可用"))
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        _ = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        _ = await manager.restorePurchases()
         await manager.retryPendingTransactions()
 
         XCTAssertEqual(queue.peek().count, 1)
@@ -215,12 +210,12 @@ final class StoreKitStateTests: XCTestCase {
 
     func testRetryDoesNotDropAnItemTheServerNeverAcknowledged() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .rejected(statusCode: 400, message: "无法验证 Apple 购买记录。"))
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        _ = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        _ = await manager.restorePurchases()
         await manager.retryPendingTransactions()
 
         // The transaction is neither finished nor thrown away: it stays on disk with
@@ -234,12 +229,12 @@ final class StoreKitStateTests: XCTestCase {
 
     func testBlockedTransactionsAreOnlyRetriedOnRequest() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
+        provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .rejected(statusCode: 400, message: "无法验证 Apple 购买记录。"))
         let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
         let manager = makeManager(provider: provider, entitlements: entitlements, queue: queue)
 
-        _ = await manager.purchase(productID: AppConfiguration.monthlyProductID)
+        _ = await manager.restorePurchases()
         entitlements.outcome = .accepted(memberState)
         await manager.retryPendingTransactions()
         XCTAssertEqual(queue.peek().count, 1)
@@ -304,29 +299,198 @@ final class StoreKitStateTests: XCTestCase {
         XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
     }
 
+    func testStoreKitManagerDeallocatesAndCancelsTransactionUpdatesStreamWhileAwaitingUpdates() async {
+        let provider = FakeStoreKitProvider(products: [monthlyProduct])
+        let entitlements = FakeEntitlements()
+        weak var weakManager: StoreKitManager?
+
+        do {
+            let manager = makeManager(provider: provider, entitlements: entitlements)
+            weakManager = manager
+            let observing = await waitUntil { provider.isObservingUpdates && !manager.isLoadingProducts }
+            XCTAssertTrue(observing)
+        }
+
+        let releasedAndCancelled = await waitUntil { weakManager == nil && provider.updatesTerminated }
+        XCTAssertTrue(releasedAndCancelled)
+        XCTAssertNil(weakManager)
+        XCTAssertTrue(provider.updatesTerminated)
+    }
+
+    func testTransactionUpdateStreamFinishingEndsObservationAndAllowsDeallocation() async {
+        let provider = FakeStoreKitProvider(products: [monthlyProduct])
+        let entitlements = FakeEntitlements()
+        weak var weakManager: StoreKitManager?
+
+        do {
+            let manager = makeManager(provider: provider, entitlements: entitlements)
+            weakManager = manager
+            let observing = await waitUntil { provider.isObservingUpdates && !manager.isLoadingProducts }
+            XCTAssertTrue(observing)
+            provider.finishUpdatesStream()
+            let finished = await waitUntil { provider.updatesTerminated }
+            XCTAssertTrue(finished)
+        }
+
+        let released = await waitUntil { weakManager == nil }
+        XCTAssertTrue(released)
+        XCTAssertNil(weakManager)
+    }
+
     // MARK: - Concurrency
 
     func testConcurrentPathsSubmitAndFinishTheTransactionOnlyOnce() async {
         let provider = FakeStoreKitProvider(products: [monthlyProduct])
-        provider.purchaseOutcome = .purchased(verifiedTransaction)
         provider.entitlements = [verifiedTransaction]
         let entitlements = FakeEntitlements(outcome: .accepted(memberState))
-        entitlements.responseDelay = 0.3
+        entitlements.pauseSubmission = true
         let manager = makeManager(provider: provider, entitlements: entitlements)
 
-        let purchaseTask = Task { await manager.purchase(productID: AppConfiguration.monthlyProductID) }
-        let submitted = await waitUntil { !entitlements.submittedTransactions.isEmpty }
-        XCTAssertTrue(submitted)
+        let firstRestore = Task { await manager.restorePurchases() }
+        let paused = await waitUntil { entitlements.submissionContinuation != nil }
+        XCTAssertTrue(paused)
+        guard paused else { return }
 
-        let restoreState = await manager.restorePurchases()
-        let purchaseState = await purchaseTask.value
+        let secondState = await manager.restorePurchases()
+        entitlements.submissionContinuation?.resume()
+        entitlements.submissionContinuation = nil
+        let firstState = await firstRestore.value
 
         XCTAssertEqual(entitlements.submittedTransactions.count, 1)
         XCTAssertEqual(provider.finishedTransactionIDs, [verifiedTransaction.transactionID])
-        XCTAssertEqual(purchaseState, .success(memberState))
-        if case .restored = restoreState {
-            XCTFail("the same transaction must not be confirmed twice")
+        XCTAssertEqual(firstState, .restored(memberState))
+        XCTAssertEqual(secondState, .failed("购买记录未能完成恢复。购买记录正在处理中，请稍后再次恢复购买。"))
+    }
+
+    func testReplayStopsAfterAccountChangesAwayAndBackDuringSubmission() async {
+        let provider = FakeStoreKitProvider(products: [])
+        let entitlements = FakeEntitlements(outcome: .accepted(memberState))
+        entitlements.pauseSubmission = true
+        let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
+        for index in 1...2 {
+            queue.enqueue(PendingTransaction(transactionID: "race-\(index)", productID: monthlyProduct.id, signedTransaction: "jws-\(index)"))
         }
+        var userID = signedInUserID
+        let manager = StoreKitManager(provider: provider, entitlements: entitlements, userIDProvider: { userID }, queueProvider: { _ in queue })
+        let task = Task { await manager.retryPendingTransactions() }
+        let paused = await waitUntil { entitlements.submissionContinuation != nil }
+        XCTAssertTrue(paused)
+        guard paused else { return }
+        userID = otherAccountUserID
+        manager.activateAccount(userID)
+        userID = signedInUserID
+        manager.activateAccount(userID)
+        entitlements.submissionContinuation?.resume()
+        entitlements.submissionContinuation = nil
+        await task.value
+        XCTAssertEqual(entitlements.submittedTransactions.count, 1)
+        XCTAssertEqual(queue.peek().count, 2)
+        XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
+        XCTAssertNil(manager.membership)
+    }
+
+    func testReplayKeepsRecordWhenAccountChangesDuringFinish() async {
+        let provider = FakeStoreKitProvider(products: [])
+        provider.pauseFinish = true
+        let entitlements = FakeEntitlements(outcome: .accepted(memberState))
+        let queue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
+        queue.enqueue(PendingTransaction(transactionID: "race", productID: monthlyProduct.id, signedTransaction: "jws"))
+        var userID = signedInUserID
+        let manager = StoreKitManager(provider: provider, entitlements: entitlements, userIDProvider: { userID }, queueProvider: { _ in queue })
+        let task = Task { await manager.retryPendingTransactions() }
+        let paused = await waitUntil { provider.finishContinuation != nil }
+        XCTAssertTrue(paused)
+        guard paused else { return }
+        userID = otherAccountUserID
+        manager.activateAccount(userID)
+        provider.finishContinuation?.resume()
+        provider.finishContinuation = nil
+        await task.value
+        XCTAssertEqual(queue.peek().count, 1)
+        XCTAssertNil(manager.membership)
+    }
+
+    func testSingleUpdateAfterAccountChangesAwayAndBackIsQueuedUnassigned() async {
+        let provider = FakeStoreKitProvider(products: [])
+        let entitlements = FakeEntitlements(outcome: .networkFailure("网络不可用"))
+        entitlements.pauseSubmission = true
+        let aQueue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
+        let bQueue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
+        let unassignedQueue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
+        var userID: String? = signedInUserID
+        let aKey = StoreKitManager.accountKey(for: signedInUserID)
+        let bKey = StoreKitManager.accountKey(for: otherAccountUserID)
+        let manager = StoreKitManager(
+            provider: provider,
+            entitlements: entitlements,
+            userIDProvider: { userID },
+            queueProvider: { key in
+                switch key {
+                case nil: return unassignedQueue
+                case aKey: return aQueue
+                case bKey: return bQueue
+                default: fatalError("Unexpected account key")
+                }
+            }
+        )
+        manager.activateAccount(signedInUserID)
+        provider.emit(VerifiedTransaction(
+            transactionID: "tokenless-race",
+            productID: monthlyProduct.id,
+            signedTransaction: "tokenless-jws",
+            appAccountToken: nil
+        ))
+        let paused = await waitUntil { entitlements.submissionContinuation != nil }
+        XCTAssertTrue(paused)
+        guard paused else { return }
+        userID = otherAccountUserID
+        manager.activateAccount(userID)
+        userID = signedInUserID
+        manager.activateAccount(userID)
+        entitlements.submissionContinuation?.resume()
+        entitlements.submissionContinuation = nil
+        let queued = await waitUntil { unassignedQueue.peek().count == 1 }
+        XCTAssertTrue(queued)
+        XCTAssertTrue(aQueue.peek().isEmpty)
+        XCTAssertTrue(bQueue.peek().isEmpty)
+        XCTAssertNil(manager.membership)
+        XCTAssertTrue(provider.finishedTransactionIDs.isEmpty)
+    }
+
+    func testSingleUpdateSwitchDuringFinishKeepsRecordAndDoesNotPublishMembership() async {
+        let provider = FakeStoreKitProvider(products: [])
+        provider.pauseFinish = true
+        let entitlements = FakeEntitlements(outcome: .accepted(memberState))
+        let ownerQueue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
+        let otherQueue = PendingTransactionQueue(fileURL: makeTemporaryQueueURL())
+        var userID: String? = signedInUserID
+        let ownerKey = StoreKitManager.accountKey(for: signedInUserID)
+        let otherKey = StoreKitManager.accountKey(for: otherAccountUserID)
+        let manager = StoreKitManager(
+            provider: provider,
+            entitlements: entitlements,
+            userIDProvider: { userID },
+            queueProvider: { key in key == ownerKey ? ownerQueue : (key == otherKey ? otherQueue : otherQueue) }
+        )
+        manager.activateAccount(signedInUserID)
+        provider.emit(VerifiedTransaction(
+            transactionID: "owned-race",
+            productID: monthlyProduct.id,
+            signedTransaction: "owned-jws",
+            appAccountToken: UUID(uuidString: signedInUserID)
+        ))
+        let paused = await waitUntil { provider.finishContinuation != nil }
+        XCTAssertTrue(paused)
+        guard paused else { return }
+        userID = otherAccountUserID
+        manager.activateAccount(userID)
+        provider.finishContinuation?.resume()
+        provider.finishContinuation = nil
+        let retained = await waitUntil { ownerQueue.peek().count == 1 }
+        XCTAssertTrue(retained)
+        XCTAssertEqual(ownerQueue.peek().first?.signedTransaction, "owned-jws")
+        XCTAssertNil(manager.membership)
+        XCTAssertEqual(provider.finishedTransactionIDs, ["owned-race"])
     }
 
     // MARK: - Account deletion contract
@@ -337,27 +501,73 @@ final class StoreKitStateTests: XCTestCase {
         XCTAssertEqual(AccountDeletionRequest.requiredConfirmation, "DELETE")
     }
 
-    func testClearingTheAccountRemovesThePersistedQueueFile() async {
-        let fileURL = makeTemporaryQueueURL()
-        let queue = PendingTransactionQueue(fileURL: fileURL)
-        queue.enqueue(
-            PendingTransaction(
-                transactionID: verifiedTransaction.transactionID,
-                productID: verifiedTransaction.productID,
-                signedTransaction: verifiedTransaction.signedTransaction
-            )
+    func testAccountSwitchPreservesUnacknowledgedPurchaseRecord() throws {
+        let firstURL = makeTemporaryQueueURL()
+        let secondURL = makeTemporaryQueueURL()
+        let unassignedURL = makeTemporaryQueueURL()
+        defer {
+            for url in [firstURL, secondURL, unassignedURL] {
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
+        let firstQueue = PendingTransactionQueue(fileURL: firstURL)
+        let secondQueue = PendingTransactionQueue(fileURL: secondURL)
+        let unassignedQueue = PendingTransactionQueue(fileURL: unassignedURL)
+        let firstRecord = PendingTransaction(
+            transactionID: verifiedTransaction.transactionID,
+            productID: verifiedTransaction.productID,
+            signedTransaction: verifiedTransaction.signedTransaction
         )
-        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
-
+        let secondRecord = PendingTransaction(
+            transactionID: otherAccountTransaction.transactionID,
+            productID: otherAccountTransaction.productID,
+            signedTransaction: otherAccountTransaction.signedTransaction
+        )
+        let secondAdditionalRecord = PendingTransaction(
+            transactionID: "another-transaction",
+            productID: otherAccountTransaction.productID,
+            signedTransaction: "another-signed-jws"
+        )
+        firstQueue.enqueue(firstRecord)
+        secondQueue.enqueue(secondRecord)
+        secondQueue.enqueue(secondAdditionalRecord)
+        let firstData = try Data(contentsOf: firstURL)
+        let secondData = try Data(contentsOf: secondURL)
+        let firstKey = StoreKitManager.accountKey(for: signedInUserID)
+        let secondKey = StoreKitManager.accountKey(for: otherAccountUserID)
         let manager = makeManager(
             provider: FakeStoreKitProvider(products: [monthlyProduct]),
             entitlements: FakeEntitlements(),
-            queue: queue
+            queueProvider: { key in
+                switch key {
+                case nil: return unassignedQueue
+                case firstKey: return firstQueue
+                case secondKey: return secondQueue
+                default:
+                    XCTFail("Unexpected account key: \(key ?? "nil")")
+                    return unassignedQueue
+                }
+            }
         )
-        manager.clearAccountData()
 
-        XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
-        XCTAssertEqual(queue.peek().count, 0)
+        manager.activateAccount(signedInUserID)
+        XCTAssertEqual(manager.pendingSyncCount, 1)
+        XCTAssertEqual(firstQueue.peek(), [firstRecord])
+        XCTAssertEqual(PendingTransactionQueue(fileURL: secondURL).peek(), [secondRecord, secondAdditionalRecord])
+        XCTAssertEqual(try Data(contentsOf: secondURL), secondData)
+
+        manager.activateAccount(otherAccountUserID)
+        XCTAssertEqual(manager.pendingSyncCount, 2)
+        XCTAssertEqual(secondQueue.peek(), [secondRecord, secondAdditionalRecord])
+        XCTAssertEqual(PendingTransactionQueue(fileURL: firstURL).peek(), [firstRecord])
+        XCTAssertEqual(try Data(contentsOf: firstURL), firstData)
+
+        manager.activateAccount(signedInUserID)
+        XCTAssertEqual(manager.pendingSyncCount, 1)
+        XCTAssertEqual(PendingTransactionQueue(fileURL: firstURL).peek(), [firstRecord])
+        XCTAssertEqual(try Data(contentsOf: secondURL), secondData)
+        XCTAssertTrue(unassignedQueue.peek().isEmpty)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: unassignedURL.path))
     }
 
     // MARK: - Helpers
@@ -434,12 +644,23 @@ private final class FakeStoreKitProvider: StoreKitProductProviding {
     var purchaseAttempts: [(productID: String, appAccountToken: UUID?)] = []
     var finishedTransactionIDs: [String] = []
     var syncCalls = 0
+    var finishSucceeds = true
+    var pauseFinish = false
+    var finishContinuation: CheckedContinuation<Void, Never>?
 
     private var updatesContinuation: AsyncStream<VerifiedTransaction>.Continuation?
     private var bufferedUpdates: [VerifiedTransaction] = []
+    private(set) var isObservingUpdates = false
+    private(set) var updatesTerminated = false
     private lazy var updates: AsyncStream<VerifiedTransaction> = {
         AsyncStream { continuation in
             updatesContinuation = continuation
+            isObservingUpdates = true
+            continuation.onTermination = { [weak self] _ in
+                Task { @MainActor in
+                    self?.updatesTerminated = true
+                }
+            }
             for transaction in bufferedUpdates { continuation.yield(transaction) }
             bufferedUpdates = []
         }
@@ -470,10 +691,17 @@ private final class FakeStoreKitProvider: StoreKitProductProviding {
         }
     }
 
+    func finishUpdatesStream() {
+        updatesContinuation?.finish()
+    }
+
     func sync() async throws { syncCalls += 1 }
 
-    func finish(transactionID: String) async {
+    func finish(transactionID: String) async -> Bool {
+        guard finishSucceeds else { return false }
         finishedTransactionIDs.append(transactionID)
+        if pauseFinish { await withCheckedContinuation { finishContinuation = $0 } }
+        return true
     }
 }
 
@@ -484,6 +712,8 @@ private final class FakeEntitlements: EntitlementSubmitting {
     var membership: MembershipState?
     /// Holds the submission open, so a test can run two paths against one transaction.
     var responseDelay: TimeInterval = 0
+    var pauseSubmission = false
+    var submissionContinuation: CheckedContinuation<Void, Never>?
 
     init(outcome: EntitlementOutcome = .networkFailure("网络不可用"), membership: MembershipState? = nil) {
         self.outcome = outcome
@@ -492,6 +722,7 @@ private final class FakeEntitlements: EntitlementSubmitting {
 
     func submitOutcome(signedTransaction: String) async -> EntitlementOutcome {
         submittedTransactions.append(signedTransaction)
+        if pauseSubmission { await withCheckedContinuation { submissionContinuation = $0 } }
         if responseDelay > 0 {
             try? await Task.sleep(nanoseconds: UInt64(responseDelay * 1_000_000_000))
         }

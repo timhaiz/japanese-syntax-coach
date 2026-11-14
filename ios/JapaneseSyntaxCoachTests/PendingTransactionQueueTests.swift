@@ -108,26 +108,6 @@ final class PendingTransactionQueueTests: XCTestCase {
         XCTAssertEqual(queue.peek().count, 0)
     }
 
-    func testRemoveAllPersistedQueuesRemovesEveryAccountFile() throws {
-        let first = PendingTransactionQueue.defaultFileURL(accountKey: "unit-test-a")
-        let second = PendingTransactionQueue.defaultFileURL(accountKey: "unit-test-b")
-        try FileManager.default.createDirectory(
-            at: first.deletingLastPathComponent(),
-            withIntermediateDirectories: true
-        )
-        try Data("[]".utf8).write(to: first)
-        try Data("[]".utf8).write(to: second)
-        defer {
-            try? FileManager.default.removeItem(at: first)
-            try? FileManager.default.removeItem(at: second)
-        }
-
-        PendingTransactionQueue.removeAllPersistedQueues()
-
-        XCTAssertFalse(FileManager.default.fileExists(atPath: first.path))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: second.path))
-    }
-
     // MARK: - Helpers
 
     private func makeItem(

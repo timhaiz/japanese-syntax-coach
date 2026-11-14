@@ -152,25 +152,34 @@ final class EntitlementSync: EntitlementSubmitting {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try? JSONEncoder().encode(EntitlementSubmissionRequest(signedTransaction: signedTransaction))
 
+        guard let context = try? await api.requestContext() else { return .unauthorized }
         do {
-            let response: EntitlementSubmissionResponse = try await api.request(request)
+            let response: EntitlementSubmissionResponse = try await api.request(request, boundTo: context)
             guard response.updated || response.duplicate == true else {
                 return Self.rejection(for: response.reason)
             }
-            let membership = await refreshMembership() ?? .unknown
+            let membership = await refreshMembership(boundTo: context) ?? .unknown
+            guard await api.isCurrent(context) else { return .unauthorized }
             return response.duplicate == true ? .duplicate(membership) : .accepted(membership)
         } catch let error as APIClientError {
+            guard await api.isCurrent(context) else { return .unauthorized }
             return Self.failure(for: error)
         } catch {
+            guard await api.isCurrent(context) else { return .unauthorized }
             return .networkFailure("购买记录同步失败，已保留待重试。")
         }
     }
 
     func refreshMembership() async -> MembershipState? {
+        guard let context = try? await api.requestContext() else { return nil }
+        return await refreshMembership(boundTo: context)
+    }
+
+    private func refreshMembership(boundTo context: APIRequestContext) async -> MembershipState? {
         var request = URLRequest(url: baseURL.appendingPathComponent("api/membership"))
         request.httpMethod = "GET"
         do {
-            let response: MembershipResponse = try await api.request(request)
+            let response: MembershipResponse = try await api.request(request, boundTo: context)
             return response.membershipState
         } catch {
             return nil

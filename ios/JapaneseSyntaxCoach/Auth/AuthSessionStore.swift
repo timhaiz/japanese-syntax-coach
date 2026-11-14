@@ -44,11 +44,17 @@ enum AuthSignupResult: Equatable {
     case confirmationRequired
 }
 
+enum InitialAuthSessionState {
+    case none, expired
+    case valid(AuthSession)
+}
+
 protocol AuthService: AnyObject {
     var currentSession: AuthSession? { get }
+    var initialSession: InitialAuthSessionState { get }
     /// Non-nil when the service cannot reach a backend (for example missing build configuration).
     var configurationProblem: String? { get }
-    func authStateChanges() -> AsyncStream<AuthSession?>
+    func authStateChanges() -> AsyncStream<AuthStateEvent>
     func signIn(email: String, password: String) async throws -> AuthSession
     func signUp(email: String, password: String, redirectTo: URL) async throws -> AuthSignupResult
     func verifySignupCode(email: String, code: String, redirectTo: URL) async throws -> AuthSession
@@ -59,9 +65,16 @@ protocol AuthService: AnyObject {
     func signOut() async throws
 }
 
+enum AuthStateEvent {
+    case initialSession(AuthSession?)
+    case changed(AuthSession?)
+    case signedOut
+}
+
 extension AuthService {
     /// Services that can actually reach a backend report no configuration problem.
     var configurationProblem: String? { nil }
+    var initialSession: InitialAuthSessionState { currentSession.map(InitialAuthSessionState.valid) ?? .none }
 }
 
 final class SupabaseAuthServiceLive: AuthService {
@@ -71,13 +84,28 @@ final class SupabaseAuthServiceLive: AuthService {
         self.client = client
     }
 
-    var currentSession: AuthSession? { client.auth.currentSession.map(AuthSession.init) }
+    var initialSession: InitialAuthSessionState {
+        guard let session = client.auth.currentSession else { return .none }
+        guard !session.isExpired else { return .expired }
+        return .valid(AuthSession(session))
+    }
 
-    func authStateChanges() -> AsyncStream<AuthSession?> {
+    var currentSession: AuthSession? {
+        if case let .valid(session) = initialSession { return session }
+        return nil
+    }
+
+    func authStateChanges() -> AsyncStream<AuthStateEvent> {
         AsyncStream { continuation in
             let task = Task {
-                for await (_, value) in client.auth.authStateChanges {
-                    continuation.yield(value.map(AuthSession.init))
+                for await (event, value) in client.auth.authStateChanges {
+                    if case .initialSession = event, value?.isExpired == true { continue }
+                    let session = value.map(AuthSession.init)
+                    switch event {
+                    case .initialSession: continuation.yield(.initialSession(session))
+                    case .signedOut: continuation.yield(.signedOut)
+                    default: continuation.yield(.changed(session))
+                    }
                 }
                 continuation.finish()
             }
@@ -135,7 +163,7 @@ final class UnconfiguredAuthService: AuthService {
     var currentSession: AuthSession? { nil }
     var configurationProblem: String? { reason }
 
-    func authStateChanges() -> AsyncStream<AuthSession?> { AsyncStream { $0.finish() } }
+    func authStateChanges() -> AsyncStream<AuthStateEvent> { AsyncStream { $0.finish() } }
     func signIn(email: String, password: String) async throws -> AuthSession { throw AuthServiceError.notConfigured(reason) }
     func signUp(email: String, password: String, redirectTo: URL) async throws -> AuthSignupResult { throw AuthServiceError.notConfigured(reason) }
     func verifySignupCode(email: String, code: String, redirectTo: URL) async throws -> AuthSession { throw AuthServiceError.notConfigured(reason) }
@@ -158,6 +186,11 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
 
     private let service: AuthService
     private var authEventsTask: Task<Void, Never>?
+    private var awaitingInitialRecovery = false
+    private var accountGeneration = UUID()
+    // Explicit authentication creates a new login even when the user ID is unchanged.
+    private var loginGeneration = UUID()
+    @Published private(set) var studyLoadGeneration = AuthGenerationSnapshot(account: UUID(), login: UUID())
 
     public init(service: AuthService? = nil, restoreSession: Bool = true) {
         let resolved: AuthService
@@ -183,16 +216,30 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
             return
         }
 
-        if restoreSession, let saved = resolved.currentSession {
-            setSession(saved)
+        if restoreSession {
+            switch resolved.initialSession {
+            case .valid(let saved): setSession(saved)
+            case .expired:
+                awaitingInitialRecovery = true // Never expose the expired access token.
+            case .none: phase = .signedOut
+            }
         } else {
             phase = .signedOut
         }
+        let subscriptionLoginGeneration = loginGeneration
         authEventsTask = Task { [weak self, resolved] in
-            for await value in resolved.authStateChanges() {
+            for await event in resolved.authStateChanges() {
                 await MainActor.run {
-                    if let value { self?.setSession(value) }
-                    else { self?.clearSession() }
+                    guard let self else { return }
+                    switch event {
+                    case .initialSession(let value):
+                        guard self.loginGeneration == subscriptionLoginGeneration else { return }
+                        self.applySessionEvent(value)
+                    case .changed(let value):
+                        self.applySessionEvent(value)
+                    case .signedOut:
+                        self.clearSession()
+                    }
                 }
             }
         }
@@ -202,8 +249,30 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
 
     public func accessToken() async throws -> String? { session?.accessToken }
 
-    public func refreshSession() async throws -> String? {
+    func generationSnapshot() -> AuthGenerationSnapshot {
+        AuthGenerationSnapshot(account: accountGeneration, login: loginGeneration)
+    }
+
+    func requestContext() async throws -> APIRequestContext? {
+        guard let session, !session.accessToken.isEmpty, session.userID != nil else { return nil }
+        return APIRequestContext(token: session.accessToken, generation: accountGeneration, loginGeneration: loginGeneration)
+    }
+
+    func refreshSession(for context: APIRequestContext) async throws -> String? {
+        guard accountGeneration == context.generation, loginGeneration == context.loginGeneration,
+              let userID = session?.userID else { return nil }
+        let login = context.loginGeneration
         let refreshed = try await service.refreshSession()
+        guard accountGeneration == context.generation, loginGeneration == login, refreshed.userID == userID else { return nil }
+        setSession(refreshed)
+        return refreshed.accessToken
+    }
+
+    public func refreshSession() async throws -> String? {
+        let account = accountGeneration
+        let login = loginGeneration
+        let refreshed = try await service.refreshSession()
+        guard accountGeneration == account, loginGeneration == login else { return nil }
         setSession(refreshed)
         return refreshed.accessToken
     }
@@ -216,14 +285,14 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
         do {
             let result = try await service.signUp(email: email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), password: password, redirectTo: AppConfiguration.authCallbackURL)
             switch result {
-            case .session(let value): setSession(value)
+            case .session(let value): setAuthenticatedSession(value)
             case .confirmationRequired: phase = .needsEmailVerification; errorMessage = "验证码已发送，请检查邮箱。"
             }
         } catch { showError("注册失败，请稍后重试。") }
     }
 
     public func verifySignupCode(email: String, code: String) async {
-        do { setSession(try await service.verifySignupCode(email: email, code: code, redirectTo: AppConfiguration.authCallbackURL)) }
+        do { setAuthenticatedSession(try await service.verifySignupCode(email: email, code: code, redirectTo: AppConfiguration.authCallbackURL)) }
         catch { showError("验证码无效或已过期，请重新获取。") }
     }
 
@@ -241,7 +310,7 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
     public func handle(url: URL) async {
         switch AuthCallbackRouter.route(url) {
         case .signup, .recovery, .apple, .session:
-            do { setSession(try await service.exchangeCallback(url: url)) }
+            do { setAuthenticatedSession(try await service.exchangeCallback(url: url)) }
             catch { showError("登录回调无效或已过期。") }
         case .ignored: break
         case .malformed: showError("登录回调无效或已过期。")
@@ -249,19 +318,84 @@ final class AuthSessionStore: ObservableObject, APITokenProvider {
     }
 
     public func signOut() async {
+        let account = accountGeneration
+        let login = loginGeneration
         try? await service.signOut()
+        guard accountGeneration == account, loginGeneration == login else { return }
         clearSession()
     }
 
     private func run(_ operation: @escaping () async throws -> AuthSession) async {
-        do { setSession(try await operation()) }
-        catch { showError("认证失败，请检查信息后重试。") }
+        do { setAuthenticatedSession(try await operation()) }
+        catch { showError(Self.authenticationMessage(for: error)) }
+    }
+
+    /// Use structured codes only: SDK messages and response bodies may contain private data.
+    private static func authenticationMessage(for error: Error) -> String {
+        if let error = error as? URLError {
+            if error.code == .timedOut { return "认证请求超时，请稍后重试。" }
+            return "网络连接不可用，请检查网络后重试。"
+        }
+        if case let AuthServiceError.notConfigured(reason) = error { return reason }
+        if let error = error as? AuthError,
+           case let .api(_, code, _, response) = error {
+            if response.statusCode == 429 { return "认证请求过于频繁，请稍后重试。" }
+            if response.statusCode >= 500 { return "认证服务暂时不可用，请稍后重试。" }
+            switch code {
+            case .invalidCredentials:
+                return "邮箱或密码未通过验证，请确认登录的是同一账号。"
+            case .emailNotConfirmed:
+                return "邮箱尚未验证，请先完成邮箱验证后再登录。"
+            case .overRequestRateLimit, .overEmailSendRateLimit:
+                return "认证请求过于频繁，请稍后重试。"
+            case .emailProviderDisabled, .providerDisabled, .badJWT, .invalidJWT, .noAuthorization:
+                return "认证服务配置异常，请联系支持人员。"
+            default:
+                if response.statusCode == 401 || response.statusCode == 403 {
+                    return "认证服务配置异常，请联系支持人员。"
+                }
+            }
+        }
+        return "暂时无法完成认证，请重试；若持续失败，请联系支持人员。"
+    }
+
+    private func applySessionEvent(_ value: AuthSession?) {
+        if let value {
+            setSession(value)
+        } else if awaitingInitialRecovery {
+            awaitingInitialRecovery = false
+            phase = .error
+            errorMessage = "登录状态暂时无法恢复。你的本地待同步数据仍会保留，请重新登录。"
+        } else {
+            clearSession()
+        }
+    }
+
+    private func setAuthenticatedSession(_ value: AuthSession) {
+        awaitingInitialRecovery = false
+        loginGeneration = UUID()
+        setSession(value)
     }
 
     private func setSession(_ value: AuthSession) {
+        awaitingInitialRecovery = false
+        if session?.userID == nil || value.userID == nil || session?.userID != value.userID {
+            accountGeneration = UUID()
+        }
         session = value; userEmail = value.email; userID = value.userID; phase = .signedIn; errorMessage = nil
+        publishStudyLoadGenerationIfChanged()
     }
 
-    private func clearSession() { session = nil; userEmail = nil; userID = nil; phase = .signedOut }
+    private func clearSession() {
+        awaitingInitialRecovery = false
+        accountGeneration = UUID()
+        session = nil; userEmail = nil; userID = nil; phase = .signedOut
+        publishStudyLoadGenerationIfChanged()
+    }
+
+    private func publishStudyLoadGenerationIfChanged() {
+        let current = AuthGenerationSnapshot(account: accountGeneration, login: loginGeneration)
+        if studyLoadGeneration != current { studyLoadGeneration = current }
+    }
     private func showError(_ message: String) { phase = .error; errorMessage = message }
 }

@@ -4,6 +4,26 @@ import Foundation
 protocol APITokenProvider: AnyObject {
     func accessToken() async throws -> String?
     func refreshSession() async throws -> String?
+    func requestContext() async throws -> APIRequestContext?
+    func refreshSession(for context: APIRequestContext) async throws -> String?
+}
+
+struct APIRequestContext: Equatable {
+    let token: String
+    let generation: UUID
+    let loginGeneration: UUID
+
+    init(token: String, generation: UUID, loginGeneration: UUID = UUID()) {
+        self.token = token
+        self.generation = generation
+        self.loginGeneration = loginGeneration
+    }
+}
+
+extension APITokenProvider {
+    // Legacy providers cannot prove account continuity, so do not retry their 401s.
+    func requestContext() async throws -> APIRequestContext? { nil }
+    func refreshSession(for context: APIRequestContext) async throws -> String? { nil }
 }
 
 enum APIClientError: Error, Equatable {
@@ -24,23 +44,71 @@ final class APIClient {
     }
 
     func request<T: Decodable>(_ request: URLRequest) async throws -> T {
+        try await self.request(request, fixedBearerToken: nil)
+    }
+
+    func request<T: Decodable>(_ request: URLRequest, fixedBearerToken: String) async throws -> T {
+        try await self.request(request, fixedBearerToken: Optional(fixedBearerToken))
+    }
+
+    @MainActor
+    func requestContext() async throws -> APIRequestContext? {
+        try await tokenProvider?.requestContext()
+    }
+
+    @MainActor
+    func isCurrent(_ context: APIRequestContext) async -> Bool {
+        guard let current = try? await tokenProvider?.requestContext() else { return false }
+        return current.generation == context.generation && current.loginGeneration == context.loginGeneration
+    }
+
+    func request<T: Decodable>(_ request: URLRequest, boundTo context: APIRequestContext) async throws -> T {
+        guard let current = try await requestContext(),
+              current.generation == context.generation, current.loginGeneration == context.loginGeneration else {
+            throw APIClientError.unauthorized
+        }
+        let result: T = try await performRequest(request, fixedBearerToken: nil, boundContext: current)
+        guard await isCurrent(context) else { throw APIClientError.unauthorized }
+        return result
+    }
+
+    private func request<T: Decodable>(_ request: URLRequest, fixedBearerToken: String?) async throws -> T {
+        try await performRequest(request, fixedBearerToken: fixedBearerToken, boundContext: nil)
+    }
+
+    private func performRequest<T: Decodable>(_ request: URLRequest, fixedBearerToken: String?, boundContext: APIRequestContext?) async throws -> T {
         var authenticated = request
         authenticated.httpShouldHandleCookies = false
         authenticated.setValue(nil, forHTTPHeaderField: "Cookie")
         authenticated.setValue(nil, forHTTPHeaderField: "Cookie2")
         authenticated.setValue("application/json", forHTTPHeaderField: "Accept")
-        if let token = try await tokenProvider?.accessToken(), !token.isEmpty {
+        let token: String?
+        var context: APIRequestContext?
+        if let fixedBearerToken {
+            token = fixedBearerToken
+        } else if let boundContext {
+            context = boundContext
+            token = boundContext.token
+        } else if let tokenProvider {
+            context = try await tokenProvider.requestContext()
+            if let context { token = context.token }
+            else { token = try await tokenProvider.accessToken() }
+        } else {
+            token = nil
+        }
+        if let token, !token.isEmpty {
             authenticated.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
         let (data, response) = try await perform(authenticated)
         guard let http = response as? HTTPURLResponse else { throw APIClientError.invalidResponse }
         guard http.statusCode == 401 else { return try decode(data, response: http) }
+        if fixedBearerToken != nil { throw APIClientError.unauthorized }
 
-        guard let tokenProvider else { throw APIClientError.unauthorized }
+        guard let tokenProvider, let context else { throw APIClientError.unauthorized }
         let refreshed: String?
         do {
-            refreshed = try await tokenProvider.refreshSession()
+            refreshed = try await tokenProvider.refreshSession(for: context)
         } catch is URLError {
             throw APIClientError.offline
         } catch {

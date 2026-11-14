@@ -14,6 +14,23 @@ final class TextbookRepositoryTests: XCTestCase {
         XCTAssertEqual(package.textbook.questions.last?.id, "L24-Q023")
     }
 
+    func testFreeBundledTextbooksMatchCatalogAndCounts() throws {
+        let expected: [(String, Int, Int)] = [
+            ("shin-standard-japanese-beginner-lower", 24, 480),
+            ("shin-standard-japanese-intermediate-upper", 16, 320),
+            ("shin-standard-japanese-intermediate-lower", 16, 320)
+        ]
+
+        for (id, lessonCount, questionCount) in expected {
+            let package = try TextbookRepository.loadBundled(id: id)
+            XCTAssertEqual(package.textbook.id, id)
+            XCTAssertEqual(package.textbook.lessons.count, lessonCount)
+            XCTAssertEqual(package.textbook.questions.count, questionCount)
+            XCTAssertEqual(FreeTextbookCatalog.items.first(where: { $0.id == id })?.lessonCount, lessonCount)
+            XCTAssertEqual(FreeTextbookCatalog.items.first(where: { $0.id == id })?.questionCount, questionCount)
+        }
+    }
+
     func testUnsupportedSchemaVersionHasReadableError() throws {
         let data = Data(#"{"schemaVersion":2,"contentHash":"hash","textbook":{}}"#.utf8)
 
@@ -72,6 +89,45 @@ final class TextbookRepositoryTests: XCTestCase {
         XCTAssertThrowsError(try JSONDecoder().decode(TextbookPackage.self, from: try JSONSerialization.data(withJSONObject: object))) { error in
             XCTAssertEqual(error as? TextbookLoadError, .missingID(entity: "question"))
         }
+    }
+
+    func testCustomTextbookImporterParsesFlatAndEmbeddedLessonQuestions() throws {
+        let rawJSON = """
+        {
+          "title": "新完全掌握 N3 句型",
+          "lessons": [
+            {
+              "id": 1,
+              "title": "原因与理由",
+              "goal": "掌握～おかげで与～せいで",
+              "grammar": [
+                {
+                  "pattern": "～おかげで",
+                  "meaning": "多亏了……",
+                  "connection": "普通形＋おかげで",
+                  "explanation": "表示积极原因",
+                  "example": "先生のおかげで合格しました。"
+                }
+              ],
+              "questions": [
+                {
+                  "type": "translate",
+                  "prompt": "多亏了老师，我合格了。",
+                  "standardAnswer": "先生のおかげで合格しました。",
+                  "hint": "使用～おかげで"
+                }
+              ]
+            }
+          ]
+        }
+        """
+        let imported = try TextbookImporter.parseTextbookPackageJSON(rawJSON)
+        XCTAssertFalse(imported.isBuiltin)
+        XCTAssertEqual(imported.title, "新完全掌握 N3 句型")
+        XCTAssertEqual(imported.lessons.count, 1)
+        XCTAssertEqual(imported.questions.count, 1)
+        XCTAssertEqual(imported.questions.first?.lessonId, 1)
+        XCTAssertEqual(imported.questions.first?.answer, "先生のおかげで合格しました。")
     }
 
     private func bundledPackageObject() throws -> [String: Any] {

@@ -27,10 +27,84 @@ export type LearningProgress = {
 
 type UseAuthSyncReturn = {
   authState: AuthState
+  authGeneration: number
+  authGenerationRef: React.MutableRefObject<number>
   currentUserId: React.MutableRefObject<string>
   cloudApplied: React.MutableRefObject<boolean>
   syncProgress: (progress: LearningProgress) => void
   retrySyncNow: () => void
+}
+
+export type AuthSyncScope = { userId: string; generation: number }
+
+export function isCurrentAuthSyncScope(expected: AuthSyncScope, current: AuthSyncScope) {
+  return expected.userId === current.userId && expected.generation === current.generation
+}
+
+export function createAuthSyncScheduler(
+  clock: Pick<typeof globalThis, 'setTimeout' | 'clearTimeout'> = globalThis,
+) {
+  let timer: ReturnType<typeof setTimeout> | null = null
+  const cancel = () => {
+    if (timer !== null) clock.clearTimeout(timer)
+    timer = null
+  }
+  return {
+    cancel,
+    schedule(scope: AuthSyncScope, getCurrent: () => AuthSyncScope, run: () => void, delay = 500) {
+      cancel()
+      timer = clock.setTimeout(() => {
+        timer = null
+        if (isCurrentAuthSyncScope(scope, getCurrent())) run()
+      }, delay)
+    },
+  }
+}
+
+export async function updateUserMetadataWithCapturedToken(
+  supabaseUrl: string,
+  anonKey: string,
+  accessToken: string,
+  metadata: Record<string, unknown>,
+  request: typeof fetch = fetch,
+) {
+  const response = await request(`${supabaseUrl.replace(/\/$/, '')}/auth/v1/user`, {
+    method: 'PUT',
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ data: metadata }),
+  })
+  const payload = await response.json()
+  if (!response.ok) return { data: { user: null }, error: payload }
+  return { data: { user: payload.user ?? payload }, error: null }
+}
+
+export async function updateProgressWithinAuthScope<T>(
+  expected: AuthSyncScope,
+  getCurrent: () => AuthSyncScope,
+  loadSession: () => Promise<{
+    data?: {
+      session?: { user?: { id?: string }; access_token?: string } | null
+    }
+    error?: unknown
+  }>,
+  update: (accessToken: string) => Promise<T>,
+): Promise<T | null> {
+  if (!isCurrentAuthSyncScope(expected, getCurrent())) return null
+  const sessionResult = await loadSession()
+  const session = sessionResult.data?.session
+  if (
+    !isCurrentAuthSyncScope(expected, getCurrent()) ||
+    sessionResult.error ||
+    session?.user?.id !== expected.userId ||
+    !session.access_token
+  )
+    return null
+  const result = await update(session.access_token)
+  return isCurrentAuthSyncScope(expected, getCurrent()) ? result : null
 }
 
 /**
@@ -48,12 +122,23 @@ export function useAuthSync(
   const [cloudLoaded, setCloudLoaded] = useState(false)
   const [syncState, setSyncState] = useState<SyncState>('local')
   const [syncRetry, setSyncRetry] = useState(0)
+  const [authGeneration, setAuthGeneration] = useState(0)
+  const authGenerationRef = useRef(0)
+  const syncSchedulerRef = useRef(createAuthSyncScheduler())
+
+  const clearSyncTimer = () => syncSchedulerRef.current.cancel()
+  const advanceAuthGeneration = () => {
+    clearSyncTimer()
+    authGenerationRef.current += 1
+    setAuthGeneration(authGenerationRef.current)
+  }
 
   const currentUserId = useRef('')
   const cloudApplied = useRef(false)
   const onProgressLoadedRef = useRef(onProgressLoaded)
-  const syncTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const learningProgressRef = useRef<Record<string, unknown>>({})
+  const currentTextbookId = useRef(textbookId)
+  currentTextbookId.current = textbookId
 
   useEffect(() => {
     onProgressLoadedRef.current = onProgressLoaded
@@ -73,6 +158,7 @@ export function useAuthSync(
       user: NonNullable<Awaited<ReturnType<typeof s.auth.getUser>>['data']['user']>,
     ) => {
       if (!mounted) return
+      advanceAuthGeneration()
       cloudApplied.current = true
       setSyncState('synced')
       currentUserId.current = user.id
@@ -149,6 +235,7 @@ export function useAuthSync(
     }
 
     const clearUser = (hadAuthenticatedUser: boolean) => {
+      advanceAuthGeneration()
       cloudApplied.current = false
       currentUserId.current = ''
       if (hadAuthenticatedUser) {
@@ -166,8 +253,9 @@ export function useAuthSync(
       setCloudLoaded(true)
     }
 
+    const initialAuthGeneration = authGenerationRef.current
     s.auth.getUser().then(({ data }) => {
-      if (!mounted) return
+      if (!mounted || authGenerationRef.current !== initialAuthGeneration) return
       if (data.user) {
         applyUser(data.user)
       } else {
@@ -181,7 +269,17 @@ export function useAuthSync(
         clearUser(Boolean(currentUserId.current))
         return
       }
-      if (event === 'SIGNED_IN' && user.id !== currentUserId.current) {
+      if (event === 'SIGNED_IN' && user.id === currentUserId.current) {
+        // Re-authentication can retain the same user ID. Fence old work without
+        // reapplying the SDK's potentially stale metadata over local progress.
+        advanceAuthGeneration()
+        setSyncState('local')
+        return
+      }
+      if (
+        (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') &&
+        user.id !== currentUserId.current
+      ) {
         setCloudLoaded(false)
         applyUser(user)
       }
@@ -194,62 +292,136 @@ export function useAuthSync(
   }, [])
 
   // 同步学习进度到云端
-  const syncProgress = useCallback((progress: LearningProgress) => {
-    if (!cloudLoaded || !userId) return
+  const syncProgress = useCallback(
+    (progress: LearningProgress) => {
+      if (!cloudLoaded || !userId) return
 
-    const s = getSupabaseBrowser()
-    if (!s) return
+      const s = getSupabaseBrowser()
+      if (!s) return
 
-    if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
+      clearSyncTimer()
+      const expectedScope = { userId, generation: authGenerationRef.current }
+      const syncedCompleted = completedFromLessonProgress(
+        progress.lessonDone,
+        progress.completedLessons,
+        progress.lessonCorrect,
+        questionLimits.length,
+        questionLimits,
+      )
 
-    const syncedCompleted = completedFromLessonProgress(
-      progress.lessonDone,
-      progress.completedLessons,
-      progress.lessonCorrect,
-      questionLimits.length,
-      questionLimits,
-    )
+      syncSchedulerRef.current.schedule(
+        expectedScope,
+        () => ({ userId: currentUserId.current, generation: authGenerationRef.current }),
+        () => {
+          if (
+            !isCurrentAuthSyncScope(expectedScope, {
+              userId: currentUserId.current,
+              generation: authGenerationRef.current,
+            })
+          )
+            return
+          setSyncState('syncing')
+          void (async () => {
+            try {
+              const result = await updateProgressWithinAuthScope(
+                expectedScope,
+                () => ({ userId: currentUserId.current, generation: authGenerationRef.current }),
+                () => s.auth.getSession(),
+                async (accessToken) => {
+                  const scopedProgress = {
+                    version: 3,
+                    lessonDone: progress.lessonDone,
+                    lessonCorrect: progress.lessonCorrect,
+                    completedLessons: syncedCompleted,
+                    mistakes: progress.mistakes,
+                    updatedAt: new Date().toISOString(),
+                  }
+                  const previousLearningProgress = learningProgressRef.current
+                  const existingByTextbook =
+                    learningProgressRef.current.byTextbook &&
+                    typeof learningProgressRef.current.byTextbook === 'object' &&
+                    !Array.isArray(learningProgressRef.current.byTextbook)
+                      ? (learningProgressRef.current.byTextbook as Record<string, unknown>)
+                      : {}
+                  const nextLearningProgress = {
+                    ...learningProgressRef.current,
+                    version: 3,
+                    byTextbook: { ...existingByTextbook, [textbookId]: scopedProgress },
+                    ...(textbookId === 'builtin-japanese-syntax' ? scopedProgress : {}),
+                  }
+                  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+                  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+                  if (!supabaseUrl || !anonKey) {
+                    throw new Error('Supabase browser configuration is unavailable')
+                  }
+                  const response = await updateUserMetadataWithCapturedToken(
+                    supabaseUrl,
+                    anonKey,
+                    accessToken,
+                    { learning_progress: nextLearningProgress },
+                  )
+                  if (
+                    !response.error &&
+                    response.data.user?.id === expectedScope.userId &&
+                    currentTextbookId.current === textbookId &&
+                    learningProgressRef.current === previousLearningProgress &&
+                    isCurrentAuthSyncScope(expectedScope, {
+                      userId: currentUserId.current,
+                      generation: authGenerationRef.current,
+                    })
+                  ) {
+                    learningProgressRef.current = nextLearningProgress
+                  }
+                  return response
+                },
+              )
+              if (
+                !isCurrentAuthSyncScope(expectedScope, {
+                  userId: currentUserId.current,
+                  generation: authGenerationRef.current,
+                })
+              )
+                return
+              if (!result) {
+                setSyncState('failed')
+                return
+              }
+              if (result.error) {
+                console.error('Failed to sync learning progress', result.error)
+                setSyncState('failed')
+                return
+              }
+              if (result.data.user?.id !== expectedScope.userId) {
+                setSyncState('failed')
+                return
+              }
+              setSyncState('synced')
+            } catch (error) {
+              if (
+                !isCurrentAuthSyncScope(expectedScope, {
+                  userId: currentUserId.current,
+                  generation: authGenerationRef.current,
+                })
+              )
+                return
+              console.error('Failed to sync learning progress', error)
+              setSyncState('failed')
+            }
+          })()
+        },
+      )
+    },
+    // A new auth generation cancels old work; changing this callback also makes
+    // the page re-schedule its current progress under the new session scope.
+    [cloudLoaded, userId, textbookId, questionLimits, authGeneration, syncRetry],
+  )
 
-    syncTimerRef.current = setTimeout(() => {
-      void (async () => {
-        setSyncState('syncing')
-        const scopedProgress = {
-          version: 3,
-          lessonDone: progress.lessonDone,
-          lessonCorrect: progress.lessonCorrect,
-          completedLessons: syncedCompleted,
-          mistakes: progress.mistakes,
-          updatedAt: new Date().toISOString(),
-        }
-        const existingByTextbook =
-          learningProgressRef.current.byTextbook &&
-          typeof learningProgressRef.current.byTextbook === 'object' &&
-          !Array.isArray(learningProgressRef.current.byTextbook)
-            ? (learningProgressRef.current.byTextbook as Record<string, unknown>)
-            : {}
-        const nextLearningProgress = {
-          ...learningProgressRef.current,
-          version: 3,
-          byTextbook: { ...existingByTextbook, [textbookId]: scopedProgress },
-          ...(textbookId === 'builtin-japanese-syntax' ? scopedProgress : {}),
-        }
-        learningProgressRef.current = nextLearningProgress
-        const { error } = await s.auth.updateUser({
-          data: { learning_progress: nextLearningProgress },
-        })
-        if (error) {
-          console.error('Failed to sync learning progress', error)
-          setSyncState('failed')
-          return
-        }
-        setSyncState('synced')
-      })()
-    }, 500)
-  }, [cloudLoaded, userId, textbookId, questionLimits])
-
-  useEffect(() => () => {
-    if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
-  }, [])
+  useEffect(
+    () => () => {
+      syncSchedulerRef.current.cancel()
+    },
+    [],
+  )
 
   const retrySyncNow = () => {
     setSyncRetry((v) => v + 1)
@@ -263,6 +435,8 @@ export function useAuthSync(
       cloudLoaded,
       syncState,
     },
+    authGeneration,
+    authGenerationRef,
     currentUserId,
     cloudApplied,
     syncProgress,

@@ -40,7 +40,7 @@ function isAnalysisResult(value: unknown): value is AnalysisResult {
 }
 
 export async function POST(req:Request){
-  const membership = await getCurrentMembership()
+  const membership = await getCurrentMembership(req)
   if (membership.configured && !membership.user) {
     return NextResponse.json({ error: '请先登录后使用 AI 深度分析。', memberRequired: true }, { status: 401 })
   }

@@ -1,0 +1,954 @@
+{
+  "lessons": [
+    {
+      "id": 21,
+      "title": "広州で / 中国茶の歴史",
+      "goal": "练习茶叶店购物、礼貌推荐与议价，并理解中国茶的历史和种类。",
+      "grammar": [
+        {
+          "pattern": "お～になる",
+          "meaning": "尊敬地询问对方动作",
+          "example": "お客様、どんなお茶をお探しですか。",
+          "connection": "お＋动词ます形去ます＋になる。",
+          "explanation": "用于尊敬顾客的动作。"
+        },
+        {
+          "pattern": "～なさいませんか",
+          "meaning": "礼貌邀请",
+          "example": "よかったら試飲なさいませんか。",
+          "connection": "动词ます形去ます＋なさいませんか。",
+          "explanation": "委婉邀请对方尝试。"
+        },
+        {
+          "pattern": "～し～し",
+          "meaning": "列举理由或特征",
+          "example": "味に深みもありますし、独特の香りがあります。",
+          "connection": "普通形＋し。",
+          "explanation": "并列多个理由或特征。"
+        },
+        {
+          "pattern": "～分",
+          "meaning": "相应的程度或份额",
+          "example": "15年物ですから、その分値段が高くなります。",
+          "connection": "名词／普通形＋分。",
+          "explanation": "表示相应的代价或程度。"
+        },
+        {
+          "pattern": "～ずつ",
+          "meaning": "各……；每……",
+          "example": "ウーロン茶を350gずつください。",
+          "connection": "数量词＋ずつ。",
+          "explanation": "表示均分或逐次。"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "title": "電話 / デジタルカメラ新製品紹介",
+      "goal": "练习商务电话、自我介绍、留言与产品特征说明。",
+      "grammar": [
+        {
+          "pattern": "～と申します",
+          "meaning": "自谦报姓名",
+          "example": "ＪＣ企画の李秀麗と申します。",
+          "connection": "姓名＋と申します。",
+          "explanation": "正式电话自我介绍。"
+        },
+        {
+          "pattern": "～ておく",
+          "meaning": "预先做",
+          "example": "佐藤に伝えておきます。",
+          "connection": "动词て形＋おく。",
+          "explanation": "为之后预先处理。"
+        },
+        {
+          "pattern": "～ながら",
+          "meaning": "虽然……却……",
+          "example": "小型でありながら機能が充実しています。",
+          "connection": "动词ます形去ます＋ながら。",
+          "explanation": "表示逆接或同时。"
+        },
+        {
+          "pattern": "～つつ",
+          "meaning": "一边……一边……",
+          "example": "確認しつつ仕事を進めます。",
+          "connection": "动词ます形去ます＋つつ。",
+          "explanation": "书面语同时进行。"
+        },
+        {
+          "pattern": "～でありながら",
+          "meaning": "虽是……却……",
+          "example": "小型でありながら高機能です。",
+          "connection": "名词／な形容词词干＋でありながら。",
+          "explanation": "书面逆接。"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "title": "紹興を訪ねる / 水郷の町",
+      "goal": "了解绍兴酒传统及江南水乡风貌，练习历史范围和地域特色表达。",
+      "grammar": [
+        {
+          "pattern": "～といわれている",
+          "meaning": "据说",
+          "example": "酒作りが始まったのは2500年前だといわれています。",
+          "connection": "普通形＋といわれている。",
+          "explanation": "转述普遍说法。"
+        },
+        {
+          "pattern": "～て以来",
+          "meaning": "自……以来",
+          "example": "それ以来、同じ手法で作られています。",
+          "connection": "动词て形＋以来。",
+          "explanation": "表示状态持续至今。"
+        },
+        {
+          "pattern": "～からこそ",
+          "meaning": "正因为……",
+          "example": "そんな土地だからこそ酒作りが栄えました。",
+          "connection": "普通形＋からこそ。",
+          "explanation": "强调原因。"
+        },
+        {
+          "pattern": "～から～にかけて",
+          "meaning": "从……到……",
+          "example": "明から清の時代にかけて発展しました。",
+          "connection": "名词＋から＋名词＋にかけて。",
+          "explanation": "表示大致范围。"
+        },
+        {
+          "pattern": "～ならでは",
+          "meaning": "只有……才有",
+          "example": "水郷ならではの景色です。",
+          "connection": "名词＋ならではの＋名词。",
+          "explanation": "强调独有特色。"
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "香港——CM撮影の下見 / CM",
+      "goal": "理解广告作用并练习表达倾向、合理性、强调与责任。",
+      "grammar": [
+        {
+          "pattern": "～がちだ",
+          "meaning": "往往……",
+          "example": "CMは迷惑なものと考えられがちです。",
+          "connection": "动词ます形去ます／名词＋がち。",
+          "explanation": "表示常见倾向。"
+        },
+        {
+          "pattern": "～たりすると",
+          "meaning": "一旦……之类情况",
+          "example": "試合が中断されたりすると迷惑です。",
+          "connection": "动词た形＋りすると。",
+          "explanation": "举例说明情形。"
+        },
+        {
+          "pattern": "～のも無理はない",
+          "meaning": "……也是难免",
+          "example": "そう思うのも無理はありません。",
+          "connection": "普通形＋のも無理はない。",
+          "explanation": "说明反应合情合理。"
+        },
+        {
+          "pattern": "～こそ",
+          "meaning": "正是……",
+          "example": "CMを見てもらうことこそ目的です。",
+          "connection": "名词／普通形＋こそ。",
+          "explanation": "强调核心。"
+        },
+        {
+          "pattern": "～以上（は）",
+          "meaning": "既然……就……",
+          "example": "応援する以上は最後まで応援します。",
+          "connection": "普通形＋以上（は）。",
+          "explanation": "前项为前提推出责任。"
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "L21-Q001",
+      "lessonId": 21,
+      "type": "选择",
+      "prompt": "试飲なさいませんか表达什么？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：邀请试喝",
+        "B：命令购买",
+        "C：询问价格"
+      ]
+    },
+    {
+      "id": "L21-Q002",
+      "lessonId": 21,
+      "type": "选择",
+      "prompt": "15年物描述什么？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：陈放年限",
+        "B：重量",
+        "C：价格"
+      ]
+    },
+    {
+      "id": "L21-Q003",
+      "lessonId": 21,
+      "type": "选择",
+      "prompt": "し在推荐句中表示什么？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：列举特征",
+        "B：假设",
+        "C：禁止"
+      ]
+    },
+    {
+      "id": "L21-Q004",
+      "lessonId": 21,
+      "type": "选择",
+      "prompt": "350gずつ表示什么？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：各350克",
+        "B：总共350克",
+        "C：不足350克"
+      ]
+    },
+    {
+      "id": "L21-Q005",
+      "lessonId": 21,
+      "type": "助词",
+      "prompt": "勉強すればする ___ 難しくなる。",
+      "answer": "ほど",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：ほど",
+        "B：しか",
+        "C：まで"
+      ]
+    },
+    {
+      "id": "L21-Q006",
+      "lessonId": 21,
+      "type": "助词",
+      "prompt": "勉強すればする ___ 難しくなる。",
+      "answer": "ほど",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：ほど",
+        "B：しか",
+        "C：まで"
+      ]
+    },
+    {
+      "id": "L21-Q007",
+      "lessonId": 21,
+      "type": "助词",
+      "prompt": "勉強すればする ___ 難しくなる。",
+      "answer": "ほど",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：ほど",
+        "B：しか",
+        "C：まで"
+      ]
+    },
+    {
+      "id": "L21-Q008",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "请您尝尝云南省的普洱茶。",
+      "answer": "雲南省のプーアル茶をお試しください。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q009",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "味道醇厚，而且有独特香气。",
+      "answer": "味に深みもありますし、独特の香りがあります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q010",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "这种茶陈放了15年。",
+      "answer": "このお茶は15年熟成させたものです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q011",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "乌龙茶和普洱茶各给我350克。",
+      "answer": "ウーロン茶とプーアル茶を350gずつください。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q012",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "全部250元怎么样？",
+      "answer": "全部で250元でどうですか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q013",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "含税一共1050日元。",
+      "answer": "税込みで1050円になります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q014",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "中国茶因发酵程度不同分为几种。",
+      "answer": "中国茶は発酵の進み方によっていくつかの種類に分けられます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q015",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "茶作为嗜好饮品被饮用是从3世纪以后。",
+      "answer": "嗜好品として飲まれるようになったのは3世紀以降です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q016",
+      "lessonId": 21,
+      "type": "翻译",
+      "prompt": "请问您在找什么茶？",
+      "answer": "お客様、どんなお茶をお探しですか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q017",
+      "lessonId": 21,
+      "type": "问答",
+      "prompt": "どんなお茶をお探しですか。（礼貌邀请试饮）",
+      "answer": "味に深みもありますし、独特の香りがあります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q018",
+      "lessonId": 21,
+      "type": "问答",
+      "prompt": "中国茶にはどんな種類がありますか。（举出三种）",
+      "answer": "2500年前から作られています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q019",
+      "lessonId": 21,
+      "type": "问答",
+      "prompt": "プーアル茶の特徴は何ですか。（香气）",
+      "answer": "独特の香りが特徴です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L21-Q020",
+      "lessonId": 21,
+      "type": "问答",
+      "prompt": "店員は試飲をどう勧めますか。（礼貌表达）",
+      "answer": "よかったら試飲なさいませんか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q001",
+      "lessonId": 22,
+      "type": "选择",
+      "prompt": "でございます常用于？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：正式电话",
+        "B：闲聊",
+        "C：命令"
+      ]
+    },
+    {
+      "id": "L22-Q002",
+      "lessonId": 22,
+      "type": "选择",
+      "prompt": "伝えておきます表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：预先转告",
+        "B：忘记转告",
+        "C：拒绝转告"
+      ]
+    },
+    {
+      "id": "L22-Q003",
+      "lessonId": 22,
+      "type": "选择",
+      "prompt": "でありながら表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：虽然却",
+        "B：因此",
+        "C：先后"
+      ]
+    },
+    {
+      "id": "L22-Q004",
+      "lessonId": 22,
+      "type": "选择",
+      "prompt": "つつ在此表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：一边一边",
+        "B：虽然但是",
+        "C：之后"
+      ]
+    },
+    {
+      "id": "L22-Q005",
+      "lessonId": 22,
+      "type": "助词",
+      "prompt": "このカメラは小型 ___ ありながら高機能です。",
+      "answer": "で",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：で",
+        "B：に",
+        "C：と"
+      ]
+    },
+    {
+      "id": "L22-Q006",
+      "lessonId": 22,
+      "type": "助词",
+      "prompt": "このカメラは小型 ___ ありながら高機能です。",
+      "answer": "で",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：で",
+        "B：に",
+        "C：と"
+      ]
+    },
+    {
+      "id": "L22-Q007",
+      "lessonId": 22,
+      "type": "助词",
+      "prompt": "このカメラは小型 ___ ありながら高機能です。",
+      "answer": "で",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：で",
+        "B：に",
+        "C：と"
+      ]
+    },
+    {
+      "id": "L22-Q008",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "我是JC企划的李秀丽。",
+      "answer": "ＪＣ企画の李秀麗と申します。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q009",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "佐藤和大山正在广州出差。",
+      "answer": "佐藤と大山は今広州に出張しております。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q010",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "我想留个口信，可以吗？",
+      "answer": "伝言をお願いしたいんですが、よろしいですか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q011",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "我会把这件事转告佐藤。",
+      "answer": "その件については佐藤に伝えておきます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q012",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "虽然小巧却搭载丰富功能。",
+      "answer": "小型でありながら充実した機能を搭載しています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q013",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "我想一边确认一边推进工作。",
+      "answer": "確認しつつ仕事を進めたいと思います。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q014",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "昏暗处不用闪光灯也能拍摄。",
+      "answer": "暗い場所でもフラッシュなしで撮影できます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q015",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "充电一次能拍350张。",
+      "answer": "1回の充電で350枚撮影できます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q016",
+      "lessonId": 22,
+      "type": "翻译",
+      "prompt": "请问佐藤先生在吗？",
+      "answer": "佐藤様はいらっしゃいますか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q017",
+      "lessonId": 22,
+      "type": "问答",
+      "prompt": "いつお戻りですか。（预计下周三）",
+      "answer": "来週の水曜日の予定です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q018",
+      "lessonId": 22,
+      "type": "问答",
+      "prompt": "伝言を頼まれたら何と言いますか。（答应记下）",
+      "answer": "はい、伺います。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q019",
+      "lessonId": 22,
+      "type": "问答",
+      "prompt": "このカメラの特徴は何ですか。（约180克）",
+      "answer": "約180gの小型軽量カメラです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L22-Q020",
+      "lessonId": 22,
+      "type": "问答",
+      "prompt": "電話が聞き取りにくい時どう言いますか。（礼貌表达）",
+      "answer": "ちょっとお電話が遠いようなんですが。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q001",
+      "lessonId": 23,
+      "type": "选择",
+      "prompt": "といわれています表达？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：据说",
+        "B：命令",
+        "C：请求"
+      ]
+    },
+    {
+      "id": "L23-Q002",
+      "lessonId": 23,
+      "type": "选择",
+      "prompt": "それ以来表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：从那以后",
+        "B：此前",
+        "C：偶尔"
+      ]
+    },
+    {
+      "id": "L23-Q003",
+      "lessonId": 23,
+      "type": "选择",
+      "prompt": "ならでは表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：独有特色",
+        "B：普遍现象",
+        "C：推测"
+      ]
+    },
+    {
+      "id": "L23-Q004",
+      "lessonId": 23,
+      "type": "选择",
+      "prompt": "からにかけて表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：大致时间范围",
+        "B：原因",
+        "C：目的"
+      ]
+    },
+    {
+      "id": "L23-Q005",
+      "lessonId": 23,
+      "type": "助词",
+      "prompt": "紹興酒はそれ ___ 作られています。",
+      "answer": "以来",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：以来",
+        "B：を",
+        "C：へ"
+      ]
+    },
+    {
+      "id": "L23-Q006",
+      "lessonId": 23,
+      "type": "助词",
+      "prompt": "紹興酒はそれ ___ 作られています。",
+      "answer": "以来",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：以来",
+        "B：を",
+        "C：へ"
+      ]
+    },
+    {
+      "id": "L23-Q007",
+      "lessonId": 23,
+      "type": "助词",
+      "prompt": "紹興酒はそれ ___ 作られています。",
+      "answer": "以来",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：以来",
+        "B：を",
+        "C：へ"
+      ]
+    },
+    {
+      "id": "L23-Q008",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "据说绍兴酿酒始于2500年前。",
+      "answer": "紹興で酒作りが始まったのは2500年前だといわれています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q009",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "绍兴酒自那以后一直以几乎不变的方法酿造。",
+      "answer": "紹興酒はそれ以来ほとんど変わらない手法で作られています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q010",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "绍兴有鉴湖的水和中国最好的大米。",
+      "answer": "紹興には鑒湖の水と中国で一番おいしいお米があります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q011",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "正因为这样的土地，酿酒业才兴盛。",
+      "answer": "そんな土地だからこそ酒作りが栄えたのでしょう。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q012",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "江南古镇从明到清发展很大。",
+      "answer": "江南古鎮は明から清の時代にかけて大きく発展しました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q013",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "乌镇的巷子非看不可。",
+      "answer": "烏鎮の路地は必見です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q014",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "周庄的运河游览一定要体验。",
+      "answer": "周荘の運河巡りはぜひとも体験したいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q015",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "退思园的美令人百看不厌。",
+      "answer": "退思園の美しさは見飽きることがありません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q016",
+      "lessonId": 23,
+      "type": "翻译",
+      "prompt": "西塘有长达一公里的长路。",
+      "answer": "西塘には1キロにもわたる長い道があります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q017",
+      "lessonId": 23,
+      "type": "问答",
+      "prompt": "紹興酒はどんな方法で作られていますか。（基本不变）",
+      "answer": "ほとんど変わらない手法で作られています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q018",
+      "lessonId": 23,
+      "type": "问答",
+      "prompt": "古鎮の景色はいつ魅力がありますか。（全年）",
+      "answer": "1年を通じてそれぞれに魅力があります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q019",
+      "lessonId": 23,
+      "type": "问答",
+      "prompt": "周荘で何を体験できますか。（运河游览）",
+      "answer": "運河巡りを体験できます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L23-Q020",
+      "lessonId": 23,
+      "type": "问答",
+      "prompt": "退思園の美しさはどうですか。（百看不厌）",
+      "answer": "その美しさは見飽きることがありません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q001",
+      "lessonId": 24,
+      "type": "选择",
+      "prompt": "考えられがち表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：往往被认为",
+        "B：必须考虑",
+        "C：考虑完"
+      ]
+    },
+    {
+      "id": "L24-Q002",
+      "lessonId": 24,
+      "type": "选择",
+      "prompt": "無理はない表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：也是难免的",
+        "B：不可能",
+        "C：没理由"
+      ]
+    },
+    {
+      "id": "L24-Q003",
+      "lessonId": 24,
+      "type": "选择",
+      "prompt": "こそ起什么作用？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：强调",
+        "B：推测",
+        "C：转折"
+      ]
+    },
+    {
+      "id": "L24-Q004",
+      "lessonId": 24,
+      "type": "选择",
+      "prompt": "以上は表示？",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：既然就",
+        "B：即使",
+        "C：之前"
+      ]
+    },
+    {
+      "id": "L24-Q005",
+      "lessonId": 24,
+      "type": "助词",
+      "prompt": "CMは迷惑だと考え ___ です。",
+      "answer": "がち",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：がち",
+        "B：以来",
+        "C：ずつ"
+      ]
+    },
+    {
+      "id": "L24-Q006",
+      "lessonId": 24,
+      "type": "助词",
+      "prompt": "CMは迷惑だと考え ___ です。",
+      "answer": "がち",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：がち",
+        "B：以来",
+        "C：ずつ"
+      ]
+    },
+    {
+      "id": "L24-Q007",
+      "lessonId": 24,
+      "type": "助词",
+      "prompt": "CMは迷惑だと考え ___ です。",
+      "answer": "がち",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：がち",
+        "B：以来",
+        "C：ずつ"
+      ]
+    },
+    {
+      "id": "L24-Q008",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "广告往往被普通观众视为麻烦。",
+      "answer": "CMは一般の視聴者に迷惑なものと考えられがちです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q009",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "比赛被广告打断，觉得讨厌也是难免的。",
+      "answer": "試合がCMで中断されると迷惑だと思うのも無理はありません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q010",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "几乎所有电视台都靠广告收入运营。",
+      "answer": "ほぼすべての放送局は広告収入によって運営されています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q011",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "让观众看到广告才是广播电视的目的。",
+      "answer": "CMを見てもらうことこそが放送の目的です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q012",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "既然要声援，就应该坚持到最后。",
+      "answer": "応援する以上は最後まで応援したほうがいいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q013",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "人们不知不觉记住了广告面孔和旋律。",
+      "answer": "知らず知らずのうちにCMの顔やメロディを覚えてしまいます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q014",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "日本经常举办广告比赛。",
+      "answer": "日本ではCMのコンテストがしばしば開催されています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q015",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "广告是为不到一分钟而投入巨大人力费用制作的影像作品。",
+      "answer": "CMとは1分足らずの時間のために莫大な手間と費用をかけて作られた映像作品です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q016",
+      "lessonId": 24,
+      "type": "翻译",
+      "prompt": "既然买房就想买带院子的房子。",
+      "answer": "家を買うからには庭付きの家を購入したいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q017",
+      "lessonId": 24,
+      "type": "问答",
+      "prompt": "放送局は何によって運営されていますか。（广告收入）",
+      "answer": "広告収入によって運営されています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q018",
+      "lessonId": 24,
+      "type": "问答",
+      "prompt": "CMを見せる側は何をする必要がありますか。（努力不让观众换台）",
+      "answer": "視聴者がチャンネルを変えないよう努力します。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q019",
+      "lessonId": 24,
+      "type": "问答",
+      "prompt": "商品名を歌にするとどうなりますか。（更容易记住）",
+      "answer": "歌にしたほうが記憶に残りやすいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L24-Q020",
+      "lessonId": 24,
+      "type": "问答",
+      "prompt": "CMは何を伝えるためにも作られますか。（企业形象）",
+      "answer": "企業イメージを伝えるためのCMです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    }
+  ]
+}

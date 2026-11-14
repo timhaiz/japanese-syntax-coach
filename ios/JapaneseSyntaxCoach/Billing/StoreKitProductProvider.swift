@@ -44,7 +44,8 @@ protocol StoreKitProductProviding: AnyObject {
     func currentEntitlements() async -> [VerifiedTransaction]
     func transactionUpdates() -> AsyncStream<VerifiedTransaction>
     func sync() async throws
-    func finish(transactionID: String) async
+    /// True only when a transaction handle was available and finish returned.
+    func finish(transactionID: String) async -> Bool
 }
 
 @MainActor
@@ -148,12 +149,13 @@ final class LiveStoreKitProductProvider: StoreKitProductProviding {
         try await AppStore.sync()
     }
 
-    func finish(transactionID: String) async {
-        guard let raw = UInt64(transactionID), let transaction = pendingTransactions[raw] else { return }
+    func finish(transactionID: String) async -> Bool {
+        guard let raw = UInt64(transactionID), let transaction = pendingTransactions[raw] else { return false }
         // The entry is removed before the await, so a second finish for the same
         // transaction is a no-op instead of a second StoreKit call.
         pendingTransactions[raw] = nil
         await transaction.finish()
+        return true
     }
 
     private static func periodDescription(for product: Product) -> String {

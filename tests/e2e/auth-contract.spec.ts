@@ -41,8 +41,8 @@ test('Apple account token comparison ignores UUID letter case',()=>{
   expect(accountTokenBelongsToUser(` ${userId.toUpperCase()} `,userId)).toBe(true)
   expect(accountTokenBelongsToUser('3f7c1a2e-5b6d-4c8e-9a01-2b3c4d5e6f71',userId)).toBe(false)
   // A transaction without an account token claims no ownership.
-  expect(accountTokenBelongsToUser(undefined,userId)).toBe(true)
-  expect(accountTokenBelongsToUser('',userId)).toBe(true)
+  expect(accountTokenBelongsToUser(undefined,userId)).toBe(false)
+  expect(accountTokenBelongsToUser('',userId)).toBe(false)
 })
 
 test('Apple entitlement route compares the account token case-insensitively',()=>{

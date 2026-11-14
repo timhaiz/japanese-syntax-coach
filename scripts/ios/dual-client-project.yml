@@ -1,0 +1,49 @@
+name: JapaneseSyntaxCoach
+options:
+  bundleIdPrefix: com.juxintong
+  deploymentTarget:
+    iOS: '16.0'
+  createIntermediateGroups: true
+  packageGroupName: Packages
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift.git
+    exactVersion: 2.39.0
+settings:
+  base:
+    SWIFT_VERSION: '5.0'
+    MARKETING_VERSION: '1.0.0'
+    CURRENT_PROJECT_VERSION: '1'
+    SUPABASE_URL: ''
+    SUPABASE_ANON_KEY: ''
+targets:
+  JapaneseSyntaxCoach:
+    type: application
+    platform: iOS
+    sources:
+      - path: JapaneseSyntaxCoach
+    resources:
+      - path: JapaneseSyntaxCoach/Onboarding
+      - path: JapaneseSyntaxCoach/Resources/builtin-japanese-syntax.json
+    dependencies:
+      - package: Supabase
+        product: Supabase
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo.dualclient
+        INFOPLIST_FILE: JapaneseSyntaxCoach/Info.plist
+        TARGETED_DEVICE_FAMILY: '1'
+    scheme:
+      testTargets:
+        - JapaneseSyntaxCoachTests
+  JapaneseSyntaxCoachTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: JapaneseSyntaxCoachTests/DualClientLabTests.swift
+    dependencies:
+      - target: JapaneseSyntaxCoach
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo.dualclient.tests
+        GENERATE_INFOPLIST_FILE: YES

@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-struct TextbookPackage: Decodable {
+struct TextbookPackage: Codable {
     private static let contentHashLength = 64
 
     private static func canonicalTextbookData(_ textbook: Textbook) throws -> Data {
@@ -21,6 +21,12 @@ struct TextbookPackage: Decodable {
         case schemaVersion
         case contentHash
         case textbook
+    }
+
+    init(schemaVersion: Int, contentHash: String, textbook: Textbook) {
+        self.schemaVersion = schemaVersion
+        self.contentHash = contentHash
+        self.textbook = textbook
     }
 
     init(from decoder: Decoder) throws {
@@ -202,10 +208,269 @@ enum TextbookLoadError: LocalizedError, Equatable {
 
 struct TextbookRepository {
     static func loadBundled() throws -> TextbookPackage {
-        guard let url = Bundle.main.url(forResource: "builtin-japanese-syntax", withExtension: "json") else {
+        try loadBundled(id: "builtin-japanese-syntax")
+    }
+
+    static func loadBundled(id: String) throws -> TextbookPackage {
+        guard let url = Bundle.main.url(forResource: id, withExtension: "json") else {
             throw TextbookLoadError.missingBundledResource
         }
         let data = try Data(contentsOf: url)
-        return try JSONDecoder().decode(TextbookPackage.self, from: data)
+        let package = try JSONDecoder().decode(TextbookPackage.self, from: data)
+        guard package.textbook.id == id else {
+            throw TextbookLoadError.contentHashMismatch
+        }
+        return package
+    }
+}
+
+extension Textbook: Equatable {
+    static func == (lhs: Textbook, rhs: Textbook) -> Bool {
+        lhs.id == rhs.id && lhs.title == rhs.title && lhs.lessons.count == rhs.lessons.count && lhs.questions.count == rhs.questions.count
+    }
+
+    var isBuiltin: Bool {
+        id == "builtin-japanese-syntax"
+    }
+
+    var displaySubtitle: String {
+        if let description, !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return description
+        }
+        return isBuiltin ? "24 课渐进式句型训练 · 每课 20 道主动输出练习" : "自定义导入教材"
+    }
+
+    var displayLevel: String {
+        if isBuiltin { return "N5 · 入门输出" }
+        if let shortTitle, !shortTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return shortTitle
+        }
+        return "自定义"
+    }
+
+    var coverTitle: String {
+        isBuiltin ? "N5" : "导入"
+    }
+
+    var coverSubtitle: String {
+        isBuiltin ? "句型" : "教材"
+    }
+
+    var displayTags: [String] {
+        isBuiltin ? ["句型", "主动输出", "助词", "造句"] : ["自定义", displayLevel]
+    }
+
+    var effectiveQuestionLimit: Int {
+        20
+    }
+
+    func questionCountsPerLesson(limit: Int = 20) -> [Int] {
+        lessons.map { lesson in
+            let count = questions.filter { $0.lessonId == lesson.id }.count
+            return min(max(1, limit), count)
+        }
+    }
+}
+
+enum TextbookImportError: LocalizedError, Equatable {
+    case invalidJSON
+    case unsupportedSchemaVersion
+    case invalidFormat(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .invalidJSON:
+            return "教材文件不是有效的 JSON。"
+        case .unsupportedSchemaVersion:
+            return "教材包版本不支持，请使用 schemaVersion 为 1 的教材文件。"
+        case .invalidFormat(let detail):
+            return detail
+        }
+    }
+}
+
+enum TextbookImporter {
+    private static let validIdPattern = "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    private static let validTypes: Set<String> = ["选择", "助词", "翻译", "问答"]
+    private static let typeAliases: [String: String] = [
+        "choice": "选择",
+        "particle": "助词",
+        "fill": "助词",
+        "translation": "翻译",
+        "translate": "翻译",
+        "qa": "问答"
+    ]
+
+    static func parseTextbookPackageJSON(_ rawText: String) throws -> Textbook {
+        guard let rawData = rawText.data(using: .utf8),
+              let parsed = try? JSONSerialization.jsonObject(with: rawData) as? [String: Any] else {
+            throw TextbookImportError.invalidJSON
+        }
+
+        if let schemaVersion = parsed["schemaVersion"] {
+            guard let version = schemaVersion as? Int, version == 1 else {
+                throw TextbookImportError.unsupportedSchemaVersion
+            }
+        }
+
+        let textbookObject: [String: Any]
+        if let nested = parsed["textbook"] as? [String: Any] {
+            textbookObject = nested
+        } else {
+            textbookObject = parsed
+        }
+
+        guard let rawTitle = (textbookObject["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !rawTitle.isEmpty else {
+            throw TextbookImportError.invalidFormat("教材缺少标题（title）。")
+        }
+
+        guard let rawLessons = textbookObject["lessons"] as? [[String: Any]], !rawLessons.isEmpty else {
+            throw TextbookImportError.invalidFormat("教材至少需要包含 1 课（lessons）。")
+        }
+
+        var normalizedLessons: [[String: Any]] = []
+        var flattenedQuestions: [[String: Any]] = []
+
+        for (lessonIdx, lesson) in rawLessons.enumerated() {
+            let lessonId = (lesson["id"] as? Int) ?? (lessonIdx + 1)
+            guard lessonId > 0 else {
+                throw TextbookImportError.invalidFormat("课程 ID 必须是正整数。")
+            }
+            let title = (lesson["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !title.isEmpty else {
+                throw TextbookImportError.invalidFormat("第 \(lessonId) 课缺少标题（title）。")
+            }
+            let goal = (lesson["goal"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let resolvedGoal = (goal?.isEmpty == false) ? goal! : title
+            let description = (lesson["description"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let rawGrammar = (lesson["grammar"] as? [[String: Any]]) ?? []
+            var normalizedGrammar: [[String: Any]] = []
+            for point in rawGrammar {
+                guard let pattern = (point["pattern"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !pattern.isEmpty,
+                      let meaning = (point["meaning"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !meaning.isEmpty,
+                      let example = (point["example"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !example.isEmpty else {
+                    throw TextbookImportError.invalidFormat("第 \(lessonId) 课存在缺少 pattern、meaning 或 example 的语法点。")
+                }
+                var g: [String: Any] = [
+                    "pattern": pattern,
+                    "meaning": meaning,
+                    "example": example,
+                    "connection": (point["connection"] as? String) ?? "按课内句型接续",
+                    "explanation": (point["explanation"] as? String) ?? meaning
+                ]
+                if let audio = point["audio"] as? String, !audio.isEmpty { g["audio"] = audio }
+                if let responses = point["responses"] as? [String] { g["responses"] = responses }
+                if let pitfalls = point["pitfalls"] as? [String] { g["pitfalls"] = pitfalls }
+                normalizedGrammar.append(g)
+            }
+
+            var lessonDict: [String: Any] = [
+                "id": lessonId,
+                "title": title,
+                "goal": resolvedGoal,
+                "grammar": normalizedGrammar
+            ]
+            if let description, !description.isEmpty {
+                lessonDict["description"] = description
+            }
+            normalizedLessons.append(lessonDict)
+
+            if textbookObject["questions"] == nil, let embedded = lesson["questions"] as? [[String: Any]] {
+                for (qIdx, q) in embedded.enumerated() {
+                    var copy = q
+                    if copy["lessonId"] == nil { copy["lessonId"] = lessonId }
+                    if copy["id"] == nil {
+                        copy["id"] = String(format: "L%02d-Q%03d", lessonId, qIdx + 1)
+                    }
+                    flattenedQuestions.append(copy)
+                }
+            }
+        }
+
+        let rawQuestions = (textbookObject["questions"] as? [[String: Any]]) ?? flattenedQuestions
+        guard !rawQuestions.isEmpty else {
+            throw TextbookImportError.invalidFormat("教材至少需要包含 1 道练习题（questions）。")
+        }
+
+        let lessonIdSet = Set(normalizedLessons.compactMap { $0["id"] as? Int })
+        var normalizedQuestions: [[String: Any]] = []
+        for (qIdx, q) in rawQuestions.enumerated() {
+            let lessonId = (q["lessonId"] as? Int) ?? 1
+            guard lessonIdSet.contains(lessonId) else {
+                throw TextbookImportError.invalidFormat("题目引用了不存在的课次（lessonId: \(lessonId)）。")
+            }
+            let qId = ((q["id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
+                ?? String(format: "L%02d-Q%03d", lessonId, qIdx + 1)
+            let rawType = (q["type"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let mappedType = typeAliases[rawType] ?? rawType
+            guard validTypes.contains(mappedType) else {
+                throw TextbookImportError.invalidFormat("题目 \(qId) 的题型无效（需为 选择/助词/翻译/问答）。")
+            }
+            let rawAnswer = ((q["answer"] as? String) ?? (q["standardAnswer"] as? String))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard let prompt = (q["prompt"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !prompt.isEmpty,
+                  !rawAnswer.isEmpty else {
+                throw TextbookImportError.invalidFormat("题目 \(qId) 缺少题干（prompt）或答案（answer）。")
+            }
+            let answer = rawAnswer
+            let hint = ((q["hint"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
+                ?? ((q["explanation"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 }
+                ?? "根据本课句型作答"
+
+            var qDict: [String: Any] = [
+                "id": qId,
+                "lessonId": lessonId,
+                "type": mappedType,
+                "prompt": prompt,
+                "answer": answer,
+                "hint": hint
+            ]
+            if let options = q["options"] as? [String], !options.isEmpty {
+                qDict["options"] = options
+            }
+            if let accepted = q["acceptedAnswers"] as? [String], !accepted.isEmpty {
+                qDict["acceptedAnswers"] = accepted
+            }
+            normalizedQuestions.append(qDict)
+        }
+
+        let rawId = (textbookObject["id"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let resolvedId = slugifyTextbookId(rawId.isEmpty ? rawTitle : rawId)
+        let shortTitle = ((textbookObject["level"] as? String) ?? (textbookObject["shortTitle"] as? String))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let subtitle = ((textbookObject["subtitle"] as? String) ?? (textbookObject["description"] as? String))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let cover = ((textbookObject["coverImage"] as? String) ?? (textbookObject["cover"] as? String))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        var finalObject: [String: Any] = [
+            "id": resolvedId,
+            "title": rawTitle,
+            "lessons": normalizedLessons,
+            "questions": normalizedQuestions
+        ]
+        if let shortTitle, !shortTitle.isEmpty { finalObject["shortTitle"] = shortTitle }
+        if let subtitle, !subtitle.isEmpty { finalObject["description"] = subtitle }
+        if let cover, !cover.isEmpty { finalObject["cover"] = cover }
+
+        let finalData = try JSONSerialization.data(withJSONObject: finalObject)
+        return try JSONDecoder().decode(Textbook.self, from: finalData)
+    }
+
+    private static func slugifyTextbookId(_ raw: String) -> String {
+        if raw != "builtin-japanese-syntax",
+           raw.range(of: validIdPattern, options: .regularExpression) != nil {
+            return raw
+        }
+        let lowered = raw.lowercased()
+        let replaced = lowered.replacingOccurrences(
+            of: "[^a-z0-9._-]+",
+            with: "-",
+            options: .regularExpression
+        ).trimmingCharacters(in: CharacterSet(charactersIn: "-._"))
+        let base = replaced.isEmpty ? "custom-\(Int(Date().timeIntervalSince1970))" : replaced
+        let candidate = base == "builtin-japanese-syntax" ? "custom-\(base)" : base
+        return String(candidate.prefix(120))
     }
 }

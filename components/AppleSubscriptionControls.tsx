@@ -8,9 +8,6 @@ import {
   type IOSPurchaseResult,
 } from '@/lib/apple/ios-bridge'
 
-const MONTHLY_PRODUCT_ID = 'com.juxintong.nihongo.monthly'
-const YEARLY_PRODUCT_ID = 'com.juxintong.nihongo.yearly'
-
 export function AppleSubscriptionControls() {
   const [available, setAvailable] = useState(false)
   const [userId, setUserId] = useState('')
@@ -63,15 +60,15 @@ export function AppleSubscriptionControls() {
 
   if (!available) return null
 
-  const purchase = (productID: string) => {
+  const purchase = (productId: string) => {
     setMessage('')
     setError('')
     if (!userId) {
       setError('请先登录，再购买会员。')
       return
     }
-    setPending(productID)
-    sendIOSMessage({ type: 'purchase', productID, userID: userId })
+    setPending(productId)
+    sendIOSMessage({ type: 'purchase', productId, appAccountToken: userId })
   }
 
   const restore = () => {
@@ -89,15 +86,15 @@ export function AppleSubscriptionControls() {
     <section className="ios-subscription-controls" aria-labelledby="ios-subscription-title">
       <div>
         <p className="ios-subscription-kicker">App Store 订阅</p>
-        <h2 id="ios-subscription-title">在 iPhone 上开通会员</h2>
-        <p>付款由 Apple 处理，订阅会自动续期。你可以在 Apple 账户的订阅设置中取消。</p>
+        <h2 id="ios-subscription-title">App Store 订阅管理</h2>
+        <p>订阅和付款由 Apple 处理，购买完成后会将签名交易同步到当前账号。你也可以随时恢复购买或在 Apple 账户中管理订阅。</p>
       </div>
       <div className="ios-subscription-actions">
-        <button type="button" onClick={() => purchase(MONTHLY_PRODUCT_ID)} disabled={pending !== null}>
-          {pending === MONTHLY_PRODUCT_ID ? '处理中…' : '月度会员 · ¥18'}
+        <button type="button" onClick={() => purchase('com.juxintong.nihongo.monthly')} disabled={pending !== null}>
+          {pending === 'com.juxintong.nihongo.monthly' ? '处理中…' : '月度订阅（$0.99/月）'}
         </button>
-        <button type="button" onClick={() => purchase(YEARLY_PRODUCT_ID)} disabled={pending !== null}>
-          {pending === YEARLY_PRODUCT_ID ? '处理中…' : '年度会员 · ¥180'}
+        <button type="button" onClick={() => purchase('com.juxintong.nihongo.yearly')} disabled={pending !== null}>
+          {pending === 'com.juxintong.nihongo.yearly' ? '处理中…' : '年度订阅（$6.59/年）'}
         </button>
         <button type="button" className="secondary" onClick={restore} disabled={pending !== null}>
           {pending === 'restore' ? '恢复中…' : '恢复购买'}

@@ -6,6 +6,7 @@ struct ContentView: View {
     @ObservedObject var storeKit: StoreKitManager
     @Environment(\.scenePhase) private var scenePhase
     @AppStorage("hasSeenOnboarding") private var hasSeenOnboarding = false
+    @State private var selectedTab = 0
 
     init(auth: AuthSessionStore, learning: LearningStore, storeKit: StoreKitManager) {
         self.auth = auth
@@ -18,18 +19,32 @@ struct ContentView: View {
             if !hasSeenOnboarding {
                 OnboardingView { hasSeenOnboarding = true }
             } else if auth.phase == .signedIn {
-                TabView {
-                    NavigationStack { HomeView(store: learning) }
-                        .tabItem { Label("首页", systemImage: "house") }
+                TabView(selection: $selectedTab) {
+                    NavigationStack {
+                        HomeView(
+                            store: learning,
+                            membership: storeKit.membership?.status ?? .free,
+                            onSelectTab: { selectedTab = $0 }
+                        )
+                    }
+                    .tabItem { Label("首页", systemImage: "house") }
+                    .tag(0)
                     NavigationStack { TextbookView(store: learning) }
-                        .tabItem { Label("教材", systemImage: "book") }
-                    NavigationStack { LearningProgressView(store: learning) }
-                        .tabItem { Label("进度", systemImage: "chart.bar") }
+                        .tabItem { Label("课程", systemImage: "book") }
+                        .tag(1)
+                    NavigationStack { MistakesView(store: learning) }
+                        .tabItem { Label("错题本", systemImage: "exclamationmark.bubble") }
+                        .tag(2)
                     NavigationStack {
                         AccountView(auth: auth, learning: learning, storeKit: storeKit)
                     }
-                    .tabItem { Label("账户", systemImage: "person.circle") }
+                    .tabItem { Label("我的", systemImage: "person.circle") }
+                    .tag(3)
                 }
+                .tint(HomeVisualStyle.accent)
+                .toolbarBackground(HomeVisualStyle.card, for: .tabBar)
+                .toolbarBackground(.visible, for: .tabBar)
+                .environment(\.adEligibility, AdEligibility.resolve(membership: storeKit.membership))
             } else {
                 AuthView(store: auth)
                     .overlay {
@@ -40,7 +55,7 @@ struct ContentView: View {
                     }
             }
         }
-        .task(id: auth.userEmail) {
+        .task(id: auth.studyLoadGeneration) {
             if auth.phase == .signedIn {
                 storeKit.activateAccount(auth.userID)
                 await learning.loadStudyState()

@@ -50,6 +50,7 @@ targets:
       gatherCoverageData: false
       testTargets:
         - JapaneseSyntaxCoachTests
+        - JapaneseSyntaxCoachUITests
   JapaneseSyntaxCoachTests:
     type: bundle.unit-test
     platform: iOS
@@ -64,3 +65,19 @@ targets:
     scheme:
       testTargets:
         - JapaneseSyntaxCoachTests
+  JapaneseSyntaxCoachUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: JapaneseSyntaxCoachUITests
+    dependencies:
+      - target: JapaneseSyntaxCoach
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SUPABASE_URL: ''
+        SUPABASE_ANON_KEY: ''
+    scheme:
+      testTargets:
+        - JapaneseSyntaxCoachUITests
