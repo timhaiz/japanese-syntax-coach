@@ -1,5 +1,8 @@
+import 'server-only'
 import { readFile, rm } from 'node:fs/promises'
 import path from 'node:path'
+import { createClient } from '@supabase/supabase-js'
+import { createSupabaseTtsRepository } from './supabase-repository'
 
 type TtsManifest = {
   provider: 'voicevox'
@@ -13,12 +16,20 @@ const rootDirectory = () =>
   path.resolve(process.env.VOICEVOX_AUDIO_DIR || path.join(process.cwd(), 'data', 'tts'))
 
 const directoryFor = (userId: string, textbookId: string) => {
-  if (!validSegment.test(userId) || !validSegment.test(textbookId)) throw new Error('Invalid audio path')
+  if (!validSegment.test(userId) || !validSegment.test(textbookId))
+    throw new Error('Invalid audio path')
   return path.join(rootDirectory(), userId, textbookId)
 }
 
 export function getTtsRepository() {
-  return null
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim()
+  if (!url || !serviceRoleKey) return null
+
+  const client = createClient(url, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  })
+  return createSupabaseTtsRepository(client)
 }
 
 export function getTtsDirectory(userId: string, textbookId: string) {
@@ -30,10 +41,16 @@ export async function deleteUserTtsData(userId: string) {
   await rm(path.join(rootDirectory(), userId), { recursive: true, force: true })
 }
 
-export async function readTtsManifest(userId: string, textbookId: string): Promise<TtsManifest | null> {
+export async function readTtsManifest(
+  userId: string,
+  textbookId: string,
+): Promise<TtsManifest | null> {
   try {
-    const value = JSON.parse(await readFile(path.join(directoryFor(userId, textbookId), 'manifest.json'), 'utf8')) as TtsManifest
-    if (value.provider !== 'voicevox' || !value.sentences || typeof value.sentences !== 'object') return null
+    const value = JSON.parse(
+      await readFile(path.join(directoryFor(userId, textbookId), 'manifest.json'), 'utf8'),
+    ) as TtsManifest
+    if (value.provider !== 'voicevox' || !value.sentences || typeof value.sentences !== 'object')
+      return null
     return value
   } catch {
     return null

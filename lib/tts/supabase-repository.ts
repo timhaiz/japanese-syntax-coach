@@ -5,7 +5,7 @@ type RpcClient = {
   rpc(
     name: string,
     args: Record<string, unknown>,
-  ): Promise<{ data: unknown; error: unknown | null }>
+  ): PromiseLike<{ data: unknown; error: unknown | null }>
 }
 
 type WorkerResult = { category: string; [key: string]: unknown }
