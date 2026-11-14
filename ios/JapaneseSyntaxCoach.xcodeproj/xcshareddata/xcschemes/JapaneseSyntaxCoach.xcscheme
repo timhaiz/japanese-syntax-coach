@@ -39,6 +39,17 @@
          </BuildableReference>
       </MacroExpansion>
       <Testables>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "0BA95CB8E5BAEA5F6BB64822"
+               BuildableName = "JapaneseSyntaxCoachTests.xctest"
+               BlueprintName = "JapaneseSyntaxCoachTests"
+               ReferencedContainer = "container:JapaneseSyntaxCoach.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <CommandLineArguments>
       </CommandLineArguments>

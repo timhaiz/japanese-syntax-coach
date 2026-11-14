@@ -1,35 +1,92 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
+import { questionForId, type Question } from '@/lib/question-bank'
+import { clampLessonAnswered, clampLessonCorrect, completedFromLessonProgress } from '@/lib/utils/lesson-utils'
+import { mistakeStateResponse } from '@/lib/learning/mistake-state-api.mjs'
 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
 const validTextbookId = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
+
+type NormalizedLegacyProgress = {
+  version: 2 | 3
+  lessonDone: Record<string, number>
+  lessonCorrect: Record<string, number>
+  completedLessons: number[]
+  mistakes: Question[]
+  updatedAt: string
+}
+
+type UnsupportedLegacyProgress = {
+  status: 'unsupported'
+  version: unknown
+  raw: unknown
+}
+
+type LegacyProgress = NormalizedLegacyProgress | UnsupportedLegacyProgress
+
+function unsupportedLegacyProgress(raw: unknown, version: unknown): UnsupportedLegacyProgress {
+  return {status: 'unsupported', version: version ?? null, raw}
+}
+
+function normalizeLegacyProgress(metadata: unknown, textbookId: string): LegacyProgress | null {
+  if (textbookId !== BUILTIN_TEXTBOOK_ID || !metadata || typeof metadata !== 'object' || Array.isArray(metadata)) return null
+  const root = metadata as Record<string, unknown>
+  const byTextbook = root.byTextbook && typeof root.byTextbook === 'object' && !Array.isArray(root.byTextbook)
+    ? root.byTextbook as Record<string, unknown>
+    : null
+  const hasScopedSnapshot = Boolean(byTextbook && Object.prototype.hasOwnProperty.call(byTextbook, BUILTIN_TEXTBOOK_ID))
+  const raw = hasScopedSnapshot ? byTextbook![BUILTIN_TEXTBOOK_ID] : root
+  if (!hasScopedSnapshot && byTextbook && !root.lessonDone) return null
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return hasScopedSnapshot ? unsupportedLegacyProgress(raw, root.version) : null
+  }
+  const candidate = raw as Record<string, unknown>
+  const version = candidate.version
+  const validShape =
+    candidate.lessonDone && typeof candidate.lessonDone === 'object' && !Array.isArray(candidate.lessonDone) &&
+    candidate.lessonCorrect && typeof candidate.lessonCorrect === 'object' && !Array.isArray(candidate.lessonCorrect) &&
+    Array.isArray(candidate.completedLessons) &&
+    Array.isArray(candidate.mistakes) &&
+    typeof candidate.updatedAt === 'string'
+  if ((version !== 2 && version !== 3) || !validShape) {
+    return unsupportedLegacyProgress(raw, version)
+  }
+  const rawDone = candidate.lessonDone as Record<string, unknown>
+  const rawCorrect = candidate.lessonCorrect as Record<string, unknown>
+  const lessonDone = Object.fromEntries(Object.entries(rawDone).map(([index, value]) => [index, clampLessonAnswered(value)]))
+  const lessonCorrect = Object.fromEntries(Object.entries(rawCorrect).map(([index, value]) => [index, clampLessonCorrect(value)]))
+  const completedLessons = completedFromLessonProgress(
+    lessonDone,
+    candidate.completedLessons,
+    lessonCorrect,
+  )
+  const mistakes = (candidate.mistakes as unknown[]).map((item) => {
+    const id = item && typeof item === 'object' ? (item as {id?: unknown}).id : undefined
+    return typeof id === 'string' ? questionForId(id) : undefined
+  }).filter((item): item is NonNullable<ReturnType<typeof questionForId>> => Boolean(item))
+  return {
+    version: version as 2 | 3,
+    lessonDone,
+    lessonCorrect,
+    completedLessons,
+    mistakes,
+    updatedAt: candidate.updatedAt as string,
+  }
+}
 
 export async function GET(request: Request) {
   const textbookId = new URL(request.url).searchParams.get('textbookId') ?? BUILTIN_TEXTBOOK_ID
   if (!validTextbookId.test(textbookId)) {
     return NextResponse.json({ error: 'Invalid textbook ID' }, { status: 400 })
   }
-  const authorization = request.headers.get('authorization')
-  let supabase
-  if (authorization !== null) {
-    const match = authorization.trim().match(/^Bearer\s+(\S+)$/i)
-    if (!match) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    if (!url || !key) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
-    supabase = createClient(url, key, {
-      global: { headers: { Authorization: `Bearer ${match[1]}` } },
-      auth: { autoRefreshToken: false, persistSession: false },
-    })
-  } else {
-    supabase = await getSupabaseServer()
-    if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
+  const authenticated = await getAuthenticatedSupabase(request)
+  if ('response' in authenticated) return authenticated.response
+  const {supabase, user} = authenticated
+  const legacyProgress = normalizeLegacyProgress(user.user_metadata?.learning_progress, textbookId)
+  const legacyResponse = {
+    legacyProgressAvailable: Boolean(legacyProgress),
+    legacyProgress,
   }
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (textbookId !== BUILTIN_TEXTBOOK_ID) {
     return NextResponse.json({
       textbookId,
@@ -39,7 +96,15 @@ export async function GET(request: Request) {
       lessons: [],
       knowledgePoints: [],
       metrics: { totalAttempts: 0, incorrectAttempts: 0, errorRate: 0, forgettingRate: 0, correctStreak: 0, topErrorTags: [] },
+      ...legacyResponse,
     })
+  }
+
+  let atomicMistakes: {mistakeStateAvailable: boolean; mistakeStates?: unknown[]}
+  try {
+    atomicMistakes = await mistakeStateResponse(supabase, textbookId, process.env.MISTAKE_STATE_V1_ENABLED === '1')
+  } catch {
+    return NextResponse.json({error: 'Mistake state unavailable', code: 'mistake_state_unavailable'}, {status: 503})
   }
 
   const load = async (scoped: boolean) => {
@@ -83,13 +148,13 @@ export async function GET(request: Request) {
     textbookScopeAvailable = false
   } else if (scopeColumnMissing) {
     return NextResponse.json(
-      { error: 'Textbook-scoped cloud sync requires the latest database migration.' },
+      { error: 'Textbook-scoped cloud sync requires the latest database migration.', ...legacyResponse },
       { status: 503 },
     )
   }
 
   if (due.error || completed.error) {
-    return NextResponse.json({ error: 'Unable to load study state' }, { status: 500 })
+    return NextResponse.json({ error: 'Unable to load study state', ...legacyResponse }, { status: 500 })
   }
   const lessons = (completed.data ?? []).map((lesson) => ({
     ...lesson,
@@ -129,6 +194,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     textbookId,
     textbookScopeAvailable,
+    ...atomicMistakes,
     dueQuestionIds: (due.data ?? []).map((item) => item.question_id),
     lessons,
     knowledgePoints: mastery.error ? [] : mastery.data ?? [],
@@ -140,5 +206,6 @@ export async function GET(request: Request) {
       correctStreak: streak,
       topErrorTags,
     },
+    ...legacyResponse,
   })
 }

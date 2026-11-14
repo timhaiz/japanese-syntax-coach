@@ -1,0 +1,982 @@
+{
+  "lessons": [
+    {
+      "id": 25,
+      "title": "創作中華料理コンテストの実現 / 日本の寿司から世界のSUSHIへ",
+      "goal": "学习感谢、成果评价与寿司文化变化的说明，掌握列举、依据和视角表达。",
+      "grammar": [
+        {
+          "pattern": "～てこそ",
+          "meaning": "正因为……才……",
+          "example": "皆さんの助けがあってこそこのような成果が生まれたのだと思います。",
+          "connection": "普通形／名词＋てこそ",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～といい～といい",
+          "meaning": "无论……还是……",
+          "example": "色といい手触りといいすばらしいです。",
+          "connection": "普通形／名词＋といい～といい",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～を超す",
+          "meaning": "超过……",
+          "example": "全国から10000件を超す応募がありました。",
+          "connection": "普通形／名词＋を超す",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～に応じて",
+          "meaning": "根据……；随着……",
+          "example": "賃金は働きに応じて支払われます。",
+          "connection": "普通形／名词＋に応じて",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～から見ると",
+          "meaning": "从……看来",
+          "example": "日本人から見ると寿司だとは思えないものもあります。",
+          "connection": "普通形／名词＋から見ると",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～ならぬ",
+          "meaning": "不是……而是……",
+          "example": "江戸前ならぬアメリカ前の寿司を楽しみます。",
+          "connection": "普通形／名词＋ならぬ",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "title": "イベント前夜 / 地球温暖化",
+      "goal": "学习活动前夜的礼貌提议，并说明地球温暖化的原因、可能性与对策。",
+      "grammar": [
+        {
+          "pattern": "～だけあって",
+          "meaning": "不愧是……",
+          "example": "さすが上海一の高級ホテルだけあってすばらしい会場ですね。",
+          "connection": "普通形／名词＋だけあって",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～によって",
+          "meaning": "由于……；通过……",
+          "example": "二酸化炭素の増加によって気温が上がっています。",
+          "connection": "普通形／名词＋によって",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～なしには",
+          "meaning": "没有……就不能……",
+          "example": "努力なしには成功できません。",
+          "connection": "普通形／名词＋なしには",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～ことによって",
+          "meaning": "通过……",
+          "example": "省エネを進めることによって排出量を減らせます。",
+          "connection": "普通形／名词＋ことによって",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～に違いない",
+          "meaning": "一定……",
+          "example": "温暖化の影響に違いありません。",
+          "connection": "普通形／名词＋に違いない",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～うる／～えない",
+          "meaning": "可能……／不可能……",
+          "example": "考えうる最悪の事態を想定してください。",
+          "connection": "普通形／名词＋うる／～えない",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        }
+      ]
+    },
+    {
+      "id": 27,
+      "title": "イベント当日 / 桜",
+      "goal": "学习活动当日的应对和樱花话题，练习预期、契机及伴随变化表达。",
+      "grammar": [
+        {
+          "pattern": "～にしては",
+          "meaning": "按……来说却……",
+          "example": "初めてにしては上手にできました。",
+          "connection": "普通形／名词＋にしては",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～わけにはいかない",
+          "meaning": "不能……",
+          "example": "失敗するわけにはいきません。",
+          "connection": "普通形／名词＋わけにはいかない",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～かのように",
+          "meaning": "仿佛……一样",
+          "example": "桜が雪のように舞っているかのようです。",
+          "connection": "普通形／名词＋かのように",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～に限らず",
+          "meaning": "不限于……",
+          "example": "桜に限らず日本の花は海外でも人気があります。",
+          "connection": "普通形／名词＋に限らず",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～をきっかけに",
+          "meaning": "以……为契机",
+          "example": "このイベントをきっかけに交流が深まりました。",
+          "connection": "普通形／名词＋をきっかけに",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～に伴って",
+          "meaning": "伴随……",
+          "example": "気温の上昇に伴って開花が早まりました。",
+          "connection": "普通形／名词＋に伴って",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "title": "病院 / ロボット",
+      "goal": "学习探病会话与机器人话题，掌握解释理由、顺便行动和结果状态表达。",
+      "grammar": [
+        {
+          "pattern": "～もので／～もんで",
+          "meaning": "因为……",
+          "example": "近くに来る用があったもんでついでに寄ったんです。",
+          "connection": "普通形／名词＋もので／～もんで",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～ついでに",
+          "meaning": "顺便……",
+          "example": "散歩に出たついでに買い物をしました。",
+          "connection": "普通形／名词＋ついでに",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～台無しになる",
+          "meaning": "毁于一旦",
+          "example": "信用が台無しになりました。",
+          "connection": "普通形／名词＋台無しになる",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～に終わる",
+          "meaning": "以……告终",
+          "example": "挑戦は失敗に終わりました。",
+          "connection": "普通形／名词＋に終わる",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～だけには",
+          "meaning": "唯独……",
+          "example": "健康だけには自信があったのに。",
+          "connection": "普通形／名词＋だけには",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        },
+        {
+          "pattern": "～たらいい",
+          "meaning": "……就好了",
+          "example": "だったらいいんですが。",
+          "connection": "普通形／名词＋たらいい",
+          "explanation": "表示本课会话和课文中的重要关系、判断或语气。"
+        }
+      ]
+    }
+  ],
+  "questions": [
+    {
+      "id": "L25-Q001",
+      "lessonId": 25,
+      "type": "选择",
+      "prompt": "応募は何件を超しましたか。",
+      "answer": "B",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：1000件",
+        "B：10000件",
+        "C：100000件"
+      ]
+    },
+    {
+      "id": "L25-Q002",
+      "lessonId": 25,
+      "type": "选择",
+      "prompt": "寿司は世界でどうですか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：大人気です",
+        "B：珍しいです",
+        "C：禁止です"
+      ]
+    },
+    {
+      "id": "L25-Q003",
+      "lessonId": 25,
+      "type": "选择",
+      "prompt": "外国の寿司は何に応じて変化しますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：文化の違い",
+        "B：天気",
+        "C：試験"
+      ]
+    },
+    {
+      "id": "L25-Q004",
+      "lessonId": 25,
+      "type": "选择",
+      "prompt": "何がゲスト審査員として出席しますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：張一心",
+        "B：医者",
+        "C：先生"
+      ]
+    },
+    {
+      "id": "L25-Q005",
+      "lessonId": 25,
+      "type": "助词",
+      "prompt": "皆さんの助け___こそ成果が生まれました。",
+      "answer": "があって",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：があって",
+        "B：を",
+        "C：で"
+      ]
+    },
+    {
+      "id": "L25-Q006",
+      "lessonId": 25,
+      "type": "助词",
+      "prompt": "働き___応じて賃金が違います。",
+      "answer": "に",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：に",
+        "B：を",
+        "C：で"
+      ]
+    },
+    {
+      "id": "L25-Q007",
+      "lessonId": 25,
+      "type": "助词",
+      "prompt": "日本人から___と寿司とは思えません。",
+      "answer": "見る",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：見る",
+        "B：見て",
+        "C：見れば"
+      ]
+    },
+    {
+      "id": "L25-Q008",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "正因为有大家的帮助，才有了成果。",
+      "answer": "皆さんの助けがあってこそ成果が生まれました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q009",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "请代我向张先生问好。",
+      "answer": "張さんによろしくお伝えください。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q010",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "收到超过一万件应征。",
+      "answer": "一万件を超す応募がありました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q011",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "无论颜色还是手感都很棒。",
+      "answer": "色といい手触りといいすばらしいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q012",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "工资根据工作表现支付。",
+      "answer": "賃金は働きに応じて支払われます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q013",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "从日本人看来有些不算寿司。",
+      "answer": "日本人から見ると寿司だとは思えません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q014",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "不是江户前而是美国风格的寿司。",
+      "answer": "江戸前ならぬアメリカ前の寿司です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q015",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "新风格SUSHI开始反向输入日本。",
+      "answer": "新しいスタイルのSUSHIが日本へ逆輸入され始めています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q016",
+      "lessonId": 25,
+      "type": "翻译",
+      "prompt": "文具之类的东西卖得很好。",
+      "answer": "文房具といったものがよく売れます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q017",
+      "lessonId": 25,
+      "type": "问答",
+      "prompt": "今回のコンテストはどうでしたか。（中文提示）",
+      "answer": "大成功でした。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q018",
+      "lessonId": 25,
+      "type": "问答",
+      "prompt": "寿司は世界でどうですか。（中文提示）",
+      "answer": "世界中で大人気です。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q019",
+      "lessonId": 25,
+      "type": "问答",
+      "prompt": "外国の寿司はなぜ変化しますか。（中文提示）",
+      "answer": "文化の違いに応じて変化します。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L25-Q020",
+      "lessonId": 25,
+      "type": "问答",
+      "prompt": "最後まであきらめますか。（中文提示）",
+      "answer": "いいえ、あきらめません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q001",
+      "lessonId": 26,
+      "type": "选择",
+      "prompt": "温暖化で何が上がりますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：気温",
+        "B：人数",
+        "C：値段"
+      ]
+    },
+    {
+      "id": "L26-Q002",
+      "lessonId": 26,
+      "type": "选择",
+      "prompt": "何を手伝いましょうか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：会場の点検",
+        "B：病院",
+        "C：料理の注文"
+      ]
+    },
+    {
+      "id": "L26-Q003",
+      "lessonId": 26,
+      "type": "选择",
+      "prompt": "温暖化の原因は何ですか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：二酸化炭素の増加",
+        "B：桜",
+        "C：寿司"
+      ]
+    },
+    {
+      "id": "L26-Q004",
+      "lessonId": 26,
+      "type": "选择",
+      "prompt": "高級ホテルはどんな会場ですか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：すばらしい",
+        "B：狭い",
+        "C：危険な"
+      ]
+    },
+    {
+      "id": "L26-Q005",
+      "lessonId": 26,
+      "type": "助词",
+      "prompt": "高級ホテルだけ___すばらしいですね。",
+      "answer": "あって",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：あって",
+        "B：を",
+        "C：で"
+      ]
+    },
+    {
+      "id": "L26-Q006",
+      "lessonId": 26,
+      "type": "助词",
+      "prompt": "努力___には成功できません。",
+      "answer": "なし",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：なし",
+        "B：しか",
+        "C：だけ"
+      ]
+    },
+    {
+      "id": "L26-Q007",
+      "lessonId": 26,
+      "type": "助词",
+      "prompt": "活動___よって気温が上がります。",
+      "answer": "に",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：に",
+        "B：を",
+        "C：で"
+      ]
+    },
+    {
+      "id": "L26-Q008",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "我来帮您拿包吧？",
+      "answer": "かばんをお持ちしましょうか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q009",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "还有什么我能帮忙的吗？",
+      "answer": "ほかに何かお手伝いできることはありませんか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q010",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "真不愧是高级酒店。",
+      "answer": "さすが高級ホテルだけあってすばらしいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q011",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "二氧化碳增加导致气温上升。",
+      "answer": "二酸化炭素の増加によって気温が上がっています。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q012",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "没有努力就不能成功。",
+      "answer": "努力なしには成功できません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q013",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "通过节能可以减少排放。",
+      "answer": "省エネによって排出量を減らせます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q014",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "一定是温暖化的影响。",
+      "answer": "温暖化の影響に違いありません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q015",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "请设想最坏的事态。",
+      "answer": "最悪の事態を想定してください。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q016",
+      "lessonId": 26,
+      "type": "翻译",
+      "prompt": "今天我来付吧。",
+      "answer": "今日はわたしが払いますよ。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q017",
+      "lessonId": 26,
+      "type": "问答",
+      "prompt": "何か手伝いましょうか。（中文提示）",
+      "answer": "はい、お願いします。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q018",
+      "lessonId": 26,
+      "type": "问答",
+      "prompt": "温暖化の原因は何ですか。（中文提示）",
+      "answer": "二酸化炭素の増加などです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q019",
+      "lessonId": 26,
+      "type": "问答",
+      "prompt": "将来、地球はどうなりますか。（中文提示）",
+      "answer": "さらに暖かくなるかもしれません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L26-Q020",
+      "lessonId": 26,
+      "type": "问答",
+      "prompt": "準備は終わりましたか。（中文提示）",
+      "answer": "はい、終わりました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q001",
+      "lessonId": 27,
+      "type": "选择",
+      "prompt": "桜はいつ咲きますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：春",
+        "B：夏",
+        "C：冬"
+      ]
+    },
+    {
+      "id": "L27-Q002",
+      "lessonId": 27,
+      "type": "选择",
+      "prompt": "イベント当日は誰が取材に来ますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：日本のテレビ局",
+        "B：病院",
+        "C：銀行"
+      ]
+    },
+    {
+      "id": "L27-Q003",
+      "lessonId": 27,
+      "type": "选择",
+      "prompt": "開花に伴って何が増えますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：観光客",
+        "B：病気",
+        "C：宿題"
+      ]
+    },
+    {
+      "id": "L27-Q004",
+      "lessonId": 27,
+      "type": "选择",
+      "prompt": "失敗してもいいですか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：いいえ、わけにはいきません",
+        "B：はい、必ず失敗します",
+        "C：わかりません"
+      ]
+    },
+    {
+      "id": "L27-Q005",
+      "lessonId": 27,
+      "type": "助词",
+      "prompt": "初めて___しては上手です。",
+      "answer": "に",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：に",
+        "B：を",
+        "C：で"
+      ]
+    },
+    {
+      "id": "L27-Q006",
+      "lessonId": 27,
+      "type": "助词",
+      "prompt": "イベント___きっかけに交流が深まりました。",
+      "answer": "を",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：を",
+        "B：に",
+        "C：が"
+      ]
+    },
+    {
+      "id": "L27-Q007",
+      "lessonId": 27,
+      "type": "助词",
+      "prompt": "気温の上昇___伴って開花しました。",
+      "answer": "に",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：に",
+        "B：を",
+        "C：で"
+      ]
+    },
+    {
+      "id": "L27-Q008",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "活动当天电视台会来采访。",
+      "answer": "イベント当日はテレビ局が取材に来ます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q009",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "虽然是第一次却做得很好。",
+      "answer": "初めてにしては上手にできました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q010",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "不能让活动失败。",
+      "answer": "イベントを失敗させるわけにはいきません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q011",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "以活动为契机交流加深。",
+      "answer": "イベントをきっかけに交流が深まりました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q012",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "随着气温上升开花提前。",
+      "answer": "気温の上昇に伴って開花が早まりました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q013",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "樱花仿佛在飞舞。",
+      "answer": "桜が舞っているかのようです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q014",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "不限于樱花，日本的花也受欢迎。",
+      "answer": "桜に限らず日本の花も人気があります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q015",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "请负责最终确认。",
+      "answer": "最後の確認をお願いします。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q016",
+      "lessonId": 27,
+      "type": "翻译",
+      "prompt": "今年开花提前了。",
+      "answer": "今年は開花が早まりました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q017",
+      "lessonId": 27,
+      "type": "问答",
+      "prompt": "イベントの準備はどうですか。（中文提示）",
+      "answer": "順調に進んでいます。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q018",
+      "lessonId": 27,
+      "type": "问答",
+      "prompt": "桜を見たことがありますか。（中文提示）",
+      "answer": "はい、日本で見たことがあります。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q019",
+      "lessonId": 27,
+      "type": "问答",
+      "prompt": "イベントをきっかけに何をしたいですか。（中文提示）",
+      "answer": "交流を深めたいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L27-Q020",
+      "lessonId": 27,
+      "type": "问答",
+      "prompt": "当日は失敗してもいいですか。（中文提示）",
+      "answer": "いいえ、わけにはいきません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q001",
+      "lessonId": 28,
+      "type": "选择",
+      "prompt": "病院へ寄った理由は何ですか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：近くに来る用があったから",
+        "B：試験だから",
+        "C：旅行だから"
+      ]
+    },
+    {
+      "id": "L28-Q002",
+      "lessonId": 28,
+      "type": "选择",
+      "prompt": "あとどのくらいで退院できますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：1週間ぐらい",
+        "B：1年",
+        "C：1日"
+      ]
+    },
+    {
+      "id": "L28-Q003",
+      "lessonId": 28,
+      "type": "选择",
+      "prompt": "信用はどうなりましたか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：台無しになりました",
+        "B：増えました",
+        "C：始まりました"
+      ]
+    },
+    {
+      "id": "L28-Q004",
+      "lessonId": 28,
+      "type": "选择",
+      "prompt": "患者に何と言いますか。",
+      "answer": "A",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：ゆっくり休んでください",
+        "B：急いでください",
+        "C：働いてください"
+      ]
+    },
+    {
+      "id": "L28-Q005",
+      "lessonId": 28,
+      "type": "助词",
+      "prompt": "用があった___ついでに寄りました。",
+      "answer": "もんで",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：もんで",
+        "B：まで",
+        "C：だけ"
+      ]
+    },
+    {
+      "id": "L28-Q006",
+      "lessonId": 28,
+      "type": "助词",
+      "prompt": "散歩に出た___に買い物をしました。",
+      "answer": "ついで",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：ついで",
+        "B：ため",
+        "C：ほど"
+      ]
+    },
+    {
+      "id": "L28-Q007",
+      "lessonId": 28,
+      "type": "助词",
+      "prompt": "挑戦は失敗___終わりました。",
+      "answer": "に",
+      "hint": "结合第 undefined 课核心句型作答。",
+      "options": [
+        "A：に",
+        "B：を",
+        "C：で"
+      ]
+    },
+    {
+      "id": "L28-Q008",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "因为来附近办事顺便来看看。",
+      "answer": "近くに来る用があったもんでついでに寄ったんです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q009",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "一直没来探望实在抱歉。",
+      "answer": "なかなかお見舞いに来られなくて申し訳ありません。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q010",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "身体怎么样？",
+      "answer": "具合はどうですか。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q011",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "请不要勉强自己。",
+      "answer": "ご無理をされないように。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q012",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "因为谎言信誉毁了。",
+      "answer": "うそのために信用が台無しになりました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q013",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "比赛大获成功地结束。",
+      "answer": "コンテストは大成功のうちに終わりました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q014",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "唯独健康我有自信。",
+      "answer": "健康だけには自信がありました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q015",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "散步时顺便买东西。",
+      "answer": "散歩に出たついでに買い物をしました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q016",
+      "lessonId": 28,
+      "type": "翻译",
+      "prompt": "如果那样就好了。",
+      "answer": "だったらいいんですが。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q017",
+      "lessonId": 28,
+      "type": "问答",
+      "prompt": "具合はどうですか。（中文提示）",
+      "answer": "おかげさまでだいぶよくなりました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q018",
+      "lessonId": 28,
+      "type": "问答",
+      "prompt": "回復までどのくらいですか。（中文提示）",
+      "answer": "あと一週間ぐらいです。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q019",
+      "lessonId": 28,
+      "type": "问答",
+      "prompt": "お見舞いに何を持ってきましたか。（中文提示）",
+      "answer": "果物を持ってきました。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    },
+    {
+      "id": "L28-Q020",
+      "lessonId": 28,
+      "type": "问答",
+      "prompt": "無理をしてもいいですか。（中文提示）",
+      "answer": "いいえ、ゆっくり休んでください。",
+      "hint": "结合第 undefined 课核心句型作答。"
+    }
+  ]
+}

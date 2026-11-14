@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
-import { getSupabaseServer } from '@/lib/supabase-server'
+import { getAuthenticatedSupabase } from '@/lib/auth/request-supabase'
 import { nextReviewByVerdict, type ReviewVerdict } from '@/lib/review'
+import { recordAnswerWithMistakes } from '@/lib/learning/mistake-state-api.mjs'
+import { questionForId } from '@/lib/question-bank'
 
 const BUILTIN_TEXTBOOK_ID = 'builtin-japanese-syntax'
 const textbookIdPattern = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/
+const clientRequestIdPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/
 
 type Body = {
   textbookId?: string
@@ -16,11 +19,14 @@ type Body = {
   errorTags?: string[]
   knowledgeTags?: string[]
   mode?: 'new' | 'review' | 'mistakes' | 'lesson' | 'lesson_replay'
+  clientRequestId?: string
+  expectedMistakeVersion?: number
 }
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Body
   const textbookId = body.textbookId ?? BUILTIN_TEXTBOOK_ID
+  const hasClientRequestId = body.clientRequestId !== undefined
   if (
     !textbookIdPattern.test(textbookId) ||
     !body.questionId ||
@@ -32,13 +38,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid answer record' }, { status: 400 })
   }
 
-  const supabase = await getSupabaseServer()
-  if (!supabase) return NextResponse.json({ error: 'Supabase is not configured' }, { status: 503 })
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (hasClientRequestId && (typeof body.clientRequestId !== 'string' || !clientRequestIdPattern.test(body.clientRequestId))) {
+    return NextResponse.json({ error: 'Invalid client request ID' }, { status: 400 })
+  }
+  if (hasClientRequestId && (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+    return NextResponse.json({ error: 'Idempotent answer persistence is unavailable' }, { status: 503 })
+  }
+  const authenticated = await getAuthenticatedSupabase(request)
+  if ('response' in authenticated) return authenticated.response
+  const {supabase, user} = authenticated
   if (textbookId !== BUILTIN_TEXTBOOK_ID) {
+    if (hasClientRequestId) {
+      return NextResponse.json({ error: 'Idempotent answer persistence is unavailable for this textbook' }, { status: 503 })
+    }
     return NextResponse.json({ record: null, textbookScopeAvailable: false, localOnly: true })
   }
 
@@ -46,7 +58,7 @@ export async function POST(request: Request) {
   const knowledgeTags = (body.knowledgeTags ?? []).filter((tag): tag is string => typeof tag === 'string')
   const verdict: ReviewVerdict =
     body.verdict ?? (body.correct ? 'correct' : 'incorrect')
-  const result = await supabase.rpc('record_textbook_learning_attempt', {
+  const rpcParams = {
     p_textbook_id: textbookId,
     p_question_id: body.questionId,
     p_lesson_id: body.lessonId,
@@ -60,9 +72,28 @@ export async function POST(request: Request) {
       Number.isInteger(body.questionLimit) && (body.questionLimit ?? 0) > 0
         ? body.questionLimit
         : 20,
-  })
+  }
+  // Enable only after the candidate database schema and both version-aware clients ship.
+  if (process.env.MISTAKE_STATE_V1_ENABLED === '1') {
+    const question = questionForId(body.questionId)
+    if (!question || question.lessonId !== body.lessonId) {
+      return NextResponse.json({error: 'Unknown textbook question'}, {status: 400})
+    }
+    const atomic = await recordAnswerWithMistakes(supabase, {...body, textbookId, errorTags, knowledgeTags, verdict})
+    return NextResponse.json(atomic.body, {status: atomic.status})
+  }
+  const result = hasClientRequestId
+    ? await supabase.rpc('record_textbook_learning_attempt_idempotent', {
+        p_user_id: user.id,
+        p_client_request_id: body.clientRequestId,
+        ...rpcParams,
+      })
+    : await supabase.rpc('record_textbook_learning_attempt', rpcParams)
 
   if (result.error) {
+    if (hasClientRequestId) {
+      return NextResponse.json({ error: 'Unable to persist idempotent answer record' }, { status: 503 })
+    }
     if (textbookId !== BUILTIN_TEXTBOOK_ID) {
       return NextResponse.json(
         { error: 'Textbook-scoped cloud sync requires the latest database migration.' },
@@ -112,6 +143,15 @@ export async function POST(request: Request) {
       .eq('question_id', body.questionId)
       .eq('user_id', user.id)
     return NextResponse.json({ record: legacy.data, textbookScopeAvailable: false })
+  }
+
+  if (hasClientRequestId) {
+    const idempotent = result.data as { duplicate?: boolean; record?: unknown } | null
+    return NextResponse.json({
+      duplicate: idempotent?.duplicate === true,
+      record: idempotent?.record ?? null,
+      textbookScopeAvailable: true,
+    })
   }
 
   return NextResponse.json({ record: result.data, textbookScopeAvailable: true })

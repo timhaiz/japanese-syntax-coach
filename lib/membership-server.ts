@@ -6,12 +6,12 @@ import { isVoiceGenerationMember } from '@/lib/tts/membership'
  * Local development can still exercise the AI fallback when Supabase is not configured;
  * deployed environments fail closed because NODE_ENV is production there.
  */
-export async function getCurrentMembership() {
+export async function getCurrentMembership(request?: Request) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return { supabase: null, user: null, profile: null, isMember: false, configured: false }
   }
 
-  const supabase = await getSupabaseServer()
+  const supabase = await getSupabaseServer(request)
   if (!supabase) return { supabase: null, user: null, profile: null, isMember: false, configured: false }
 
   const { data: { user } } = await supabase.auth.getUser()

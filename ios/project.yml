@@ -5,6 +5,12 @@ options:
   deploymentTarget:
     iOS: '16.0'
   createIntermediateGroups: true
+  packageGroupName: Packages
+
+packages:
+  Supabase:
+    url: https://github.com/supabase/supabase-swift.git
+    exactVersion: 2.39.0
 
 settings:
   base:
@@ -13,6 +19,8 @@ settings:
     CURRENT_PROJECT_VERSION: '1'
     CODE_SIGN_STYLE: Automatic
     DEVELOPMENT_TEAM: RMBJCSP3G9
+    SUPABASE_URL: ''
+    SUPABASE_ANON_KEY: ''
 
 targets:
   JapaneseSyntaxCoach:
@@ -22,6 +30,10 @@ targets:
       - path: JapaneseSyntaxCoach
     resources:
       - path: JapaneseSyntaxCoach/Onboarding
+      - path: JapaneseSyntaxCoach/Resources/builtin-japanese-syntax.json
+    dependencies:
+      - package: Supabase
+        product: Supabase
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo
@@ -31,5 +43,41 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: YES
     entitlements:
       path: JapaneseSyntaxCoach/JapaneseSyntaxCoach.entitlements
+      properties:
+        com.apple.developer.applesignin:
+          - Default
     scheme:
       gatherCoverageData: false
+      testTargets:
+        - JapaneseSyntaxCoachTests
+        - JapaneseSyntaxCoachUITests
+  JapaneseSyntaxCoachTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: JapaneseSyntaxCoachTests
+    dependencies:
+      - target: JapaneseSyntaxCoach
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo.tests
+        GENERATE_INFOPLIST_FILE: YES
+    scheme:
+      testTargets:
+        - JapaneseSyntaxCoachTests
+  JapaneseSyntaxCoachUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: JapaneseSyntaxCoachUITests
+    dependencies:
+      - target: JapaneseSyntaxCoach
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.juxintong.nihongo.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        SUPABASE_URL: ''
+        SUPABASE_ANON_KEY: ''
+    scheme:
+      testTargets:
+        - JapaneseSyntaxCoachUITests

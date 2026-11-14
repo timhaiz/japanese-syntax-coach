@@ -5,9 +5,22 @@ export type TtsManifest = {
 }
 
 const manifestCache = new Map<string, Promise<TtsManifest | null>>()
+let manifestScope = 'anonymous'
+const manifestKey = (textbookId: string) => JSON.stringify([manifestScope, textbookId])
+
+export function clearTtsManifestCache() {
+  manifestCache.clear()
+}
+
+export function setTtsManifestScope(scope: string) {
+  const nextScope = scope || 'anonymous'
+  if (manifestScope !== nextScope) manifestCache.clear()
+  manifestScope = nextScope
+}
 
 const loadManifest = (textbookId: string): Promise<TtsManifest | null> => {
-  const cached = manifestCache.get(textbookId)
+  const cacheKey = manifestKey(textbookId)
+  const cached = manifestCache.get(cacheKey)
   if (cached) return cached
 
   const request = fetch(`/api/tts/manifest?textbookId=${encodeURIComponent(textbookId)}`, {
@@ -25,7 +38,11 @@ const loadManifest = (textbookId: string): Promise<TtsManifest | null> => {
     .then(async (response) => {
       if (!response.ok) return null
       const value = (await response.json()) as Partial<TtsManifest>
-      if (value.provider !== 'voicevox' || !value.sentences || typeof value.sentences !== 'object') {
+      if (
+        value.provider !== 'voicevox' ||
+        !value.sentences ||
+        typeof value.sentences !== 'object'
+      ) {
         return null
       }
       return value as TtsManifest
@@ -33,10 +50,10 @@ const loadManifest = (textbookId: string): Promise<TtsManifest | null> => {
     .catch(() => null)
 
   request.then((manifest) => {
-    if (!manifest) manifestCache.delete(textbookId)
+    if (!manifest && manifestCache.get(cacheKey) === request) manifestCache.delete(cacheKey)
   })
 
-  manifestCache.set(textbookId, request)
+  manifestCache.set(cacheKey, request)
   return request
 }
 

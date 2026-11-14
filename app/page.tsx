@@ -9,6 +9,8 @@ import { usePracticeState } from '@/lib/hooks/usePracticeState'
 import { useGradingState } from '@/lib/hooks/useGradingState'
 import { useLessonProgress } from '@/lib/hooks/useLessonProgress'
 import { useAnswerSubmission } from '@/lib/hooks/useAnswerSubmission'
+import { createMistakeQueue } from '@/lib/learning/mistake-queue.mjs'
+import { projectMistakeIds, validateMistakeStateSnapshot } from '@/lib/learning/mistake-state-validation.mjs'
 import {
   isAnswerAccepted,
   normalizeAnswer,
@@ -53,6 +55,7 @@ import {
 } from '@/lib/utils/storage-utils'
 
 const STUDY_STATE_CACHE_TTL_MS = 30_000
+const browserMistakeQueue = typeof window === 'undefined' ? null : createMistakeQueue()
 export default function Home() {
   const {
     selectedTextbook,
@@ -128,9 +131,18 @@ function TextbookHome({
   const [active, setActive] = useState(0)
   const hasStartedPracticeRef = useRef(false)
 
+  const atomicMistakeAuthorityRef = useRef(false)
+  const mistakeProtocolReadyRef = useRef(false)
+  const mistakeVersionsRef = useRef(new Map<string, number>())
+  const mistakeStateValuesRef = useRef(new Map<string, boolean>())
+  const mistakeScopeRef = useRef({userId: '', textbookId: selectedTextbookId, generation: -1})
+  const [mistakeQueueNotice, setMistakeQueueNotice] = useState('')
+
   // 使用 useAuthSync 管理认证和同步
   const {
     authState,
+    authGeneration,
+    authGenerationRef,
     currentUserId,
     cloudApplied,
     syncProgress,
@@ -139,33 +151,41 @@ function TextbookHome({
     setLessonDone(progress.lessonDone)
     setLessonCorrect(progress.lessonCorrect)
     setCompletedLessons(progress.completedLessons)
-    setMistakes(progress.mistakes)
+    if (!atomicMistakeAuthorityRef.current) setMistakes(progress.mistakes)
   }, selectedTextbookId, questionCounts, questions)
 
   const { userId, userEmail, registeredAt, cloudLoaded, syncState } = authState
   const { status: membershipStatus, endsAt: membershipEndsAt } = useMembership(userId)
   const deleteAccount = useCallback(async () => {
-    if (!userEmail || !window.confirm('确定要注销账号吗？云端学习记录、会员状态和账号数据将被永久删除，且无法恢复。')) return
-    const response = await fetch('/api/account/delete', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ confirmation: 'DELETE' }),
-    })
-    if (!response.ok) {
-      const payload = await response.json().catch(() => ({})) as { error?: string }
-      window.alert(payload.error || '注销失败，请稍后重试。')
-      return
+    if (!window.confirm('确认永久注销当前账号？此操作将删除账号及云端学习记录，且无法恢复。')) return
+    try {
+      const response = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: 'DELETE' }),
+      })
+      const payload = (await response.json().catch(() => ({}))) as { deleted?: boolean; error?: string }
+      if (!response.ok || !payload.deleted) {
+        window.alert(payload.error || '账号注销失败，请稍后重试。')
+        return
+      }
+      await getSupabaseBrowser()?.auth.signOut().catch(() => undefined)
+      try {
+        window.localStorage.clear()
+        window.sessionStorage.clear()
+      } catch {
+        // Ignore storage cleanup errors after server deletion succeeds.
+      }
+      window.location.href = '/login'
+    } catch {
+      window.alert('账号注销请求失败，请检查网络后重试。')
     }
-    Object.keys(window.localStorage).forEach((key) => {
-      if (key.startsWith('syntax-coach') || key.startsWith('japanese-syntax-coach')) window.localStorage.removeItem(key)
-    })
-    window.location.href = '/login'
-  }, [userEmail])
+  }, [])
   const loadedStudyUserId = useRef('')
 
   useEffect(() => {
     hasStartedPracticeRef.current = false
-  }, [userId])
+  }, [userId, authGeneration])
 
   // 使用新的 hooks 管理状态
   const {
@@ -193,7 +213,7 @@ function TextbookHome({
     resetGrading,
   } = useGradingState()
 
-  const { submitAnswer } = useAnswerSubmission()
+  const { submitAnswer, retryMistakeQueue } = useAnswerSubmission(userId, selectedTextbookId, authGeneration)
 
   // 学习进度相关状态
   const [completedLessons, setCompletedLessons] = useState<number[]>([])
@@ -304,6 +324,17 @@ function TextbookHome({
   }, [cloudLoaded, studyStateLoaded, userId, lessonDone, lessonCorrect, completedLessons, mistakes, syncProgress])
 
   useEffect(() => {
+    const scopeChanged = mistakeScopeRef.current.userId !== userId ||
+      mistakeScopeRef.current.textbookId !== selectedTextbookId ||
+      mistakeScopeRef.current.generation !== authGeneration
+    if (scopeChanged) {
+      mistakeScopeRef.current = {userId, textbookId: selectedTextbookId, generation: authGeneration}
+      atomicMistakeAuthorityRef.current = false
+      mistakeProtocolReadyRef.current = false
+      setMistakeQueueNotice('')
+      mistakeVersionsRef.current = new Map()
+      mistakeStateValuesRef.current = new Map()
+    }
     if (!userId) return
     // 用户导入的教材只保存在当前用户自己的本地/账号范围内，
     // 不依赖需要数据库教材字段的云端复习接口。
@@ -320,12 +351,60 @@ function TextbookHome({
     setStudyStateLoaded(false)
     setStudyStateError('')
 
+    const resolveAtomicMistakeProjection = (state: {
+      mistakeStateAvailable?: boolean
+      mistakeStates?: Array<{questionId: string; isMistake: boolean; version: number}>
+    }) => {
+      const canonicalIds = new Set(questionsById.keys())
+      const validated = validateMistakeStateSnapshot(state, canonicalIds)
+      if (validated.kind !== 'atomic') return validated
+      const states = new Map(validated.states)
+      for (const [questionId, knownVersion] of mistakeVersionsRef.current) {
+        const snapshotState = states.get(questionId)
+        if (knownVersion > (snapshotState?.version ?? 0)) {
+          states.set(questionId, {
+            version: knownVersion,
+            isMistake: mistakeStateValuesRef.current.get(questionId) ?? false,
+          })
+        }
+      }
+      let pendingOperations: Array<Record<string, unknown>> = []
+      try {
+        pendingOperations = browserMistakeQueue?.list(userId, selectedTextbookId) ?? []
+      } catch {
+        return {kind: 'invalid'}
+      }
+      return {
+        kind: 'atomic',
+        states,
+        mistakeIds: projectMistakeIds(states, pendingOperations, canonicalIds),
+      }
+    }
+
     const applyStudyState = (state: {
       dueQuestionIds?: unknown
       knowledgePoints?: Array<{ knowledge_point: string; mastery: number }>
       metrics?: { correctStreak: number; errorRate: number; forgettingRate?: number; topErrorTags: { tag: string; count: number }[] }
       lessons?: Array<{ lesson_id: number; answered_count: number; correct_count?: number; completed_at: string | null }>
+      mistakeStateAvailable?: boolean
+      mistakeStates?: Array<{ questionId: string; isMistake: boolean; version: number }>
     }) => {
+      const resolution = resolveAtomicMistakeProjection(state)
+      if (resolution.kind === 'invalid') {
+        setStudyStateError('错题云端快照无效，未应用；当前设备输入保留，请重试同步。')
+        return false
+      }
+      mistakeProtocolReadyRef.current = true
+      if (resolution.kind === 'atomic') {
+        mistakeVersionsRef.current = new Map([...resolution.states].map(([id, value]) => [id, value.version]))
+        mistakeStateValuesRef.current = new Map([...resolution.states].map(([id, value]) => [id, value.isMistake]))
+        atomicMistakeAuthorityRef.current = true
+        setMistakes([...resolution.mistakeIds].map((id) => questionsById.get(id)).filter((question): question is Question => Boolean(question)))
+      } else {
+        atomicMistakeAuthorityRef.current = false
+        mistakeVersionsRef.current = new Map()
+        mistakeStateValuesRef.current = new Map()
+      }
       setDueQuestionIds(Array.isArray(state.dueQuestionIds) ? state.dueQuestionIds.filter((id): id is string => typeof id === 'string') : [])
       setKnowledgePointMastery(
         Object.fromEntries(
@@ -362,6 +441,7 @@ function TextbookHome({
           ),
         )
       }
+      return true
     }
 
     // 同一标签页短时间刷新时直接使用缓存，避免重复请求和整页等待。
@@ -371,10 +451,11 @@ function TextbookHome({
           sessionStorage.getItem(`syntax-coach-study-state:${userId}:${selectedTextbookId}`) || 'null',
         ) as { fetchedAt?: number; state?: Parameters<typeof applyStudyState>[0] } | null
         if (cached?.state && typeof cached.fetchedAt === 'number' && Date.now() - cached.fetchedAt < STUDY_STATE_CACHE_TTL_MS) {
-          applyStudyState(cached.state)
-          setStudyStateLoaded(true)
-          return () => {
-            cancelled = true
+          if (applyStudyState(cached.state)) {
+            setStudyStateLoaded(true)
+            return () => {
+              cancelled = true
+            }
           }
         }
       } catch {
@@ -400,10 +481,27 @@ function TextbookHome({
         }
         const state = (await response.json()) as Parameters<typeof applyStudyState>[0]
         if (cancelled) return
-        // 请求可能在用户开始答题后才返回；旧的云端快照不能覆盖
-        // 当前练习过程中已经更新的本地队列和进度。
-        if (hasStartedPracticeRef.current) return
-        applyStudyState(state)
+        // Validate even stale responses; invalid atomic data must not enable legacy writes.
+        const resolution = resolveAtomicMistakeProjection(state)
+        if (resolution.kind === 'invalid') {
+          setStudyStateError('错题云端快照无效，未应用；当前设备输入保留，请重试同步。')
+          return
+        }
+        mistakeProtocolReadyRef.current = true
+        if (hasStartedPracticeRef.current) {
+          if (resolution.kind === 'atomic') {
+            mistakeVersionsRef.current = new Map([...resolution.states].map(([id, value]) => [id, value.version]))
+            mistakeStateValuesRef.current = new Map([...resolution.states].map(([id, value]) => [id, value.isMistake]))
+            atomicMistakeAuthorityRef.current = true
+            setMistakes([...resolution.mistakeIds].map((id) => questionsById.get(id)).filter((question): question is Question => Boolean(question)))
+          } else {
+            atomicMistakeAuthorityRef.current = false
+            mistakeVersionsRef.current = new Map()
+            mistakeStateValuesRef.current = new Map()
+          }
+          return
+        }
+        if (!applyStudyState(state)) return
         try {
           sessionStorage.setItem(
             `syntax-coach-study-state:${userId}:${selectedTextbookId}`,
@@ -425,7 +523,7 @@ function TextbookHome({
     return () => {
       cancelled = true
     }
-  }, [userId, studyStateRetry, selectedTextbookId, questionCounts, courses.length])
+  }, [userId, authGeneration, studyStateRetry, selectedTextbookId, questionCounts, courses.length])
 
   // 当 localLessonDone 加载完成后，同步到主状态
   useEffect(() => {
@@ -619,9 +717,27 @@ function TextbookHome({
       replayMode: practiceState.isReplay,
       currentLesson: active,
       userId,
+      authGeneration,
       membershipStatus,
       textbookId: selectedTextbookId,
       questionLimit: questionCounts[question.lessonId - 1] ?? LESSON_QUESTION_LIMIT,
+      atomicMistakeStateAvailable: atomicMistakeAuthorityRef.current || (selectedTextbookId === 'builtin-japanese-syntax' && !mistakeProtocolReadyRef.current),
+      expectedMistakeVersion: atomicMistakeAuthorityRef.current ? mistakeVersionsRef.current.get(question.id) ?? 0 : undefined,
+      currentMistake: mistakes.some((item) => item.id === question.id),
+      onMistakeQueueChange: (notice) => {
+        if (currentUserId.current === userId && authGenerationRef.current === authGeneration) setMistakeQueueNotice(notice)
+      },
+      onMistakeStateUpdate: (state) => {
+        if (currentUserId.current !== userId || authGenerationRef.current !== authGeneration) return
+        mistakeVersionsRef.current.set(state.questionId, state.version)
+        mistakeStateValuesRef.current.set(state.questionId, state.isMistake)
+        if (state.isMistake) {
+          const updated = questionsById.get(state.questionId)
+          if (updated) setMistakes((current) => current.some((item) => item.id === updated.id) ? current : [...current, updated])
+        } else {
+          setMistakes((current) => current.filter((item) => item.id !== state.questionId))
+        }
+      },
     }
 
     const currentProgress = {
@@ -632,7 +748,12 @@ function TextbookHome({
       dueQuestionIds,
     }
 
-    const { gradeResult, progressUpdates } = await submitAnswer(context, currentProgress)
+    const { gradeResult, progressUpdates, persistence } = await submitAnswer(context, currentProgress)
+    if (persistence === 'failed') {
+      setMistakeQueueNotice('答案未提交，当前输入仍保留；请重试。')
+      submittedQuestion.current = null
+      return
+    }
 
     setExplanation(gradeResult.explanation)
     setSource(gradeResult.source)
@@ -884,6 +1005,24 @@ function TextbookHome({
             progress: overallProgress,
           }}
         />
+      )}
+      {mistakeQueueNotice && userId && (
+        <div className="state-note warning" role="alert">
+          <span>{mistakeQueueNotice}</span>
+          <button type="button" onClick={async () => {
+            const result = await retryMistakeQueue(userId, selectedTextbookId, authGeneration, (state) => {
+              mistakeVersionsRef.current.set(state.questionId, state.version)
+              mistakeStateValuesRef.current.set(state.questionId, state.isMistake)
+              if (state.isMistake) {
+                const question = questionsById.get(state.questionId)
+                if (question) setMistakes((current) => current.some((item) => item.id === question.id) ? current : [...current, question])
+              } else {
+                setMistakes((current) => current.filter((item) => item.id !== state.questionId))
+              }
+            })
+            if (currentUserId.current === userId && authGenerationRef.current === authGeneration) setMistakeQueueNotice(result.notice)
+          }}>重试</button>
+        </div>
       )}
       {studyStateError && userId && (
         <div className="state-note warning" role="alert">

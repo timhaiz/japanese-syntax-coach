@@ -1,0 +1,4 @@
+#!/usr/bin/env node
+// Isolated CLI fixture: no Docker daemon access.
+console.log(JSON.stringify(process.argv.slice(2)))
+process.exit(0)
