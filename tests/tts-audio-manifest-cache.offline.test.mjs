@@ -6,11 +6,12 @@ import vm from 'node:vm'
 
 const source = await readFile(new URL('../lib/tts/audio-manifest.ts', import.meta.url), 'utf8')
 const pending = []
+const requestedUrls = []
 const context = vm.createContext({
   Map,
   Promise,
   encodeURIComponent,
-  fetch: () => new Promise((resolve) => pending.push(resolve)),
+  fetch: (url) => { requestedUrls.push(url); return new Promise((resolve) => pending.push(resolve)) },
 })
 const module = new vm.SourceTextModule(stripTypeScriptTypes(source), { context })
 await module.link(() => {
@@ -52,4 +53,12 @@ test('manifest cache is partitioned by authenticated scope and textbook', async 
   )
   assert.equal(await firstUser, '/audio/user-1.wav')
   assert.equal(await secondUser, '/audio/user-2.wav')
+})
+
+test('resolves bundled MiniMax Japanese audio manifests', async () => {
+  clearTtsManifestCache()
+  const request = resolveGeneratedAudio('日本語です。', 'builtin-japanese-syntax')
+  assert.equal(requestedUrls.at(-1), '/audio/grammar/builtin-japanese-syntax/manifest.json')
+  pending[pending.length - 1](response({ provider: 'minimax', voice: 'Japanese_CalmLady', sentences: { '日本語です。': '/audio/example.mp3' } }))
+  assert.equal(await request, '/audio/example.mp3')
 })

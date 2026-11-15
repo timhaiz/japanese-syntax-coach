@@ -31,6 +31,8 @@ targets:
     resources:
       - path: JapaneseSyntaxCoach/Onboarding
       - path: JapaneseSyntaxCoach/Resources/builtin-japanese-syntax.json
+      - path: JapaneseSyntaxCoach/Resources/JapaneseAudio
+        type: folder
     dependencies:
       - package: Supabase
         product: Supabase

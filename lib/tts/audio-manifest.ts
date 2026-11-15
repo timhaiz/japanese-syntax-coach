@@ -1,6 +1,7 @@
 export type TtsManifest = {
-  provider: 'voicevox'
-  speaker: number
+  provider: 'voicevox' | 'minimax'
+  speaker?: number
+  voice?: string
   sentences: Record<string, string>
 }
 
@@ -23,14 +24,17 @@ const loadManifest = (textbookId: string): Promise<TtsManifest | null> => {
   const cached = manifestCache.get(cacheKey)
   if (cached) return cached
 
-  const request = fetch(`/api/tts/manifest?textbookId=${encodeURIComponent(textbookId)}`, {
-    cache: 'no-store',
+  const builtIn = textbookId === 'builtin-japanese-syntax'
+  const staticUrl = `/audio/grammar/${encodeURIComponent(textbookId)}/manifest.json`
+  const apiUrl = `/api/tts/manifest?textbookId=${encodeURIComponent(textbookId)}`
+  const request = fetch(builtIn ? staticUrl : apiUrl, {
+    cache: builtIn ? 'force-cache' : 'no-store',
   })
     .catch(() => null)
     .then(async (response) => {
       if (!response?.ok) {
-        return fetch(`/audio/grammar/${encodeURIComponent(textbookId)}/manifest.json`, {
-          cache: 'force-cache',
+        return fetch(builtIn ? apiUrl : staticUrl, {
+          cache: builtIn ? 'no-store' : 'force-cache',
         })
       }
       return response
@@ -39,7 +43,7 @@ const loadManifest = (textbookId: string): Promise<TtsManifest | null> => {
       if (!response.ok) return null
       const value = (await response.json()) as Partial<TtsManifest>
       if (
-        value.provider !== 'voicevox' ||
+        (value.provider !== 'voicevox' && value.provider !== 'minimax') ||
         !value.sentences ||
         typeof value.sentences !== 'object'
       ) {

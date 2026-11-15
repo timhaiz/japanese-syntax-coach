@@ -9,6 +9,25 @@ import XCTest
 @testable import JapaneseSyntaxCoach
 #endif
 
+#if !WORD_TOKEN_STANDALONE
+@MainActor
+final class JapaneseAudioManifestTests: XCTestCase {
+    func testOnlyBuiltinGrammarExamplesResolveExistingFiles() throws {
+        let data = Data(#"{"sentences":{"私は学生です。":"example.mp3"}}"#.utf8)
+        let directory = URL(fileURLWithPath: "/JapaneseAudio", isDirectory: true)
+        let resolve: (String, String?) -> URL? = { text, textbookID in
+            JapaneseSpeechPlayer.bundledAudioURL(for: text, textbookID: textbookID, manifestData: data, directory: directory) { $0.lastPathComponent == "example.mp3" }
+        }
+        XCTAssertEqual(resolve("私は学生です。", "builtin-japanese-syntax")?.lastPathComponent, "example.mp3")
+        XCTAssertNil(resolve("私は学生です。", "another-textbook"))
+        XCTAssertNil(resolve("私は学生です。", nil))
+        XCTAssertNil(resolve("別の文。", "builtin-japanese-syntax"))
+        XCTAssertNil(JapaneseSpeechPlayer.bundledAudioURL(for: "私は学生です。", textbookID: "builtin-japanese-syntax", manifestData: data, directory: directory) { _ in false })
+        XCTAssertNil(JapaneseSpeechPlayer.bundledAudioURL(for: "私は学生です。", textbookID: "builtin-japanese-syntax", manifestData: Data(), directory: directory) { _ in true })
+    }
+}
+#endif
+
 final class WordTokenTests: XCTestCase {
     func testTokenizationAndPunctuation() {
         XCTAssertEqual(WordTokenizer.tokenize("かばんはかばんです。"), ["かばん", "は", "かばん", "です"])

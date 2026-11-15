@@ -27,56 +27,113 @@ extension View {
     }
 }
 
-/// Native Japanese speech helper using AVSpeechSynthesizer (`ja-JP`) for reading example sentences aloud.
+/// Plays bundled grammar examples when available, otherwise synthesizes Japanese speech.
 @MainActor
-final class JapaneseSpeechPlayer: NSObject, ObservableObject, AVSpeechSynthesizerDelegate {
+final class JapaneseSpeechPlayer: NSObject, ObservableObject, AVSpeechSynthesizerDelegate, AVAudioPlayerDelegate {
     static let shared = JapaneseSpeechPlayer()
 
     @Published private(set) var speakingText: String?
     private let synthesizer = AVSpeechSynthesizer()
+    private var audioPlayer: AVAudioPlayer?
+    private var currentUtterance: AVSpeechUtterance?
+
+    private struct AudioManifest: Decodable {
+        let sentences: [String: String]
+    }
+
+    static func bundledAudioURL(for text: String, textbookID: String?, manifestData: Data, directory: URL, fileExists: (URL) -> Bool) -> URL? {
+        guard textbookID == "builtin-japanese-syntax",
+              let manifest = try? JSONDecoder().decode(AudioManifest.self, from: manifestData),
+              let filename = manifest.sentences[text],
+              !filename.isEmpty, filename == (filename as NSString).lastPathComponent,
+              (filename as NSString).pathExtension.lowercased() == "mp3" else { return nil }
+        let url = directory.appendingPathComponent(filename)
+        return fileExists(url) ? url : nil
+    }
+
+    private func bundledAudioURL(for text: String, textbookID: String?) -> URL? {
+        guard let directory = Bundle.main.resourceURL?.appendingPathComponent("JapaneseAudio", isDirectory: true),
+              let data = try? Data(contentsOf: directory.appendingPathComponent("manifest.json")) else { return nil }
+        return Self.bundledAudioURL(for: text, textbookID: textbookID, manifestData: data, directory: directory) {
+            FileManager.default.fileExists(atPath: $0.path)
+        }
+    }
 
     override init() {
         super.init()
         synthesizer.delegate = self
     }
 
-    func speak(_ rawText: String) {
+    func speak(_ rawText: String, textbookID: String? = nil) {
         let cleaned = Self.extractJapaneseSentence(from: rawText)
         guard !cleaned.isEmpty else { return }
 
-        if synthesizer.isSpeaking {
+        if speakingText != nil {
             let wasSame = (speakingText == rawText)
-            synthesizer.stopSpeaking(at: .immediate)
-            speakingText = nil
+            stop()
             if wasSame { return }
         }
 
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio, options: [.duckOthers])
         try? AVAudioSession.sharedInstance().setActive(true)
 
+        if let url = bundledAudioURL(for: rawText, textbookID: textbookID),
+           let player = try? AVAudioPlayer(contentsOf: url) {
+            player.delegate = self
+            audioPlayer = player
+            speakingText = rawText
+            if player.play() { return }
+            audioPlayer = nil
+        }
+
         let utterance = AVSpeechUtterance(string: cleaned)
         utterance.voice = AVSpeechSynthesisVoice(language: "ja-JP")
         utterance.rate = 0.46
         utterance.pitchMultiplier = 1.0
         speakingText = rawText
+        currentUtterance = utterance
         synthesizer.speak(utterance)
     }
 
     func stop() {
+        audioPlayer?.stop()
+        audioPlayer = nil
+        currentUtterance = nil
         if synthesizer.isSpeaking {
             synthesizer.stopSpeaking(at: .immediate)
         }
         speakingText = nil
     }
 
+    nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        Task { @MainActor in
+            guard self.audioPlayer === player else { return }
+            self.audioPlayer = nil
+            self.speakingText = nil
+        }
+    }
+
+    nonisolated func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        Task { @MainActor in
+            guard self.audioPlayer === player, let text = self.speakingText else { return }
+            self.audioPlayer = nil
+            self.speakingText = nil
+            self.speak(text)
+        }
+    }
+
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
         Task { @MainActor in
+            guard self.currentUtterance === utterance else { return }
+            self.currentUtterance = nil
             self.speakingText = nil
         }
     }
 
     nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
         Task { @MainActor in
+            guard self.currentUtterance === utterance else { return }
+            self.currentUtterance = nil
             self.speakingText = nil
         }
     }
@@ -148,7 +205,8 @@ struct TextbookView: View {
                                         LessonGrammarDetailView(
                                             store: store,
                                             lesson: lesson,
-                                            questions: LearningStore.orderedQuestions(for: lesson.id, in: textbook)
+                                            questions: LearningStore.orderedQuestions(for: lesson.id, in: textbook),
+                                            textbookID: textbook.id
                                         )
                                     } label: {
                                         lessonRowContent(
@@ -298,12 +356,14 @@ struct LessonGrammarDetailView: View {
     @ObservedObject private var speechPlayer = JapaneseSpeechPlayer.shared
     let lesson: TextbookLesson
     let questions: [TextbookQuestion]
+    let textbookID: String?
     @State private var carouselIndex = 0
 
-    init(store: LearningStore, lesson: TextbookLesson, questions: [TextbookQuestion]) {
+    init(store: LearningStore, lesson: TextbookLesson, questions: [TextbookQuestion], textbookID: String? = nil) {
         self.store = store
         self.lesson = lesson
         self.questions = questions
+        self.textbookID = textbookID
     }
 
     init(store: LearningStore, lesson: TextbookLesson, textbook: Textbook? = nil) {
@@ -311,8 +371,10 @@ struct LessonGrammarDetailView: View {
         self.lesson = lesson
         if let textbook = textbook ?? store.textbook {
             self.questions = LearningStore.orderedQuestions(for: lesson.id, in: textbook)
+            self.textbookID = textbook.id
         } else {
             self.questions = []
+            self.textbookID = nil
         }
     }
 
@@ -463,7 +525,7 @@ struct LessonGrammarDetailView: View {
                     .foregroundStyle(HomeVisualStyle.secondaryInk)
                 Spacer()
                 Button {
-                    speechPlayer.speak(example)
+                    speechPlayer.speak(example, textbookID: textbookID)
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: isSpeaking ? "speaker.wave.3.fill" : "speaker.wave.2")

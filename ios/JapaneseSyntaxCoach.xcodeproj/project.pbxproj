@@ -26,6 +26,7 @@
 		3563571B838E236E3C08A8C1 /* AccountDeletion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 092574DC0A81DC0E9005426B /* AccountDeletion.swift */; };
 		3579FA7EBD78F5F4A7327B73 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 71EF9078C24B075A8D616033 /* AuthView.swift */; };
 		3979D8AE9EDD6BEABAE2D7BA /* builtin-japanese-syntax.json in Resources */ = {isa = PBXBuildFile; fileRef = 55AE525EBB1829500B33ACF3 /* builtin-japanese-syntax.json */; };
+		D927B1102026111500000001 /* JapaneseAudio in Resources */ = {isa = PBXBuildFile; fileRef = D927B1102026111500000002 /* JapaneseAudio */; };
 		F22222222222222222222201 /* shin-standard-japanese-beginner-lower.json in Resources */ = {isa = PBXBuildFile; fileRef = F22222222222222222222204 /* shin-standard-japanese-beginner-lower.json */; };
 		F22222222222222222222202 /* shin-standard-japanese-intermediate-upper.json in Resources */ = {isa = PBXBuildFile; fileRef = F22222222222222222222205 /* shin-standard-japanese-intermediate-upper.json */; };
 		F22222222222222222222203 /* shin-standard-japanese-intermediate-lower.json in Resources */ = {isa = PBXBuildFile; fileRef = F22222222222222222222206 /* shin-standard-japanese-intermediate-lower.json */; };
@@ -111,6 +112,7 @@
 		4E5FCBCB6CAB46E282899248 /* ProgressView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressView.swift; sourceTree = "<group>"; };
 		556078B51B9548ABACA87E61 /* HomeLearningPath.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeLearningPath.swift; sourceTree = "<group>"; };
 		55AE525EBB1829500B33ACF3 /* builtin-japanese-syntax.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "builtin-japanese-syntax.json"; sourceTree = "<group>"; };
+		D927B1102026111500000002 /* JapaneseAudio */ = {isa = PBXFileReference; lastKnownFileType = folder; path = JapaneseAudio; sourceTree = "<group>"; };
 		F22222222222222222222204 /* shin-standard-japanese-beginner-lower.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "shin-standard-japanese-beginner-lower.json"; sourceTree = "<group>"; };
 		F22222222222222222222205 /* shin-standard-japanese-intermediate-upper.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "shin-standard-japanese-intermediate-upper.json"; sourceTree = "<group>"; };
 		F22222222222222222222206 /* shin-standard-japanese-intermediate-lower.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "shin-standard-japanese-intermediate-lower.json"; sourceTree = "<group>"; };
@@ -267,6 +269,7 @@
 			isa = PBXGroup;
 			children = (
 				55AE525EBB1829500B33ACF3 /* builtin-japanese-syntax.json */,
+				D927B1102026111500000002 /* JapaneseAudio */,
 				F22222222222222222222204 /* shin-standard-japanese-beginner-lower.json */,
 				F22222222222222222222205 /* shin-standard-japanese-intermediate-upper.json */,
 				F22222222222222222222206 /* shin-standard-japanese-intermediate-lower.json */,
@@ -424,6 +427,7 @@
 				EBC04E1D3FCBEE7B4F090187 /* Assets.xcassets in Resources */,
 				2BC4C1C92D83B1434EDE0047 /* PrivacyInfo.xcprivacy in Resources */,
 				3979D8AE9EDD6BEABAE2D7BA /* builtin-japanese-syntax.json in Resources */,
+				D927B1102026111500000001 /* JapaneseAudio in Resources */,
 				F22222222222222222222201 /* shin-standard-japanese-beginner-lower.json in Resources */,
 				F22222222222222222222202 /* shin-standard-japanese-intermediate-upper.json in Resources */,
 				F22222222222222222222203 /* shin-standard-japanese-intermediate-lower.json in Resources */,
